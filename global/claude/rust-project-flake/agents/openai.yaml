@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Project Flake"
+  short_description: "Generate crane-based Rust Nix flakes"
+  default_prompt: "Use $rust-project-flake to add a crane-based Nix flake to this Rust project."

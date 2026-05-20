@@ -1,0 +1,52 @@
+---
+name: yeehaw
+description: Execute and inspect yee-haw multi-phase plan directories through the yh MCP phases tools.
+argument_hint: "[plan-dir] | run | status | show"
+---
+
+# Yeehaw phase executor
+
+Use this skill when the user wants to inspect, run, or resume a multi-phase plan directory from Claude Code.
+
+## When to use
+
+- After a `multi-phase-plan-*` flavour skill (`-codex` / `-claude`) writes a phase doc set under `docs/src/planning/<plan-name>/`.
+- When the user asks to execute a phase plan in the current repository.
+- When the user asks for `/yeehaw run`, `/yeehaw show`, or `/yeehaw status`.
+
+Do not auto-invoke this from another skill. Suggest `/yeehaw run`; wait for the user to ask for execution.
+
+## How to use
+
+1. Resolve the plan directory. If the user did not pass one, use the most recent phase plan directory in the current repository, usually `docs/src/planning/<plan-name>/`.
+2. Call `phases_show` with `{ "plan_dir": "<absolute or repo-relative path>" }`.
+3. If `phases_show` returns an error, stop and tell the user the directory is not a valid phase doc set.
+4. For `/yeehaw show`, summarize the returned `phases` and `dag_edges`.
+5. For `/yeehaw status`, call `phases_status` and summarize `lock`, active signals, and checkpoints.
+6. For `/yeehaw run`, call `phases_run` only after `phases_show` succeeds. Pass `resume: true` when continuing a prior run. Pass `strict: true` only if the user explicitly asks for strict failure semantics.
+7. While `phases_run` is active, surface MCP progress messages as phases start, complete, pause, or fail.
+8. When `phases_run` returns, interpret `status` and `exit_code` exactly as below.
+
+## Exit-code handling
+
+- `status: completed`, `exit_code: 0`: report the completed phase ids and the lock file path.
+- `status: needs_human`, `exit_code: 2`: stop. Prompt the user with `active_checkpoint.question` and include `active_checkpoint.suggested_resolution` when present.
+- `status: impossible`, `exit_code: 3`: stop. Surface the returned `message`, failed phase ids, and the lock file path.
+- `status: expansion_pending`, `exit_code: 4`: tell the user an expansion proposal was staged. Offer to inspect `active_checkpoint.proposal_path` or re-run `/yeehaw run` to apply pending proposals.
+
+## Anti-patterns
+
+- Do not retry blindly on `needs_human`; always surface the checkpoint to the user.
+- Do not run `phases_run` on a directory that `phases_show` has not accepted.
+- Do not skip a human checkpoint by passing `strict: true` unless the user asked for strict mode.
+- Do not claim progress streaming is authoritative; the final `phases_run` return value is the source of truth.
+- Do not run two `phases_run` calls against the same plan directory at the same time.
+
+## Test plan
+
+Manual smoke steps:
+
+1. Run `/multi-phase-plan-codex add a small feature X` (or `/multi-phase-plan-claude …`) in a repository that has the yee-haw MCP server configured.
+2. Run `/yeehaw show <plan-dir>` and confirm the phase DAG is listed.
+3. Run `/yeehaw run <plan-dir>` and confirm phase progress appears and the final response includes `status`, `exit_code`, and `lock_file`.
+4. Re-run `/yeehaw status <plan-dir>` and confirm it reflects the lock file written by the run.

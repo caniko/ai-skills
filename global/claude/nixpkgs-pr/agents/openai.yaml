@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nixpkgs PRs"
+  short_description: "Create, repair, and review nixpkgs PRs."
+  default_prompt: "Prepare, update, or repair a nixpkgs pull request end to end. Inspect failing CI first when a PR already exists, run the needed local validation, publish branch updates, format the PR body from the current NixOS/nixpkgs pull request template with a short human summary above it, and dispatch the required review through caniko/nixpkgs-review-gha."

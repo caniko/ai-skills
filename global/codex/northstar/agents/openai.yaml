@@ -1,0 +1,3 @@
+interface:
+  display_name: "Northstar"
+  short_description: "Create concise orientation summaries for complex implementation situations"

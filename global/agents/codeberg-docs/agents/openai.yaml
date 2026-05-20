@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codeberg Docs"
+  short_description: "Create mdBook docs for Codeberg Pages."
+  default_prompt: "Use $codeberg-docs to create a docs-only mdBook site for this Codeberg-hosted project and wire it to Nix and Pages publishing."
