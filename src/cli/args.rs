@@ -62,6 +62,9 @@ pub(super) enum Command {
     },
     /// Write the current mirror state back to live .agents and .claude directories.
     Sync {
+        /// Sync all configured mirror targets.
+        #[arg(long)]
+        all: bool,
         /// Target to sync: all, global, or project.
         #[arg(long, default_value = "all")]
         target: String,
@@ -204,6 +207,9 @@ pub(super) enum MirrorCommand {
     },
     /// Write the current mirror state back to live .agents and .claude directories.
     Sync {
+        /// Sync all configured mirror targets.
+        #[arg(long)]
+        all: bool,
         /// Target to sync: all, global, or project.
         #[arg(long, default_value = "all")]
         target: String,

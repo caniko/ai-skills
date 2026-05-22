@@ -32,7 +32,11 @@ pub(crate) fn run() -> Result<()> {
             sync,
             dry_run,
         } => commands::reconcile(&ctx, &target, sync, dry_run),
-        Command::Sync { target, dry_run } => commands::sync(&ctx, &target, dry_run),
+        Command::Sync {
+            all,
+            target,
+            dry_run,
+        } => commands::sync(&ctx, sync_target(all, &target), dry_run),
         Command::Delete {
             scope,
             skill,
@@ -102,10 +106,22 @@ fn run_mirror_command(ctx: &Context, command: MirrorCommand) -> Result<()> {
             sync,
             dry_run,
         } => commands::reconcile(ctx, &target, sync, dry_run),
-        MirrorCommand::Sync { target, dry_run } => commands::sync(ctx, &target, dry_run),
+        MirrorCommand::Sync {
+            all,
+            target,
+            dry_run,
+        } => commands::sync(ctx, sync_target(all, &target), dry_run),
         MirrorCommand::List { target } => commands::list(ctx, &target),
         MirrorCommand::Targets => commands::targets(ctx),
         MirrorCommand::Sources { target } => commands::sources(ctx, &target),
+    }
+}
+
+fn sync_target<'a>(all: bool, target: &'a str) -> &'a str {
+    if all {
+        "all"
+    } else {
+        target
     }
 }
 

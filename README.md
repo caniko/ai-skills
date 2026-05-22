@@ -70,6 +70,7 @@ The same functionality is also available through grouped command families:
 ```sh
 skillctl mirror reconcile --target all
 skillctl mirror sync --target all
+skillctl mirror sync --all
 skillctl mirror list --target global
 skillctl skill delete global skill-name
 skillctl toml project list
@@ -131,6 +132,7 @@ Sync skips live-source discovery and writes the current mirror state back to liv
 ```sh
 skillctl sync --target all
 skillctl sync --target global --dry-run
+skillctl mirror sync --all
 skillctl mirror sync --target global --dry-run
 ```
 

@@ -554,3 +554,46 @@ fn grouped_mirror_and_skill_commands_match_legacy_commands() {
 
     assert!(mirror.join("alpha/SKILL.md").is_file());
 }
+
+#[test]
+fn mirror_sync_all_flag_selects_all_targets() {
+    let tmp = tempdir().unwrap();
+    let project_root = tmp.path().join("repos/demo");
+    fs::create_dir_all(&project_root).unwrap();
+
+    let config = tmp.path().join("skillctl.toml");
+    fs::write(
+        &config,
+        format!(
+            r#"
+[global]
+sources = []
+sync_paths = []
+stale_codex_skill_paths = []
+
+[[projects]]
+name = "demo"
+path = "{}"
+"#,
+            project_root.display()
+        ),
+    )
+    .unwrap();
+
+    Command::cargo_bin("skillctl")
+        .unwrap()
+        .args([
+            "--config",
+            config.to_str().unwrap(),
+            "--mirror-root",
+            tmp.path().to_str().unwrap(),
+            "mirror",
+            "sync",
+            "--all",
+            "--dry-run",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("# sync global"))
+        .stdout(predicate::str::contains("# sync demo"));
+}
