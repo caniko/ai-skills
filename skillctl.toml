@@ -1,0 +1,106 @@
+[global]
+sources = [
+  { label = "agents", path = "~/.agents/skills", priority = 3 },
+  { label = "claude", path = "~/.claude/skills", priority = 2 },
+  { label = "codex", path = "~/.codex/skills", priority = 1 },
+]
+sync_paths = [
+  "~/.agents/skills",
+  "~/.claude/skills",
+]
+stale_codex_skill_paths = [
+  "~/.codex/skills",
+]
+
+[[project_source_rules]]
+label = "agents"
+rel = ".agents/skills"
+priority = 6
+
+[[project_source_rules]]
+label = "claude"
+rel = ".claude/skills"
+priority = 5
+
+[[project_source_rules]]
+label = "codex"
+rel = ".codex/skills"
+priority = 4
+
+[[project_source_rules]]
+label = "root-skills"
+rel = "skills"
+priority = 3
+
+[[project_source_rules]]
+label = "codex-plugin"
+rel = ".codex-plugin/skills"
+priority = 2
+
+[[project_source_rules]]
+label = "claude-plugin"
+rel = ".claude-plugin/skills"
+priority = 1
+
+[[projects]]
+name = "SynDB"
+path = "~/canix/Projects/SynDB"
+
+[[projects]]
+name = "SynDB-dep-machete-udeps"
+path = "~/canix/Projects/SynDB-dep-machete-udeps"
+
+[[projects]]
+name = "ai-yolo-nix"
+path = "~/canix/Projects/ai-yolo-nix"
+
+[[projects]]
+name = "canix"
+path = "~/canix/Projects/canix"
+
+[[projects]]
+name = "codex"
+path = "~/canix/Projects/codex"
+
+[[projects]]
+name = "fragpipe-mcp"
+path = "~/canix/Projects/fragpipe-mcp"
+
+[[projects]]
+name = "goose"
+path = "~/canix/Projects/upstream/goose"
+
+[[projects]]
+name = "mempalace"
+path = "~/canix/Projects/upstream/mempalace"
+extra_sources = [
+  { label = "integration", rel = "integrations", priority = 1 },
+]
+
+[[projects]]
+name = "nix-crossbow"
+path = "~/canix/Projects/nix-crossbow"
+
+[[projects]]
+name = "plinth"
+path = "~/canix/Projects/solo/plinth"
+
+[[projects]]
+name = "regicide"
+path = "~/canix/Projects/solo/game-dev/regicide"
+extra_sources = [
+  { label = "vendor-fragpipe", rel = "vendor/fragpipe/skills", priority = 2 },
+  { label = "vendor-thespis", rel = "vendor/thespis/.agents/skills", priority = 1 },
+]
+
+[[projects]]
+name = "rs-modde"
+path = "~/canix/Projects/rs-modde"
+
+[[projects]]
+name = "rs_bouldy"
+path = "~/canix/Projects/rs_bouldy"
+
+[[projects]]
+name = "syndb-morphometry-rollout"
+path = "~/canix/Projects/.codex-worktrees/syndb-morphometry-rollout"
