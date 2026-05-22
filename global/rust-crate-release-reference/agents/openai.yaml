@@ -1,0 +1,3 @@
+display_name: Rust Crate Release Reference
+short_description: Shared crates.io release rules for Rust crate skills.
+default_prompt: "Apply the shared Rust crate release reference rules for source integrity, simit infrastructure, changelog readiness, validation gates, and blocker reporting."

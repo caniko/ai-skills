@@ -1,0 +1,4 @@
+interface:
+  display_name: "Consolidate Plan Sets"
+  short_description: "Collapse existing plan sets into one plan"
+  default_prompt: "Use $consolidate-plan-sets with $multi-phase-plan-codex to consolidate existing plan sets into one current monolith plan."

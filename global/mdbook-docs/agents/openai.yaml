@@ -1,0 +1,4 @@
+interface:
+  display_name: "mdBook Docs"
+  short_description: "Generic mdBook docs with Nix outputs."
+  default_prompt: "Use $mdbook-docs to create a docs-only mdBook site for this flake and prepare it for host-specific Pages wiring."

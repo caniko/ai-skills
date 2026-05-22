@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Crate Rustdoc"
+  short_description: "Public API documentation and docs.rs readiness."
+  default_prompt: "Make this crate's public API documentation docs.rs-ready."

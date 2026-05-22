@@ -1,4 +1,0 @@
-interface:
-  display_name: "Fix Clippy Errors"
-  short_description: "Resolve Rust Clippy diagnostics end to end."
-  default_prompt: "Fix all Clippy errors in the current Rust workspace, preserving existing behavior and validating with the appropriate cargo clippy command."

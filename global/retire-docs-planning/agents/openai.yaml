@@ -1,0 +1,4 @@
+interface:
+  display_name: "Retire Planning Docs"
+  short_description: "Fold obsolete planning docs into stable docs"
+  default_prompt: "Use $retire-docs-planning to retire docs/src/planning content and fold the durable guidance into the stable documentation."

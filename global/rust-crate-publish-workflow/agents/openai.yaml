@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Crate Publish Workflow"
+  short_description: "Human-in-the-loop crates.io publish checklist."
+  default_prompt: "Prepare the final crates.io publish workflow for this Rust crate."

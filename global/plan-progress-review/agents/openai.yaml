@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Plan Progress"
+  short_description: "Check completion status of existing plan docs"
+  default_prompt: "Use $plan-progress-review to audit existing plan docs against the current repository state."

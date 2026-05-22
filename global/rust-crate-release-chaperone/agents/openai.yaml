@@ -1,0 +1,3 @@
+display_name: Rust Crate Release Chaperone
+short_description: Run simit release hooks, install missing hooks, and fix release blockers.
+default_prompt: "Chaperone this Rust crate release: ensure simit hooks are installed, run the release checks, and fix any bugs or blockers that arise."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nixpkgs Build Fix PRs"
+  short_description: "Fix nixpkgs build failures from logs."
+  default_prompt: "Investigate a nixpkgs package build failure from the provided log or derivation, identify the upstream cause, implement the narrowest package fix, validate the failing build, open a draft PR with the live nixpkgs template, and run caniko/nixpkgs-review-gha."

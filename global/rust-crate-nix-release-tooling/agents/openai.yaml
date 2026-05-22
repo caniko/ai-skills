@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Crate Nix Release Tooling"
+  short_description: "Crane flake, dev shell, packages, and release checks."
+  default_prompt: "Add crane-based Nix release tooling to this Rust crate."

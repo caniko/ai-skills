@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitLab Pages"
+  short_description: "GitLab CI for static Pages deploys."
+  default_prompt: "Use $gitlab-pages to wire this site's build output into a GitLab Pages deployment."
