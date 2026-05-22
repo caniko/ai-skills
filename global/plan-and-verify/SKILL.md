@@ -242,22 +242,6 @@ Steps:
   in a single shot, plan first and tell them to come back for `verify`
   once the phases have been executed.
 
-## Domain-specific variants
-
-When the user's task matches a known compile-time / build-graph
-optimisation pattern, **delegate to the more specific skill** instead
-of running the generic flow — it pins the phase shape and bakes in the
-exact verification matrix for that domain.
-
-- **`feature-flag-compile-sweep`** — Rust workspace feature-flag
-  hygiene: shrink the default compile graph (e.g. Wayland-only
-  default, Steam SDK opt-in, no dev-only deps in release). Six-phase
-  shape: audit → workspace bevy/winit backend split → per-crate
-  platform features → test/visual crate features → code-level cfg
-  sweep → Nix shell + runtime verify. Verification matrix includes
-  `cargo check` per-backend, `cargo tree` Android cross-target, `ldd`
-  linkage proof.
-
 Add new domain variants here as they emerge — each one should pin its
 phase shape and its verification matrix so this generic skill stays
 thin.

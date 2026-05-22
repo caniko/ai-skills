@@ -47,10 +47,6 @@ name = "SynDB"
 path = "~/canix/Projects/SynDB"
 
 [[projects]]
-name = "SynDB-dep-machete-udeps"
-path = "~/canix/Projects/SynDB-dep-machete-udeps"
-
-[[projects]]
 name = "ai-yolo-nix"
 path = "~/canix/Projects/ai-yolo-nix"
 
@@ -63,19 +59,16 @@ name = "codex"
 path = "~/canix/Projects/codex"
 
 [[projects]]
+name = "CourseOfLife"
+path = "~/canix/Projects/CourseOfLife"
+
+[[projects]]
 name = "fragpipe-mcp"
 path = "~/canix/Projects/fragpipe-mcp"
 
 [[projects]]
 name = "goose"
 path = "~/canix/Projects/upstream/goose"
-
-[[projects]]
-name = "mempalace"
-path = "~/canix/Projects/upstream/mempalace"
-extra_sources = [
-  { label = "integration", rel = "integrations", priority = 1 },
-]
 
 [[projects]]
 name = "nix-crossbow"
@@ -100,7 +93,3 @@ path = "~/canix/Projects/rs-modde"
 [[projects]]
 name = "rs_bouldy"
 path = "~/canix/Projects/rs_bouldy"
-
-[[projects]]
-name = "syndb-morphometry-rollout"
-path = "~/canix/Projects/.codex-worktrees/syndb-morphometry-rollout"

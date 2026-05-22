@@ -122,7 +122,7 @@ pub fn remove_codex_skills(skills_path: &Utf8Path) -> Result<()> {
         fs::remove_dir_all(skills_path)?;
     }
     if let Some(codex_dir) = skills_path.parent() {
-        if codex_dir.exists() && fs::read_dir(codex_dir)?.next().is_none() {
+        if codex_dir.is_dir() && fs::read_dir(codex_dir)?.next().is_none() {
             fs::remove_dir(codex_dir)?;
         }
     }
@@ -161,5 +161,15 @@ mod tests {
         remove_codex_skills(&skills).unwrap();
         assert!(!skills.exists());
         assert!(codex.exists());
+    }
+
+    #[test]
+    fn preserves_file_codex_parent() {
+        let tmp = tempdir().unwrap();
+        let codex = Utf8PathBuf::from_path_buf(tmp.path().join(".codex")).unwrap();
+        let skills = codex.join("skills");
+        fs::write(&codex, "").unwrap();
+        remove_codex_skills(&skills).unwrap();
+        assert!(codex.is_file());
     }
 }

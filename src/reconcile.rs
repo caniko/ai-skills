@@ -70,9 +70,6 @@ pub fn choose_latest(candidates: &[Candidate]) -> Result<Vec<Choice>> {
 
 pub fn reconcile_target(target: &Target, sync: bool, dry_run: bool) -> Result<Vec<Choice>> {
     let candidates = discover_candidates(&target.sources)?;
-    if candidates.is_empty() {
-        bail!("no skill directories found for target `{}`", target.name);
-    }
     let choices = choose_latest(&candidates)?;
 
     if dry_run {
@@ -224,6 +221,9 @@ pub fn candidate_from_path(source: &Source, path: &Utf8Path, label: String) -> R
 
 fn print_choices(target: &Target, choices: &[Choice], sync: bool) {
     println!("# {} -> {}", target.name, target.mirror_path);
+    if choices.is_empty() {
+        println!("no skills found");
+    }
     for choice in choices {
         println!(
             "{}\t{}\t{}\t{}",

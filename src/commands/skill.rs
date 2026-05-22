@@ -1,77 +1,10 @@
 use std::fs;
 
 use anyhow::{bail, Context as AnyhowContext, Result};
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8Path;
 
-use crate::{config::Config, fs_ops, model::Target, reconcile};
-
-pub struct Context {
-    pub config: Config,
-    pub mirror_root: Utf8PathBuf,
-}
-
-impl Context {
-    pub fn load(config_path: &Utf8Path, mirror_root: &Utf8Path) -> Result<Self> {
-        Ok(Self {
-            config: Config::load(config_path)?,
-            mirror_root: mirror_root.to_path_buf(),
-        })
-    }
-
-    fn all_targets(&self) -> Result<Vec<Target>> {
-        self.config.targets(&self.mirror_root)
-    }
-
-    fn target(&self, name: &str) -> Result<Target> {
-        if name == "global" {
-            return self.config.global_target(&self.mirror_root);
-        }
-        let project = self
-            .config
-            .projects
-            .iter()
-            .find(|p| p.name == name)
-            .with_context(|| format!("unknown target `{name}`"))?;
-        self.config.project_target(&self.mirror_root, project)
-    }
-
-    fn selected_targets(&self, selector: &str) -> Result<Vec<Target>> {
-        match selector {
-            "all" => self.all_targets(),
-            "global" => Ok(vec![self.target("global")?]),
-            other => Ok(vec![self.target(other)?]),
-        }
-    }
-}
-
-pub fn reconcile(ctx: &Context, target: &str, sync: bool, dry_run: bool) -> Result<()> {
-    for target in ctx.selected_targets(target)? {
-        reconcile::reconcile_target(&target, sync, dry_run)?;
-    }
-    Ok(())
-}
-
-pub fn sync(ctx: &Context, target: &str, dry_run: bool) -> Result<()> {
-    for target in ctx.selected_targets(target)? {
-        if dry_run {
-            println!("# sync {}", target.name);
-            println!("from: {}", target.mirror_path);
-            println!(
-                "to: {}",
-                target
-                    .sync_paths
-                    .iter()
-                    .map(|p| p.as_str())
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            );
-            continue;
-        }
-        reconcile::sync_target(&target)?;
-        println!("synced {}", target.name);
-    }
-    Ok(())
-}
+use super::Context;
+use crate::{fs_ops, model::Target, reconcile};
 
 pub fn delete(
     ctx: &Context,
@@ -155,33 +88,6 @@ pub fn move_skill(
             if from.name != to.name {
                 reconcile::sync_target(&to)?;
             }
-        }
-    }
-    Ok(())
-}
-
-pub fn list(ctx: &Context, target: &str) -> Result<()> {
-    for target in ctx.selected_targets(target)? {
-        println!("# {}", target.name);
-        for skill in reconcile::mirror_skill_dirs(&target.mirror_path)? {
-            println!("{}", skill.file_name().unwrap_or_default());
-        }
-    }
-    Ok(())
-}
-
-pub fn targets(ctx: &Context) -> Result<()> {
-    for target in ctx.all_targets()? {
-        println!("{}", target.name);
-    }
-    Ok(())
-}
-
-pub fn sources(ctx: &Context, target: &str) -> Result<()> {
-    for target in ctx.selected_targets(target)? {
-        println!("# {}", target.name);
-        for source in target.sources {
-            println!("{}\t{}\t{}", source.label, source.priority, source.path);
         }
     }
     Ok(())

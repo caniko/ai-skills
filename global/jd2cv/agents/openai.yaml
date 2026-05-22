@@ -1,4 +1,0 @@
-interface:
-  display_name: "JD to CV"
-  short_description: "Tailor senior tech CVs from JDs"
-  default_prompt: "Tailor my generic CV to this job description for a senior software engineering or tech lead application."
