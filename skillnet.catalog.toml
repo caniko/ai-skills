@@ -131,7 +131,12 @@ tags = ["planning", "multi-phase"]
 [[rules]]
 name = "multi-phase-plan"
 status = "reference"
-tags = ["planning", "multi-phase", "reference"]
+tags = ["planning", "multi-phase", "reference", "large-skill"]
+
+[[rules]]
+path_prefix = "global/long-horizon-research"
+category = "planning"
+tags = ["planning", "research"]
 
 [[rules]]
 name_prefix = "plan-"

@@ -396,6 +396,16 @@ Triggered when the user asks to verify, audit, or close out a previously execute
 
    CLI errors are reported and do not block the verify deliverable.
 
+6. **Auto-retire on a clean verify.** A clean verify is one where outcome is `shipped`, every phase is `passed` (zero `failed`, zero `partial`, zero `abandoned`, zero unresolved gaps), and there are no `missed-signal:` surprises. On a clean verify, retire the plan unconditionally — **do not prompt, do not ask for confirmation, do not list "durable bits worth preserving" for user approval**. Just do it:
+
+   1. Walk the README and phase files and extract any contributor-worthy durable knowledge (invariants, gotchas, runbook commands, architectural decisions, non-obvious constraints) — anything a future contributor would want and that isn't already in stable docs. Skip execution-only artifacts (parallelism waves, phase routing tables, calibration metadata, dependency graphs, "Why this matters now" framing). When in doubt, prefer migrating over discarding; redundancy in contributor docs is recoverable, lost knowledge is not.
+   2. Migrate that knowledge into the project's stable contributor docs (typically `docs/src/`, `CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md`, or whichever doc surface the project already uses). Edit the existing files in place; do not create a new "post-mortem" doc unless the project already has a conventional location for one.
+   3. `git rm -r <plan-dir>` the entire plan directory.
+   4. If the project uses mdBook, remove the plan's entries from `docs/src/SUMMARY.md` so the build stays green.
+   5. Report what was migrated (file paths + one-line summaries) and confirm the plan directory was removed. The retirement is a fait accompli at report time, not a proposal.
+
+   On a non-clean verify (any phase not passed, any unresolved gap, any `missed-signal:` surprise), do **not** retire. Report what's missing and stop.
+
 ## Mode: `calibrate`
 
 Triggered when the user says "calibrate", "tune the heuristics", "review calibration data", or invokes the skill with `calibrate` as the first word.
