@@ -152,6 +152,22 @@
     },
     "nixpkgs": {
       "locked": {
+        "lastModified": 1779536132,
+        "narHash": "sha256-q+fF42iv/geEbHfgSzy3tS0FF/EyD6XTZ98E6yxiBO8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "3d8f0f3f72a6cd4d93d0ad13203f2ea1cb7e1456",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
         "lastModified": 1777395829,
         "narHash": "sha256-HposVFZcsBCevgqLR73w/BpSe8J1lMgw5kASnnxO3A4=",
         "owner": "NixOS",
@@ -196,10 +212,7 @@
           "skillnet",
           "flake-utils"
         ],
-        "nixpkgs": [
-          "skillnet",
-          "nixpkgs"
-        ],
+        "nixpkgs": "nixpkgs",
         "skillnet": "skillnet"
       }
     },
@@ -207,7 +220,7 @@
       "inputs": {
         "crane": "crane",
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "osxcross": "osxcross",
         "rust-overlay": "rust-overlay"
       },
@@ -263,8 +276,6 @@
         "git-hooks": "git-hooks",
         "home-manager": "home-manager",
         "nixpkgs": [
-          "skillnet",
-          "rs-harbor",
           "nixpkgs"
         ],
         "rs-harbor": "rs-harbor",
@@ -276,14 +287,18 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1779623204,
-        "narHash": "sha256-QIdxKkBuMrjCzjkmOqCsCMmhZuGWZTKdw4A2TG6Sw2I=",
-        "path": "~/canix/Projects/skillnet",
-        "type": "path"
+        "lastModified": 1779630910,
+        "narHash": "sha256-7+zqQj2nE/LtoNsiozQh4d8E+A31IeGNemOfPBw+cCI=",
+        "ref": "refs/heads/main",
+        "rev": "3d35951a3de622fa6995c4ddb681e9d4efc26ea3",
+        "revCount": 16,
+        "type": "git",
+        "url": "ssh://git@codeberg.org/caniko/skillnet.git"
       },
       "original": {
-        "path": "~/canix/Projects/skillnet",
-        "type": "path"
+        "rev": "3d35951a3de622fa6995c4ddb681e9d4efc26ea3",
+        "type": "git",
+        "url": "ssh://git@codeberg.org/caniko/skillnet.git"
       }
     },
     "systems": {

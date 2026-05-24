@@ -5,3 +5,4 @@ result
 result-*
 .skillnet/
 .pre-commit-config.yaml
+docs/planning/**/.calibration.json

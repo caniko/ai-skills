@@ -17,10 +17,11 @@ This file only documents what's specific to Claude:
 
 ## Modes
 
-This skill is invoked in one of two modes, inherited from `multi-phase-plan`:
+This skill is invoked in one of three modes, inherited from `multi-phase-plan`:
 
 - **plan** — the default. Produce the phase doc set per the workflow below.
 - **verify** — when the user says "verify" (or "check the phases", "did it all land"), do **not** re-plan. Run the verify workflow from `multi-phase-plan` against the most recent (or named) plan directory: read each phase's `## Acceptance criteria`, prove or disprove each item against the current repo state, and emit a per-phase pass/fail report. The user has already executed the phases themselves; verify just audits the result. On a fully successful verify, the post-verify step from `multi-phase-plan` automatically migrates any contributor-worthy knowledge into the project's contributor docs and `git rm`s the plan directory — see the base skill for the migration criteria and retirement steps.
+- **calibrate** — when the user says "calibrate", "tune the heuristics", or "review calibration data", invoke the base skill's `calibrate` mode. See the base `global/multi-phase-plan/SKILL.md` "Mode: calibrate" for the workflow. The calibrate mode shells out to `skillnet calibration walkthrough`; users with the skillnet HM module enabled get this transparently (`programs.skillnet.enable = true` via ai-skills' re-exported HM module). The flavor-specific routing skill (`claude-plan-routing` for claude) is *not* consulted for calibrate — calibrate analyzes past plans, it doesn't route new ones.
 
 ## 1. Model routing via `claude-plan-routing`
 
@@ -85,6 +86,7 @@ Examples of valid callout headers:
 5. Write phase files / phase directories per the layout in `multi-phase-dispatch`. **Do not generate run scripts, dispatch shims, log directories, or `run-all.sh` orchestrators.** The user runs each phase themselves in a fresh Claude Code session.
 6. Wire into `docs/src/SUMMARY.md` if mdBook is in use.
 7. Reply with the Claude routing summary table, parallelism matrix, and a one-line reminder: *"Run the phases yourself; prompt `verify` when done to audit acceptance criteria."*
+8. **Record for calibration.** Follow the base skill's end-of-plan hook: run `skillnet calibration init <plan-dir>`, and if any meta-heuristic fires, run `skillnet calibration record <plan-dir>`. Surface in the chat reply per the base workflow.
 
 ## Routing summary in chat reply
 

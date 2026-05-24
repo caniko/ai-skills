@@ -9,6 +9,12 @@ Use this skill when the user wants a non-trivial body of work decomposed into a 
 
 Pair this with the **`gpt-plan-routing`** skill to assign each phase its appropriate GPT-5.x model + `reasoning_effort` level. Don't guess at "max" vs "medium" — run the routing matrix for each phase.
 
+## Modes
+
+- **`plan`** — decompose work into standalone phase files, route each phase, and record calibration data when sampling rules fire.
+- **`verify`** — audit an executed phase set against its acceptance criteria and record the verification outcome.
+- **`calibrate`** — walk calibration data through skillnet and prepare a changelog block for this file's footer.
+
 ## When to use
 
 - The user describes a body of work that exceeds one session-worth of focus (typically 2+ days of effort, 3+ logical sub-goals, or interactions across multiple repos / crates / subsystems).
@@ -137,9 +143,18 @@ commit. Include a time SLA.>
 agent has a runbook.>
 ```
 
-## Workflow
+## Mode: `plan`
 
-1. **Take inventory.** List every concrete action the work entails. Group related actions into candidate phases. Aim for 3–8 phases — fewer means the breakdown isn't pulling weight; more means individual phases are probably too small.
+Triggered when the user asks to break work into phases, create a multi-phase plan, split work into standalone markdown files, or otherwise requests plan decomposition with per-phase model routing.
+
+### Workflow
+
+1. **Take inventory.** List every concrete action the work entails. Group related actions into candidate phases. Each phase must satisfy the per-phase shape rules:
+   - **One outcome.** The Goal section names a single user-observable outcome; you can write "this phase succeeds when ..." in one sentence.
+   - **One rollback boundary.** The phase's changes can be reverted as a unit without leaving the repo in a half-state. If a phase crosses two natural revert boundaries, it's two phases.
+   - **One session window.** A fresh session can plausibly complete the phase in one sitting at the recommended tier. A phase that needs to be bumped from `medium` to `high` to fit is a routing signal, not a "make the phase bigger" signal.
+
+   Phase count is whatever falls out. There is no upper cap. Large efforts trigger additional README sections via the heuristics catalog below.
 
 2. **Identify dependencies.** Draw an explicit dependency table:
 
@@ -181,6 +196,14 @@ agent has a runbook.>
 
    Plus a parallelism matrix showing which phases can run concurrently and which serialise.
 
+9. **Record for calibration.** After the plan files are written:
+
+   1. Run `skillnet calibration init <plan-dir>`. This bootstraps `<plan-dir>/.calibration.json` by parsing the README and phase files, evaluating the heuristics catalog, and evaluating the meta-heuristics.
+   2. If `init`'s output indicates at least one meta-heuristic fired, printed as `meta_heuristics_fired: [...]`, run `skillnet calibration record <plan-dir>` to persist the plan to the calibration database.
+   3. Surface the recording in the chat reply: `Recorded for calibration: <reason1, reason2>`. If no meta-heuristic fired, do not surface anything; the plan deliverable is unchanged.
+
+   If `skillnet` is missing because there is no HM module and no `cargo install`, skip the recording silently and print a one-line install hint at the end of the chat reply: `(skillnet not installed — calibration recording skipped; see ai-skills' HM module to enable.)`. Calibration recording is a best-effort augment, not a blocker.
+
 ## Sequencing and parallelism guidance
 
 Default each phase to "independent unless flagged". Explicit constraints belong in the phase doc, not in tribal knowledge.
@@ -191,6 +214,154 @@ Default each phase to "independent unless flagged". Explicit constraints belong 
 | Logical dependency (later phase consumes earlier phase's output) | First sentence of the later phase's "Working tree" section names the prerequisite phase. |
 | Repo-level conflict (both phases push to same repo's main branch) | Recommend sequential execution AND have the later phase note "pull steampipe/main before starting — see Phase D". |
 | Verification gating (later phase needs earlier phase's smoke run to be green) | In the later phase's "Acceptance criteria" preamble, list the prerequisite phase's green run as a precondition. |
+
+## Heuristics catalog
+
+The plan's README and individual phase files gain extra sections when specific *triggers* fire. Trigger names, categories, current thresholds, and section metadata live canonically in skillnet: run `skillnet calibration heuristics list --format json`. This section documents what each category means and what kind of section each trigger contributes; it does not duplicate threshold values.
+
+Run `skillnet calibration eval <plan-dir>` after writing a plan to see which triggers fire and what they add. `skillnet calibration init <plan-dir>` uses the same catalog when bootstrapping a sidecar.
+
+### Coordination
+
+Triggers in this category surface coordination cost between phases that share resources or cross repos.
+
+- `shared-file-contention` — multiple phases touch the same file. Adds a "Shared-file lockstep" section to the README and cross-links each affected phase's Plan.
+- `external-repo-phases` — any phase has a non-primary `Working tree`. Adds an "External repo coordination" section.
+- `convergence-point` — a phase has many direct predecessors. The convergent phase gets a "Merge-readiness checklist".
+- `ownership-boundary-spread` — phases span multiple maintainer domains. Adds a "PR sequencing & cross-owner coordination" section.
+
+### Risk
+
+Triggers in this category call out phases whose failure would invalidate downstream work or widen compatibility risk.
+
+- `risk-concentration` — many `max` phases. README gets a "Risk-tier callout".
+- `risk-late-in-plan` — a `max` phase in the final waves. README gets a "Late-risk warning".
+- `infrastructure-spof` — a phase touches CI, build orchestration, flake files, lockfiles, or similar infrastructure and downstream phases depend on it. The phase is flagged "infra-SPOF"; downstream Pitfalls inherit a smoke-invalid note.
+- `revendor-phase` — phase title or files indicate vendoring, dependency, or lockfile churn. Routing tier suggestion bumps up; the phase gets a "Compat surface" section.
+
+### Plan Shape
+
+Triggers in this category keep large or oddly shaped plans dispatchable.
+
+- `long-serial-chain` — deep dependency chain. README gets a "Serial-chain recovery" section.
+- `mid-plan-rerouting` — many phases. README mandates an "after wave N, re-run routing" checkpoint.
+- `trivial-phase-swamp` — many low-tier phases relative to high. README gains a "Cleanup batch" appendix.
+- `no-integrated-verification` — no closing verification phase. Warn; prompt adding one.
+
+### Quality Lint
+
+Quality lint triggers warn or block instead of adding a README section.
+
+- `routing-tier-inversion` — leaf phase routes at least as high as its orchestrator. Require an inline justification.
+- `mechanical-streak` — many `low` phases in a row. Suggest bundling.
+- `hidden-prerequisite` — phase assumes state nothing earlier produces. Block; require an explicit dependency edge.
+
+Current thresholds, including any per-tag-band overrides, are available via `skillnet calibration heuristics list --format json`. They evolve through the calibration loop; do not hardcode them in this skill body.
+
+## When a plan gets recorded
+
+A plan is written to the calibration dataset only when at least one *meta-heuristic* fires. The goal is to minimize selection bias: the dataset concentrates on plans where learning is possible, such as boundary cases, novel shapes, and verifier surprises.
+
+Categories of meta-heuristic are implemented in skillnet; see `skillnet calibration meta-heuristics --help` for command usage and `skillnet/src/calibration/catalog/meta.rs` for the live list:
+
+- **Threshold proximity.** A trigger's input value sits near its threshold; the boundary is where tuning matters most.
+- **Trigger absence with risk shape.** No triggers fired, but the plan looks risky by other measures. Catches false negatives.
+- **Novel shape signature.** The plan's overall shape has not appeared before; sparse-region sampling.
+- **Routing tier outlier.** A phase routes unusually high or low for its complexity class.
+- **Verify surprise** *(verify-time only).* The verifier reported a failure, emergency change, added phase, or structured surprise no trigger pre-empted.
+- **Re-routing event** *(verify-time only).* A phase executed at a different tier than recommended.
+- **High-stakes combo.** A `max` phase combined with external-repo work.
+- **Uniform random.** A small per-plan probability, currently described by skillnet as the 7% anti-bias random sample; use skillnet as the live source if this value changes.
+
+Each meta-heuristic that fires is recorded in the sidecar's `meta_heuristics_fired` array so calibration can later check whether each meta-heuristic itself produces signal.
+
+## Sidecar `.calibration.json`
+
+Every recorded plan carries a sidecar at `<plan-dir>/.calibration.json`. skillnet's `init`, `record`, and `verify` commands read and write it; the skill body never composes the JSON by hand.
+
+Source-of-truth: `skillnet/src/calibration/sidecar.rs` (`schema_version = 1`). This sidecar `schema_version` is separate from the `schema_version` used by `skillnet calibration analyze --format json`.
+
+Top-level shape; `worktype` is `null` or one of `refactor`, `migration`, `cleanup`, `feature`, `infra`, `docs`, `other`:
+
+```json
+{
+  "schema_version": 1,
+  "plan": {
+    "id": "<uuid>",
+    "name": "<slug>",
+    "flavor": "codex|claude|mixed",
+    "worktype": null,
+    "created_at": 0,
+    "phase_count": 0,
+    "wave_count": 0,
+    "max_chain_depth": 0,
+    "repo_spread": 0,
+    "routing_dist": { "low": 0, "medium": 0, "high": 0, "max": 0 },
+    "shape_hash": "<blake3-hex>"
+  },
+  "triggers": [
+    {
+      "name": "...",
+      "input_value": 0.0,
+      "threshold": 0.0,
+      "fired": false,
+      "section_added": null
+    }
+  ],
+  "phases": [
+    {
+      "ordinal": 1,
+      "slug": "...",
+      "routing_tier": "low|medium|high|max",
+      "files": ["..."]
+    }
+  ],
+  "meta_heuristics_fired": ["..."],
+  "tags": { "key": "value" },
+  "verify": null
+}
+```
+
+When verification data exists, `verify` has this shape:
+
+```json
+{
+  "verified_at": 0,
+  "elapsed_seconds": null,
+  "outcome": "shipped|partial|abandoned",
+  "phase_outcomes": { "1": "passed|failed|skipped|abandoned" },
+  "emergency_changes": null,
+  "surprises": null
+}
+```
+
+Run `skillnet calibration init <plan-dir>` to bootstrap; `skillnet calibration show <plan-id>` to inspect a recorded one.
+
+## Tag conventions
+
+skillnet applies **auto-tags** at `record` time from the sidecar's plan metadata:
+
+- `flavor:<codex|claude|mixed>`
+- `worktype:<refactor|migration|cleanup|feature|infra|docs|other>` when set
+- `scope:<single-repo|multi-repo|cross-org>` from `repo_spread`
+- `risk:<low|mixed|high>` from `routing_dist`
+- `signal:<meta-heuristic-name>` once per firing meta-heuristic
+- `outcome:<shipped|partial|abandoned>` updated by `verify`
+
+**User tags** are free-form; key must match `^[a-z][a-z0-9_-]*$`. Add them with `skillnet calibration tag <plan-id> <key>=<value>`.
+
+**Per-band analysis**: `skillnet calibration analyze --filter-tag <key>=<value>` slices the dataset; calibrate mode uses this to surface flavor- or worktype-specific skew.
+
+## Verifier `surprises` field
+
+The verifier's free-text `surprises` field accepts structured prefixes that feed calibration. Lines without a recognized prefix are preserved verbatim but ignored by the analyzer.
+
+Recognized prefixes:
+
+- `dead-weight: <trigger-name>: <note>` — the section added by `<trigger-name>` was useless on this plan; the analyzer treats it as a false positive.
+- `missed-signal: <trigger-name>: <note>` — `<trigger-name>` would have added a useful section if its threshold were lower; the analyzer treats it as a false negative.
+
+Full convention: `skillnet` mdBook page `docs/src/calibration/surprises.md`, surfaced as "Verifier surprises convention".
 
 ## What goes in the chat reply
 
@@ -204,6 +375,67 @@ After writing the files, the chat reply should include:
 
 Don't recap the contents of each phase file in chat. The files are the artifact; the chat reply is the dispatch.
 
+## Mode: `verify`
+
+Triggered when the user asks to verify, audit, or close out a previously executed multi-phase plan set.
+
+### Workflow
+
+1. Read the plan README and every phase file in `<plan-dir>`.
+2. Inspect the repository state and execution evidence that proves each phase acceptance criterion passed, failed, was skipped, or was abandoned.
+3. Report the verify outcome in chat: `shipped`, `partial`, or `abandoned`, plus a per-phase pass/fail/skipped/abandoned map and any unresolved gaps.
+4. Record any useful `surprises` notes. Use the structured prefixes documented in "Verifier `surprises` field" when applicable.
+5. **Record verify outcome.**
+
+   1. Read `<plan-dir>/.calibration.json` if it exists.
+   2. Append a `verify` section to the sidecar with the outcome, per-phase pass/fail map, and `surprises` text. The `surprises` field should use the structured prefixes documented in "Verifier `surprises` field" when applicable:
+      - For each section that turned out to be dead weight on this plan: `dead-weight: <trigger-name>: <one-line note>`.
+      - For each failure mode no trigger pre-empted: write `missed-signal: <closest-trigger-name>: <one-line note>` if a known trigger would have caught it with a lower threshold; otherwise leave informational prose and consider proposing a new heuristic in the next calibrate-mode session.
+   3. Run `skillnet calibration verify <plan-dir>`.
+   4. If the sidecar does not exist because the plan was not recorded at plan time, but a verify-time meta-heuristic would fire (`skillnet calibration meta-heuristics <plan-dir> --sidecar /dev/null` returns either `verify-surprise` or `rerouting-event`), run `skillnet calibration init <plan-dir> --force` first, then proceed.
+
+   CLI errors are reported and do not block the verify deliverable.
+
+## Mode: `calibrate`
+
+Triggered when the user says "calibrate", "tune the heuristics", "review calibration data", or invokes the skill with `calibrate` as the first word.
+
+Calibrate mode does not write phase files. It walks the user through the calibration dataset and produces a changelog block to paste into this file's footer.
+
+### Workflow
+
+1. From the ai-skills repository root, shell out to:
+
+   ```sh
+   skillnet calibration walkthrough \
+       --skill-md global/multi-phase-plan/SKILL.md \
+       --interactive
+   ```
+
+   The orchestrator runs `analyze` -> interactive prompts per candidate proposal -> records `propose`/`decide` -> emits an `export-changelog` block scoped to changes since the most recent entry in this file's footer.
+
+2. The user interacts with `walkthrough` directly; it handles the prompts. The skill agent's job is to surface what the user pasted next.
+
+3. After `walkthrough` finishes, copy the markdown block between `──── Changelog block ────` and the closing `══` markers into the "Calibration changelog" footer at the bottom of this file. For each accepted proposal, also update the corresponding heuristic's threshold in the catalog section above. Phase 06's catalog is descriptive; the live threshold is the one in skillnet, and this footer is for human audit.
+
+4. Calibrate mode does not auto-edit `SKILL.md`. The user pastes; the user is the editor; the user can reject a bad block before it ratchets.
+
+### Non-interactive use
+
+Scripted callers can run:
+
+```sh
+skillnet calibration walkthrough \
+    --non-interactive --decisions decisions.json \
+    --skill-md global/multi-phase-plan/SKILL.md
+```
+
+Decisions file format: see `skillnet calibration walkthrough --help` and the schema at <https://codeberg.org/caniko/skillnet/src/branch/main/docs/src/calibration/walkthrough.md>.
+
+### Cadence
+
+User-initiated; not scheduled. The min-N guard in `analyze` ensures running too early is a no-op. Suggested rhythm: after every ~10 verified plans, or when a recurring `dead-weight:` annotation suggests a trigger is over-firing.
+
 ## Anti-patterns to avoid
 
 - **README content that phase files depend on.** The README is required for coordination, but each phase file must still be readable cold.
@@ -212,6 +444,11 @@ Don't recap the contents of each phase file in chat. The files are the artifact;
 - **Generic acceptance criteria.** "Tests pass" / "builds cleanly" / "no regressions" are not acceptance criteria. Name specific test targets, warning counts, log-line presence/absence.
 - **Routing every phase to `max`.** The `gpt-plan-routing` skill explicitly warns against this: it triples cost with diminishing returns. Use `low` and `medium` aggressively for mechanical phases; reserve `max` for genuinely frontier-complex work.
 - **Pre-mortem section missing on high-risk phases.** If you've routed a phase to `max`, you owe the agent a failure-modes-and-recoveries section. Without it, the agent has to discover the failure modes the hard way.
+- **Treating heuristic thresholds as immutable.** Use `dead-weight:` and `missed-signal:` prefixes when verifier surprises occur; the calibration loop is how thresholds get tuned.
+- **Skipping the verifier `surprises` field.** Without annotations, the loop runs on shape data alone and converges slower.
+- **Re-implementing what skillnet provides.** The skill body no longer evaluates heuristics in prose; call `skillnet calibration eval` or rely on `skillnet calibration init`, which uses the same catalog.
+- **Hand-editing the calibration changelog.** It is the audit trail; paste blocks from `skillnet calibration walkthrough` or `skillnet calibration export-changelog` only.
+- **Editing thresholds in skillnet without going through `walkthrough`.** The accepted-proposal trail in `calibration_proposals` is provenance; bypassing it leaves no record of why a threshold moved.
 
 ## Example: the 5-phase pre-landing-cleanup set that this skill abstracts
 
@@ -231,3 +468,16 @@ The pattern: route to the cheapest tier that holds the quality bar for *this spe
 
 - Model + effort selection: the **`gpt-plan-routing`** skill (consult its routing table and key heuristics).
 - mdBook conventions for project docs: `docs/src/SUMMARY.md`.
+
+## Calibration changelog
+
+Threshold changes to the heuristics catalog above are recorded here. Each entry is produced by `skillnet calibration walkthrough` or `export-changelog` and pasted by the user during a `calibrate` mode session. The live thresholds are authoritative in skillnet (`heuristic_thresholds` table); this footer is the human-readable audit trail.
+
+<!-- Newest first. Format produced by `skillnet calibration export-changelog`. -->
+
+### 2026-05-24 — Calibration loop activated
+
+- skillnet 0.4.0 consumed via HM module re-export.
+- Initial heuristic thresholds: see `skillnet calibration heuristics list --format json` for live values.
+- Database backend: Postgres (`postgres:///can?host=/run/postgresql` per this user's HM config; SQLite fallback documented).
+- No threshold changes in this entry — genesis row only.
