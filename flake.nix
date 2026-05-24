@@ -1,71 +1,29 @@
 {
-  description = "skillctl AI skill mirror manager";
+  description = "caniko's AI skills mirror";
 
   inputs = {
-    rs-harbor.url = "git+file://~/canix/Projects/rs-harbor";
-
-    nixpkgs.follows = "rs-harbor/nixpkgs";
-    rust-overlay.follows = "rs-harbor/rust-overlay";
-    crane.follows = "rs-harbor/crane";
-    flake-utils.follows = "rs-harbor/flake-utils";
+    skillnet.url = "path:~/canix/Projects/skillnet";
+    nixpkgs.follows = "skillnet/nixpkgs";
+    flake-utils.follows = "skillnet/flake-utils";
   };
 
   outputs = {
     self,
-    nixpkgs,
-    rs-harbor,
+    skillnet,
     flake-utils,
-    rust-overlay,
     ...
   }:
     flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [(import rust-overlay)];
-      };
-
-      toolchain = rs-harbor.lib.mkToolchain {inherit pkgs;};
-      inherit (toolchain) craneLib;
-
-      src = craneLib.cleanCargoSource ./.;
-
-      commonArgs = {
-        inherit src;
-        strictDeps = true;
-      };
-
-      cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-
-      package = craneLib.buildPackage (commonArgs
-        // {
-          inherit cargoArtifacts;
-        });
+      skillnetPackage = skillnet.packages.${system}.skillnet;
     in {
-      packages.default = package;
-      packages.skillctl = package;
+      packages.default = skillnetPackage;
+      packages.skillnet = skillnetPackage;
 
-      checks = {
-        default = package;
-
-        clippy = craneLib.cargoClippy (commonArgs
-          // {
-            inherit cargoArtifacts;
-            cargoClippyExtraArgs = "--all-targets -- --deny warnings";
-          });
-
-        fmt = craneLib.cargoFmt {
-          inherit src;
-        };
+      apps.default = {
+        type = "app";
+        program = "${skillnetPackage}/bin/skillnet";
       };
 
-      devShells.default = craneLib.devShell {
-        checks = self.checks.${system};
-        packages = [
-          package
-        ] ++ (with pkgs; [
-          cargo-nextest
-          rust-analyzer
-        ]);
-      };
+      devShells.default = skillnet.devShells.${system}.default;
     });
 }

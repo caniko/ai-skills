@@ -1,3 +1,6 @@
+skills_root = "~/canix/Projects/ai-skills"
+mirror_root = "~/canix/Projects/ai-skills"
+
 [global]
 sources = [
   { label = "agents", path = "~/.agents/skills", priority = 3 },

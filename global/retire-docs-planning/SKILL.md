@@ -53,6 +53,7 @@ Never promote planning assumptions into stable docs without checking the current
 - Remove planning entries from nav files such as `SUMMARY.md`.
 - Delete obsolete planning files once their durable content has been absorbed.
 - Keep or rewrite any plan that `plan-progress-review` marked `partial`, `not-started`, `blocked`, or `unknown` unless the user explicitly wants it consolidated elsewhere.
+- If an unresolved future roadmap must be retained, move or classify it outside the active planning tree and update navigation instead of deleting it.
 - Remove empty planning directories when practical.
 - Search for leftover references to the retired planning section and resolve them.
 

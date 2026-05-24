@@ -7,3 +7,4 @@
 - 2026-05-22: If stable docs already claim a planning tree was retired, treat any reintroduced `docs/planning` content as suspect and re-verify the live install or release surface from workflows, manifests, and tags before preserving anything.
 - 2026-05-22: Before retiring a plan that may still contain active work, run a dedicated progress review and keep unfinished or blocked items in planning until they are either completed or consolidated into a replacement plan.
 - 2026-05-22: When a user explicitly defers deleting old plan files, still fold durable guidance into stable docs and limit stale-reference cleanup to navigation/text that the user put in scope.
+- 2026-05-22: If a future roadmap appears under `docs/src/planning` during a final retirement check, move or classify it outside active planning instead of deleting it, then re-run the exact directory assertion.

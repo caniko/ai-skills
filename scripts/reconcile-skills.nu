@@ -1,3 +1,3 @@
 #!/usr/bin/env nu
 
-nix run .# -- reconcile --target all --sync
+skillnet --config ./skillnet.toml --catalog-config ./skillnet.catalog.toml --allow-dirty-destination sync pull --all --then-push
