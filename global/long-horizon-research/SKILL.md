@@ -14,7 +14,7 @@ Use this skill to gather and structure the facts that a later multi-phase planni
 - When existing planning docs may be stale and the user wants the future plan based on current evidence.
 - When the user asks for "pre research", "research first", "longterm stuff", or similar before plan assembly.
 
-Do not use this for small single-session tasks or for verifying an already executed phase set.
+Do not use this for small single-session tasks or for verifying an already executed phase set. If the work turns out to be single-phase mid-flight, downshift per step 5 instead of forcing the dossier shape.
 
 ## Workflow
 
@@ -63,7 +63,48 @@ Never fabricate, synthesize, or silently substitute missing required data. If a 
 
 Use `blocked` for evidence gaps that would change the future phase breakdown.
 
-### 5. Write the research dossier
+### 5. Right-size before committing to the long-horizon shape
+
+After steps 1-4 you have enough evidence to judge size. Run this gate **before** writing the dossier. If two or more downshift signals apply, do **not** produce a long-horizon dossier and do **not** hand off to a multi-phase planner. Write a compact findings note instead.
+
+Downshift signals:
+
+- The canonical fix is one command, one config edit, or one short shell session.
+- Candidate phases collapse to "do the real fix" plus optional polish — the optional items are not load-bearing for the user's stated goal.
+- All work targets one repo, one provider, one runtime; no cross-repo coordination, no migration sequencing, no schema/API break.
+- Conclusion is "working as designed" / "stale snapshot" / "one rerun" rather than "needs new code or design".
+- The user's ask was a triage, audit, or investigation, not "plan this out for me".
+- No durable acceptance criteria worth handing to a fresh session — a brief commit message would carry the same information.
+
+When you downshift, write the report at the same docs location with suffix `-findings.md` instead of `-research.md`. Use this compact shape and stop:
+
+```markdown
+# <Topic> Findings
+
+## Goal And Trigger
+<What the user wanted and why this investigation exists.>
+
+## Root Cause(s)
+<Citations: file:line, command output, commit, log line.>
+
+## Evidence
+<Commands run + key artifacts inspected.>
+
+## Recommended Fix
+<The single command, edit, or decision that resolves it.>
+
+## Optional Follow-Ups
+<Clearly marked optional. Omit the section if there are none.>
+
+## Open Decisions
+<Only if a decision blocks the recommended fix.>
+```
+
+State explicitly in the response that the work does not need multi-phase decomposition and name which downshift signals fired. Do not name a downstream planner. Skip steps 6-7.
+
+If only one signal fires, continue to step 6 but keep the phase count honest — do not pad with optional phases to justify the shape.
+
+### 6. Write the research dossier
 
 Create one durable markdown dossier unless the user explicitly asks for chat-only output.
 
@@ -111,7 +152,7 @@ Use this shape:
 
 Omit `Existing Plan Status` only when there are no existing plans in scope. Keep every evidence claim traceable to a file, command, log, issue, or explicit user-provided source.
 
-### 6. Handoff to multi-phase planning
+### 7. Handoff to multi-phase planning
 
 The dossier's `Planner Handoff` section must name:
 
@@ -140,6 +181,7 @@ If blocked before writing the dossier, report the missing artifact details from 
 
 - Do not treat old planning prose as source of truth.
 - Do not invent phase boundaries beyond what current evidence supports.
+- Do not pad a single-fix investigation with optional phases to justify the long-horizon shape — downshift per step 5.
 - Do not bury missing evidence as a caveat when it changes the future plan.
 - Do not run the multi-phase planning skill from this skill unless the user explicitly asks for the next step after the dossier exists.
 - Do not create extra README, quick reference, or process notes inside the skill directory.

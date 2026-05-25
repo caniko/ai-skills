@@ -1,50 +1,6 @@
 skills_root = "~/canix/Projects/ai-skills"
 mirror_root = "~/canix/Projects/ai-skills"
 
-[global]
-sources = [
-  { label = "agents", path = "~/.agents/skills", priority = 3 },
-  { label = "claude", path = "~/.claude/skills", priority = 2 },
-  { label = "codex", path = "~/.codex/skills", priority = 1 },
-]
-sync_paths = [
-  "~/.agents/skills",
-  "~/.claude/skills",
-]
-stale_codex_skill_paths = [
-  "~/.codex/skills",
-]
-
-[[project_source_rules]]
-label = "agents"
-rel = ".agents/skills"
-priority = 6
-
-[[project_source_rules]]
-label = "claude"
-rel = ".claude/skills"
-priority = 5
-
-[[project_source_rules]]
-label = "codex"
-rel = ".codex/skills"
-priority = 4
-
-[[project_source_rules]]
-label = "root-skills"
-rel = "skills"
-priority = 3
-
-[[project_source_rules]]
-label = "codex-plugin"
-rel = ".codex-plugin/skills"
-priority = 2
-
-[[project_source_rules]]
-label = "claude-plugin"
-rel = ".claude-plugin/skills"
-priority = 1
-
 [[projects]]
 name = "SynDB"
 path = "~/canix/Projects/SynDB"
@@ -84,10 +40,6 @@ path = "~/canix/Projects/solo/plinth"
 [[projects]]
 name = "regicide"
 path = "~/canix/Projects/solo/game-dev/regicide"
-extra_sources = [
-  { label = "vendor-fragpipe", rel = "vendor/fragpipe/skills", priority = 2 },
-  { label = "vendor-thespis", rel = "vendor/thespis/.agents/skills", priority = 1 },
-]
 
 [[projects]]
 name = "rs-modde"
