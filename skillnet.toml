@@ -1,6 +1,12 @@
 skills_root = "~/canix/Projects/ai-skills"
 mirror_root = "~/canix/Projects/ai-skills"
 
+[global]
+views = [
+  { label = "claude", path = "~/.claude/skills" },
+  { label = "agents", path = "~/.agents/skills" },
+]
+
 [[projects]]
 name = "SynDB"
 path = "~/canix/Projects/SynDB"

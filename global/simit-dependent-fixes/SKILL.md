@@ -57,6 +57,17 @@ regenerate with current simit rather than preserving obsolete command spelling.
    release, secret-name, command-shape, or workflow pattern that could appear
    in other registered projects.
 
+   **Fleet-sweep is mandatory, not optional.** Before reporting, enumerate
+   every entry from `simit projects list` (or `--json`) and check each one for
+   the specific bug pattern — including projects where the affected feature
+   shows as `absent`, because hand-rolled equivalents of simit-managed files
+   are exactly where regressions hide (e.g. a project with `ci: absent` may
+   still have hand-rolled `.forgejo/workflows/*.yml` containing the same bad
+   step). Filter out ephemeral `/tmp/*` and `/tmp/nix-shell.*` scratch
+   entries, but check every real path under `~/Projects`, `/data/.../Projects`,
+   or wherever the user's real repos live. The reporting section requires a
+   per-project verdict for each non-scratch entry — do not omit any.
+
 2. If the registry is sparse or the user names a filesystem area, discover:
    ```sh
    simit projects discover <ROOT>
@@ -152,9 +163,12 @@ regenerate downstream projects with the fixed command.
 Close with:
 
 - simit version or checkout used
-- registry query/discovery scope
-- downstream projects inspected
+- registry query/discovery scope (paste or summarize the `simit projects list`
+  output that drove the sweep)
+- **per-project verdict for every non-scratch entry from
+  `simit projects list`** — `affected`, `clean`, or `skipped (<reason>)`.
+  An omission is a bug; if a project was not checked, say so explicitly with
+  the reason. Ephemeral `/tmp/*` paths may be collapsed into a single line.
 - projects changed and validation per project
 - simit fixes made, if any
-- projects skipped and the reason
 - remaining remote CI or publish state, if checked
