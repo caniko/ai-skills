@@ -11,3 +11,4 @@
 - 2026-05-24: When retiring one completed plan from a mixed planning tree, keep incomplete sibling plans published and verify stale-reference searches are scoped so retained plans do not mask deleted-plan leftovers.
 - 2026-05-24: If the named obsolete plan directory is already absent, verify it is neither tracked nor referenced from published navigation, then update the replacement plan's README to state the retirement instead of running a no-op deletion.
 - 2026-05-24: When stable docs exist in both README and mdBook, preserve retired plan guidance in the mdBook too; README-only preservation is not enough if the plan was published from `docs/src/SUMMARY.md`.
+- 2026-05-25: When a published plan is only partially complete because external workflow evidence failed, remove it from reader navigation and fold verified durable guidance into stable docs, but keep the plan files for the unresolved follow-up.
