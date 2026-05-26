@@ -9,6 +9,10 @@ metadata:
 
 ## Purpose
 
+This skill is a domain-grounded research specialist (simit ecosystem) in the
+family rooted at [long-horizon-research](../long-horizon-research/SKILL.md).
+For non-simit research, see [research-routing](../research-routing/SKILL.md).
+
 Use `simit projects` as the inventory for downstream Rust projects that have
 simit-managed files or simit feature usage. Fix affected dependents directly,
 but first decide whether the root cause belongs in simit itself. If generated
@@ -172,3 +176,8 @@ Close with:
 - projects changed and validation per project
 - simit fixes made, if any
 - remaining remote CI or publish state, if checked
+
+## Reference
+
+- Generic research base: [long-horizon-research](../long-horizon-research/SKILL.md) — this skill is a simit-grounded specialization of the generic dossier-producer pattern. Use the base directly for non-simit research.
+- Sibling research router: [research-routing](../research-routing/SKILL.md) — picks the right research specialist when the request is ambiguous between simit and other domains.

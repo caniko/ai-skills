@@ -6,6 +6,8 @@ argument-hint: [project-dir]
 
 # workspace-check — Cargo Workspace Readiness Assessment
 
+Lineage: this is a narrowly scoped research specialist built on the generic research pattern; use broader research routing when the project exceeds this skill's file-count and LOC gate.
+
 You are analyzing a Rust project to determine whether it has grown large enough to benefit from being split into a Cargo workspace with multiple crates. This is a gated routine: if the project is below size thresholds, exit early.
 
 ## Phase 1: Locate the Project
@@ -178,3 +180,8 @@ Print a structured markdown report:
 ```
 
 Do NOT create or modify any project files. This skill is read-only analysis. The report is printed to stdout only.
+
+## References
+
+- Generic research base: [long-horizon-research](../long-horizon-research/SKILL.md) — workspace-check is a narrowly scoped research specialist. For broader Rust-project investigation, use the base.
+- Sibling research router: [research-routing](../research-routing/SKILL.md).

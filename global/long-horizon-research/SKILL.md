@@ -1,33 +1,31 @@
 ---
 name: long-horizon-research
-description: Prepare evidence-backed pre research before long-term, longterm, or multi-phase plan assembly. Use before `multi-phase-plan-codex`, `multi-phase-plan-claude`, or `multi-phase-plan-mixed` when the user asks for pre research, long-term planning, longterm planning, roadmap planning, a large refactor or migration plan, stale plan consolidation, or "research before we call the multi-phase skill". Produces a durable research dossier and planner handoff; it does not create phase files itself.
+description: Produce an evidence-backed research dossier for any non-trivial investigation such as audits, pre-design research, and fact-finding before consequential decisions. Use before any work that benefits from a durable, citation-traceable evidence file. Stays domain-agnostic; wrapper skills such as plan-research load this and add domain-specific obligations on top.
 ---
 
 # Long-Horizon Research
 
-Use this skill to gather and structure the facts that a later multi-phase planning skill needs. The output is a research dossier, not the executable phase plan.
+Use this skill to gather and structure durable facts for a consequential investigation. The output is a research dossier, not an implementation plan or decision memo.
 
 ## When to use
 
-- Before a long-horizon plan, roadmap, migration, broad refactor, or multi-repo cleanup.
-- Before `multi-phase-plan-codex`, `multi-phase-plan-claude`, or `multi-phase-plan-mixed` when the task is not yet researched enough to decompose safely.
-- When existing planning docs may be stale and the user wants the future plan based on current evidence.
-- When the user asks for "pre research", "research first", "longterm stuff", or similar before plan assembly.
+- Before consequential design, audit, migration, roadmap, broad refactor, or multi-repo cleanup work.
+- When the task is not yet researched enough to act on safely.
+- When existing docs, plans, or assumptions may be stale and the user wants conclusions based on current evidence.
+- When the user asks for "pre research", "research first", "longterm stuff", "investigate this first", or similar.
 
-Do not use this for small single-session tasks or for verifying an already executed phase set. If the work turns out to be single-phase mid-flight, downshift per step 5 instead of forcing the dossier shape.
+Do not use this for small single-session tasks or for verifying already executed work. If the work turns out to be small mid-flight, downshift per step 5 instead of forcing the dossier shape.
 
 ## Workflow
 
-### 1. Establish the planning target
+### 1. Establish the research target
 
 Identify:
 
 - User goal and trigger.
 - Target repository, working tree, and any external repositories.
-- Intended downstream planner. Default to `multi-phase-plan-codex` unless the user explicitly asks for Claude or mixed routing.
-- Whether the work is new, continuing, or consolidating existing plans.
-
-If the downstream provider matters and the user has not specified it, record the default in the dossier instead of blocking.
+- Whether the work is new, continuing, consolidating existing plans, or auditing existing claims.
+- The decision, design, implementation, or audit outcome the research is meant to inform.
 
 ### 2. Discover before asking
 
@@ -49,7 +47,7 @@ If existing planning docs are in scope, invoke `plan-progress-review` behavior:
 - Classify items as `done`, `partial`, `not-started`, `obsolete`, `blocked`, or `unknown`.
 - Carry forward only unfinished, still-relevant work and durable constraints.
 
-Do not copy stale phase numbering, old provider routing, checked boxes without proof, or obsolete assumptions into the new dossier.
+Do not copy stale sequencing, old routing, checked boxes without proof, or obsolete assumptions into the new dossier.
 
 ### 4. Stop on missing foundational inputs
 
@@ -61,20 +59,20 @@ Never fabricate, synthesize, or silently substitute missing required data. If a 
 - Exact command or workflow to regenerate it.
 - Validation command that proves it is fixed.
 
-Use `blocked` for evidence gaps that would change the future phase breakdown.
+Use `blocked` for evidence gaps that would change the future work breakdown.
 
-### 5. Right-size before committing to the long-horizon shape
+### 5. Right-size before committing to the dossier shape
 
-After steps 1-4 you have enough evidence to judge size. Run this gate **before** writing the dossier. If two or more downshift signals apply, do **not** produce a long-horizon dossier and do **not** hand off to a multi-phase planner. Write a compact findings note instead.
+After steps 1-4 you have enough evidence to judge size. Run this gate **before** writing the dossier. If two or more downshift signals apply, do **not** produce a long-horizon dossier. Write a compact findings note instead.
 
 Downshift signals:
 
 - The canonical fix is one command, one config edit, or one short shell session.
-- Candidate phases collapse to "do the real fix" plus optional polish — the optional items are not load-bearing for the user's stated goal.
+- Candidate next steps collapse to "do the real fix" plus optional polish - the optional items are not load-bearing for the user's stated goal.
 - All work targets one repo, one provider, one runtime; no cross-repo coordination, no migration sequencing, no schema/API break.
 - Conclusion is "working as designed" / "stale snapshot" / "one rerun" rather than "needs new code or design".
 - The user's ask was a triage, audit, or investigation, not "plan this out for me".
-- No durable acceptance criteria worth handing to a fresh session — a brief commit message would carry the same information.
+- No durable acceptance criteria worth preserving for future work - a brief commit message would carry the same information.
 
 When you downshift, write the report at the same docs location with suffix `-findings.md` instead of `-research.md`. Use this compact shape and stop:
 
@@ -100,9 +98,9 @@ When you downshift, write the report at the same docs location with suffix `-fin
 <Only if a decision blocks the recommended fix.>
 ```
 
-State explicitly in the response that the work does not need multi-phase decomposition and name which downshift signals fired. Do not name a downstream planner. Skip steps 6-7.
+State explicitly in the response that the work does not need a full dossier and name which downshift signals fired. Skip step 6.
 
-If only one signal fires, continue to step 6 but keep the phase count honest — do not pad with optional phases to justify the shape.
+If only one signal fires, continue to step 6 but keep the recommended next steps honest - do not pad with optional work to justify the shape.
 
 ### 6. Write the research dossier
 
@@ -131,7 +129,7 @@ Use this shape:
 ## Existing Plan Status
 <Only when applicable; status table from plan-progress-review style audit.>
 
-## Work That Should Survive Into The Long-Term Plan
+## Work That Should Survive
 <Unfinished, still-relevant work and durable constraints.>
 
 ## Blockers And Missing Artifacts
@@ -140,48 +138,35 @@ Use this shape:
 ## Risks And Constraints
 <Compatibility, sequencing, ownership, testing, CI, release, and migration risks.>
 
-## Candidate Phase Boundaries
-<Likely phase slices, dependencies, and parallelism hints without final routing.>
+## Candidate Next Steps
+<Likely next steps, dependencies, sequencing constraints, and parallelism hints.>
 
 ## Open Decisions For The User
-<Only decisions that materially affect the future plan.>
-
-## Planner Handoff
-<Exact concise prompt/context to feed into the selected multi-phase-plan skill.>
+<Only decisions that materially affect the future work.>
 ```
 
 Omit `Existing Plan Status` only when there are no existing plans in scope. Keep every evidence claim traceable to a file, command, log, issue, or explicit user-provided source.
-
-### 7. Handoff to multi-phase planning
-
-The dossier's `Planner Handoff` section must name:
-
-- Selected downstream skill (`multi-phase-plan-codex`, `multi-phase-plan-claude`, or `multi-phase-plan-mixed`).
-- Dossier path.
-- Current-state summary.
-- Work that should become phases.
-- Known blockers that must remain blockers instead of being planned around.
-- Acceptance evidence the future phase set should preserve.
-
-Do not write phase files, route models, or create dispatch scripts in this skill. That belongs to the downstream multi-phase planning skill.
 
 ## Output standard
 
 In the final response, state:
 
 - Dossier path.
-- Downstream planner selected or defaulted.
 - Key blockers, if any.
 - Whether existing plans were audited.
 - Commands or checks run for research.
 
-If blocked before writing the dossier, report the missing artifact details from step 4 and do not produce a speculative handoff.
+If blocked before writing the dossier, report the missing artifact details from step 4 and do not produce speculative conclusions.
 
 ## Anti-patterns
 
 - Do not treat old planning prose as source of truth.
-- Do not invent phase boundaries beyond what current evidence supports.
-- Do not pad a single-fix investigation with optional phases to justify the long-horizon shape — downshift per step 5.
-- Do not bury missing evidence as a caveat when it changes the future plan.
-- Do not run the multi-phase planning skill from this skill unless the user explicitly asks for the next step after the dossier exists.
+- Do not invent next-step boundaries beyond what current evidence supports.
+- Do not pad a single-fix investigation with optional work to justify the long-horizon shape - downshift per step 5.
+- Do not bury missing evidence as a caveat when it changes the conclusion or recommended next steps.
 - Do not create extra README, quick reference, or process notes inside the skill directory.
+
+## See also
+
+- `plan-research` - planning-tuned wrapper, added separately.
+- Domain-grounded research skills - load this base and add their own source and evidence obligations.

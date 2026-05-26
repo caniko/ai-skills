@@ -12,7 +12,7 @@ This skill depends on two other skills:
 - **`plan-progress-review`** — audit existing plans and classify what is done, stale, unfinished, or blocked.
 - **One multi-phase plan flavour** — `multi-phase-plan-codex`, `multi-phase-plan-claude`, or `multi-phase-plan-mixed`. The chosen flavour supplies provider-specific model callouts, routing language, and execution assumptions.
 
-If no multi-phase flavour is explicit in the user request, do not write the consolidated plan set. Ask which executing provider the plan targets.
+If no multi-phase flavour is explicit in the user request, do not write the consolidated plan set. Ask which executing provider the plan targets. In `plan-and-verify prep consolidate` invocations, the orchestrator picks the default — see [`plan-and-verify`](../plan-and-verify/SKILL.md) "Default flavour for prep/plan dispatch". When invoked standalone, this skill still asks.
 
 ## Workflow
 
@@ -61,6 +61,7 @@ The consolidated plan set must include:
 - Current state summary from `plan-progress-review`.
 - Phase table with dependency order and safe parallelism.
 - Parallelism layer in `README.md`: execution waves that show which phases can run at the same time, what each wave unlocks, and when the plan is exhausted.
+- A `## Planner Handoff` section in `README.md` that emits the `plan-handoff` schema literally, using its required fields and optional fields only when evidence supports them. Fill required fields from the consolidated `README.md` path, `plan-progress-review` current-state summary, selected multi-phase flavour, surviving phase-table work, known audit blockers, and whole-set acceptance criteria.
 - Whole-set acceptance criteria.
 - One standalone phase file per remaining work slice, following the selected multi-phase flavour's required shape.
 - A coverage or retirement report proving how each old plan set's intent is represented, retired, retained, or rejected.
@@ -75,6 +76,7 @@ The `README.md` is not optional filler. It is the coordination surface for the p
 - Which phases unlock after each wave?
 - Which phases must serialize because they touch the same files or depend on prior validation?
 - What command or evidence proves the whole plan set is complete?
+- What dossier-shaped contract can a future planner consume to extend or re-route this plan set?
 
 Do not collapse many days or subsystems of remaining work into a handful of milestone paragraphs. If the old material had many independent execution tracks, the consolidated set should have many phase files.
 
@@ -111,3 +113,7 @@ If the task is only to draft the consolidated set, leave old plans in place and 
 - Do not merge stale assumptions just because they appear in multiple plans.
 - Do not invent a provider recommendation; use the selected multi-phase flavour's routing rules.
 - Do not delete an old plan before its remaining useful work is represented or intentionally rejected.
+
+## Reference
+
+- **`plan-handoff`** — authoritative `## Planner Handoff` schema and required/optional field contract.

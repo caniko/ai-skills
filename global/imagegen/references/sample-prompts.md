@@ -13,7 +13,7 @@ When adapting a user's prompt:
 
 The labeled lines are prompt scaffolding, not a closed schema. `Asset type` and `Input images` are prompt-only scaffolding; the CLI does not expose them as dedicated flags.
 
-Execution details such as explicit CLI flags, `quality`, `input_fidelity`, masks, output formats, and local output paths depend on mode. Use the built-in tool by default, including simple transparent-image requests. For transparent images, prompt for a flat chroma-key background and remove it locally with `python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py"`; only apply CLI-specific controls when the user explicitly opts into fallback mode or explicitly confirms that the transparent request should use true CLI transparency.
+Execution details such as explicit CLI flags, `quality`, `input_fidelity`, masks, output formats, and local output paths depend on mode. Prefer the built-in tool, including simple transparent-image requests. For transparent images, prompt for a flat chroma-key background and remove it locally with `python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py"`; only apply CLI-specific controls when the user explicitly opts into fallback mode or explicitly confirms that the transparent request should use true CLI transparency.
 
 CLI model notes:
 - `gpt-image-2` is the fallback CLI default for new workflows.

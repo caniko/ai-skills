@@ -11,7 +11,7 @@ Pair this with the **`gpt-plan-routing`** skill to assign each phase its appropr
 
 ## Modes
 
-- **`plan`** — decompose work into standalone phase files, route each phase, and record calibration data when sampling rules fire.
+- **`plan`** — decompose work into standalone phase files, route each phase, and record calibration data when sampling rules fire. It accepts two input shapes: free-text task descriptions, or dossier-aware planning from a Planner Handoff dossier supplied explicitly or auto-detected in `docs/planning/`.
 - **`verify`** — audit an executed phase set against its acceptance criteria and record the verification outcome.
 - **`calibrate`** — walk calibration data through skillnet and prepare a changelog block for this file's footer.
 
@@ -146,6 +146,57 @@ agent has a runbook.>
 ## Mode: `plan`
 
 Triggered when the user asks to break work into phases, create a multi-phase plan, split work into standalone markdown files, or otherwise requests plan decomposition with per-phase model routing.
+
+### Dossier-aware planning
+
+Dossier-aware planning is an input variant of `plan`, not a fourth top-level mode. The output is still the same phase doc set, the same README shape, the same routing pass, and the same calibration sidecar. This keeps callers simple: an orchestrator can invoke the normal flavour skill in `plan` mode with `--from-dossier <path>` when a dossier exists, or with only a free-text task description when it does not.
+
+This base skill consumes the dossier's `Recommended planner flavour`; it does
+not define the downstream-flavour default. For orchestrated prep/plan
+dispatch, see [`plan-and-verify`](../plan-and-verify/SKILL.md) "Default
+flavour for prep/plan dispatch".
+
+Use dossier-aware planning when the invocation includes `--from-dossier <path>`, when the first positional argument after `plan` is a path to a Planner Handoff dossier, or when a dossier is auto-detectable for the target plan name. Detection order:
+
+1. Explicit dossier path from `--from-dossier <path>` or the plan invocation argument.
+2. `docs/planning/<plan-name>-research.md` adjacent to the target plan-set directory.
+3. `docs/planning/<plan-name>-findings.md`. This is a downshift case and should not normally happen; if found, stop and warn that planning directly from a findings note is suspicious unless the user explicitly confirms that file is the intended handoff dossier.
+
+Parse only the dossier's `## Planner Handoff` section, using the `plan-handoff` contract. The required fields are required inputs. If any required H3 field is absent, empty, structurally wrong for its field type, or still contains placeholder text, stop and report:
+
+- the missing or invalid field name;
+- why that field is required for planning;
+- the upstream producer to rerun, usually `long-horizon-research`, `consolidate-plan-sets`, or `plan-progress-review`;
+- the exact producer workflow or command the user should rerun when known, otherwise the producer skill invocation that created the dossier;
+- a validation command such as `rg -n "^## Planner Handoff|^### (Dossier path|Current-state summary|Recommended planner flavour|Work that should become phases|Known blockers|Acceptance evidence to preserve)" <dossier-path>` plus a manual check that each required heading has non-placeholder content.
+
+Do not fabricate, infer, or silently substitute missing required dossier fields from the user's free-text prompt.
+
+Field reads and mapping:
+
+| Planner Handoff field | Plan-mode use |
+|---|---|
+| `Dossier path` | Provenance for the plan README and phase references. If it conflicts with the actual file consumed, preserve the actual consumed path in the chat reply and treat the mismatch as a dossier defect to report before writing phase files. |
+| `Current-state summary` | Seeds workflow step 1, "Take inventory". Do not rediscover from scratch; verify only enough local context to avoid writing stale or impossible phase steps. |
+| `Recommended planner flavour` | Must match the currently invoked flavour (`multi-phase-plan-codex`, `multi-phase-plan-claude`, or `multi-phase-plan-mixed`). If it names a different flavour, stop and ask the user whether to switch flavour or intentionally override the dossier recommendation. |
+| `Work that should become phases` | Starting candidate phase list. Respect the proposed slice boundaries, but merge or split when the standard phase rules require it, and state the reason in the README or chat reply. |
+| `Known blockers` | Hard constraints that remain blockers in the plan set. Do not plan around them, downgrade them to `not-started`, or turn them into implementation phases unless the user supplies the missing upstream artifact or decision. |
+| `Acceptance evidence to preserve` | Seeds the whole-set acceptance criteria in the plan README and any phase-level evidence checks that protect those claims. |
+| `Candidate phase boundaries` *(optional)* | Starting dependency table and execution-wave sketch. Refine it through the normal dependency and parallelism workflow. |
+| `Risks and constraints` *(optional)* | Feed into README global constraints and per-phase Pitfalls sections. |
+| `Open decisions for the user` *(optional)* | Surface before writing phase files. Do not silently choose among material open decisions. |
+
+Precedence rules:
+
+- Dossier fields override user free-text on factual claims: current state, blockers, acceptance evidence, provenance, and producer-observed constraints.
+- User free-text overrides the dossier on intent reframing: the user may add scope, drop scope, or explicitly mark the dossier stale or superseded. If the prompt and dossier describe different goals rather than additive scope, stop and ask before writing files.
+- Optional fields guide planning when present and are ignored when absent. Do not invent optional fields to make the dossier look complete.
+
+Calibration and heuristic interaction:
+
+- The heuristics catalog still evaluates the output plan directory, not the dossier.
+- The sidecar still lives at `<plan-dir>/.calibration.json`; do not create a sidecar next to the dossier and do not extend the sidecar schema.
+- After `skillnet calibration init <plan-dir>` creates the sidecar, tag dossier-aware plans as `input:from-dossier` using `skillnet calibration tag <plan-id> input=from-dossier` so `calibrate` mode can compare dossier-aware plans to free-text plans. If the tagging command is unavailable, report that tagging was skipped; the plan deliverable is still valid.
 
 ### Workflow
 
@@ -371,7 +422,8 @@ After writing the files, the chat reply should include:
 2. The routing summary table (phase × model × blocking-status).
 3. The README parallelism layer summary: execution waves and serialization points.
 4. Any setup the user needs to run (e.g., `mdbook build`, `git add docs/src/SUMMARY.md`).
-5. A concrete next-step suggestion: "ready to start with phase A" or "phase A is the only blocker — others can fan out".
+5. For dossier-aware invocations, the dossier path consumed, the Planner Handoff fields read, any dossier/free-text precedence decisions made, and any open decisions the user must resolve before phase execution.
+6. A concrete next-step suggestion: "ready to start with phase A" or "phase A is the only blocker — others can fan out".
 
 Don't recap the contents of each phase file in chat. The files are the artifact; the chat reply is the dispatch.
 
@@ -396,13 +448,7 @@ Triggered when the user asks to verify, audit, or close out a previously execute
 
    CLI errors are reported and do not block the verify deliverable.
 
-6. **Auto-retire on a clean verify.** A clean verify is one where outcome is `shipped`, every phase is `passed` (zero `failed`, zero `partial`, zero `abandoned`, zero unresolved gaps), and there are no `missed-signal:` surprises. On a clean verify, retire the plan unconditionally — **do not prompt, do not ask for confirmation, do not list "durable bits worth preserving" for user approval**. Just do it:
-
-   1. Walk the README and phase files and extract any contributor-worthy durable knowledge (invariants, gotchas, runbook commands, architectural decisions, non-obvious constraints) — anything a future contributor would want and that isn't already in stable docs. Skip execution-only artifacts (parallelism waves, phase routing tables, calibration metadata, dependency graphs, "Why this matters now" framing). When in doubt, prefer migrating over discarding; redundancy in contributor docs is recoverable, lost knowledge is not.
-   2. Migrate that knowledge into the project's stable contributor docs (typically `docs/src/`, `CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md`, or whichever doc surface the project already uses). Edit the existing files in place; do not create a new "post-mortem" doc unless the project already has a conventional location for one.
-   3. `git rm -r <plan-dir>` the entire plan directory.
-   4. If the project uses mdBook, remove the plan's entries from `docs/src/SUMMARY.md` so the build stays green.
-   5. Report what was migrated (file paths + one-line summaries) and confirm the plan directory was removed. The retirement is a fait accompli at report time, not a proposal.
+6. **Auto-retire on a clean verify.** A clean verify is one where outcome is `shipped`, every phase is `passed` (zero `failed`, zero `partial`, zero `abandoned`, zero unresolved gaps), and there are no `missed-signal:` surprises. On a clean verify, invoke [retire-docs-planning](../retire-docs-planning/SKILL.md) in `clean-shipped` mode scoped to `<plan-dir>`. The retirement is unconditional — **do not prompt, do not ask for confirmation, do not list "durable bits worth preserving" for user approval**. Migration criteria, removal steps, and validation steps live in `retire-docs-planning`; this skill delegates.
 
    On a non-clean verify (any phase not passed, any unresolved gap, any `missed-signal:` surprise), do **not** retire. Report what's missing and stop.
 
@@ -457,6 +503,7 @@ User-initiated; not scheduled. The min-N guard in `analyze` ensures running too 
 - **Treating heuristic thresholds as immutable.** Use `dead-weight:` and `missed-signal:` prefixes when verifier surprises occur; the calibration loop is how thresholds get tuned.
 - **Skipping the verifier `surprises` field.** Without annotations, the loop runs on shape data alone and converges slower.
 - **Re-implementing what skillnet provides.** The skill body no longer evaluates heuristics in prose; call `skillnet calibration eval` or rely on `skillnet calibration init`, which uses the same catalog.
+- **Fabricating dossier fields.** If a required Planner Handoff field is missing or invalid, stop and report the broken producer artifact. Do not infer it from the user's prompt; that defeats the contract.
 - **Hand-editing the calibration changelog.** It is the audit trail; paste blocks from `skillnet calibration walkthrough` or `skillnet calibration export-changelog` only.
 - **Editing thresholds in skillnet without going through `walkthrough`.** The accepted-proposal trail in `calibration_proposals` is provenance; bypassing it leaves no record of why a threshold moved.
 
@@ -477,6 +524,8 @@ The pattern: route to the cheapest tier that holds the quality bar for *this spe
 ## Reference
 
 - Model + effort selection: the **`gpt-plan-routing`** skill (consult its routing table and key heuristics).
+- Planner Handoff dossier contract: **`plan-handoff`** (`global/plan-handoff/SKILL.md`).
+- Clean verify plan retirement: **`retire-docs-planning`** (`global/retire-docs-planning/SKILL.md`).
 - mdBook conventions for project docs: `docs/src/SUMMARY.md`.
 
 ## Calibration changelog

@@ -65,11 +65,29 @@ Also include:
 - Stale assumptions or contradictions that must not be copied into new docs.
 - Missing artifacts, their likely upstream producer, the command or workflow to regenerate them, and the validation command that proves they are fixed.
 
+### 6. Emit a planner handoff in producer mode only
+
+**Producer mode only**: if invoked directly by the user as the entrypoint for a downstream multi-phase planner, append a `## Planner Handoff` section to the progress report conforming to the [`plan-handoff`](../plan-handoff/SKILL.md) schema.
+
+Required fields:
+
+- Dossier path: this progress report's file.
+- Current-state summary: the table's overall takeaways.
+- Recommended planner flavour: use the canonical downstream-flavour rule
+  from [`plan-and-verify`](../plan-and-verify/SKILL.md) "Default flavour
+  for prep/plan dispatch".
+- Work that should become phases: each unfinished-but-still-relevant item from the table.
+- Known blockers: each `blocked` row.
+- Acceptance evidence to preserve: verification commands the table cites.
+
+**Evidence supplier mode**: if invoked internally by another skill, do not emit a handoff. The calling skill consumes the table directly and writes its own handoff when needed.
+
 ## Handoff Rules
 
 - For `retire-docs-planning`: pass along which planning content is complete enough to retire and which durable knowledge still needs to be folded into stable docs.
 - For `consolidate-plan-sets`: pass along only unfinished, still-relevant work plus any durable constraints needed by the new monolith plan.
 - For multi-phase plan verify mode: do not duplicate the verifier; use this skill for broader plan-set triage across multiple existing plan directories.
+- **Producer vs supplier mode**: emit the handoff section only when this skill is the user-facing entrypoint. When called internally by `retire-docs-planning`, `consolidate-plan-sets`, or `multi-phase-plan` verify, the caller owns the handoff and this skill does not duplicate it.
 
 ## Anti-Patterns
 
@@ -77,3 +95,7 @@ Also include:
 - Do not treat planning prose as source of truth.
 - Do not preserve provider-routing notes as product knowledge.
 - Do not mark an item complete because a file exists; verify the behavior, contract, or command the plan required.
+
+## Reference
+
+- [`plan-handoff`](../plan-handoff/SKILL.md): shared `## Planner Handoff` schema for producer-mode reports.

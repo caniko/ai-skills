@@ -9,6 +9,8 @@ description: Create a concise northstar summary for complicated situations befor
 
 Use this skill to orient complicated work before implementation or while recovering clarity midstream. The output is not a full implementation plan; it is a guiding summary that keeps the goal, facts, uncertainty, and next move visible.
 
+Northstar is a short-form sibling of `long-horizon-research`: use it for concise situational summaries, not longer-form citation-heavy dossiers.
+
 ## Workflow
 
 1. Discover the relevant facts before summarizing. Inspect available project state, docs, logs, plans, or prior work when they are available.
@@ -36,3 +38,8 @@ Use these headings exactly unless the user asks for a different format:
 - Mention files, commands, or systems only when they materially clarify the situation.
 - Do not invent evidence, silently skip missing inputs, or overclaim what tests/builds prove.
 - If the summary will guide later implementation, make the tradeoffs explicit enough that a follow-up plan can build from it.
+
+## Reference
+
+- Generic research base: [long-horizon-research](../long-horizon-research/SKILL.md) - northstar is a short-form sibling. For longer-form citation-heavy investigation, use the base.
+- Sibling research router: [research-routing](../research-routing/SKILL.md).

@@ -9,7 +9,25 @@ Use this skill to remove planning sections from published documentation without 
 
 Read [references/retirement-checklist.md](references/retirement-checklist.md) at the start of the run. Read [references/lessons.md](references/lessons.md) before editing anything, and update it before you finish.
 
-When retirement depends on whether a plan actually landed, invoke **`plan-progress-review`** first. Use its status report to decide which planning pages are complete enough to retire, which unfinished work must stay visible, and which claims are blocked by missing evidence.
+When retirement depends on whether a plan actually landed, invoke **`plan-progress-review`** first unless the caller explicitly uses `clean-shipped <plan-dir>`. Use its status report to decide which planning pages are complete enough to retire, which unfinished work must stay visible, and which claims are blocked by missing evidence.
+
+## Modes
+
+- **`general`** (default) — run the full workflow: inventory, classify, re-verify time-sensitive claims, fold durable knowledge into stable docs, remove the planning surface, validate, and self-improve.
+- **`clean-shipped <plan-dir>`** (fast path) — for callers that have already proven `<plan-dir>` fully shipped. Skip steps 1-3: inventory, classify, and re-verify. Start at step 4, then run step 5 and step 6. For step 5, remove the plan with `git rm -r <plan-dir>` and prune any `SUMMARY.md` entries that pointed at it. This mode expects the caller to have proven every acceptance criterion passed and that there are no `missed-signal:` surprises. The retirement is unconditional: **do not prompt, do not ask for confirmation, do not list "durable bits worth preserving" for user approval**.
+
+## Migration criteria
+
+Contributor-worthy durable knowledge includes anything a future contributor would need after the plan disappears:
+
+- current user-facing behavior, API semantics, compatibility rules, and invariants;
+- non-obvious constraints, gotchas, architectural decisions, and maintainer guidance;
+- release, validation, or runbook commands that still match current workflows and metadata;
+- feature-flag, packaging, CI, or source-layout details that stable docs do not already cover.
+
+Do not migrate execution-only artifacts: phase structure, parallelism waves, routing tables, model choices, calibration metadata, dependency graphs, branch names, "run this in a fresh session" instructions, "Why this matters now" framing, or "after this lands" language.
+
+Prefer migrating real contributor knowledge over discarding it; redundancy in stable docs is recoverable, lost knowledge is not. Edit existing stable docs in place, such as `docs/src/`, `CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md`, API docs, getting-started docs, compatibility references, release docs, or maintenance docs. Do not create a new "retired plan" or "post-mortem" page unless the repository already has a conventional home for one.
 
 ## Workflow
 
@@ -42,11 +60,7 @@ Never promote planning assumptions into stable docs without checking the current
 
 ### 4. Fold durable knowledge into stable docs
 
-- Prefer updating existing stable pages over creating a new “retired plan” page.
-- Put user-facing API behavior in API or getting-started docs.
-- Put semantic rules and invariants in compatibility or reference docs.
-- Put maintainer and validation guidance in release or maintenance docs.
-- Keep wording present-tense and product-focused. Remove “Phase”, “next step”, and “after this lands” language.
+Use the Migration criteria above as the canonical preservation rule. Keep wording present-tense and product-focused, and place each durable fact near the stable docs surface where future contributors will look for it.
 
 ### 5. Remove the planning surface cleanly
 
@@ -81,6 +95,10 @@ Before ending the task:
 
 - State where the planning knowledge was folded.
 - State which planning files or directories were removed.
-- State any plan-progress status used to justify retirement or retention.
+- State any plan-progress status used to justify retirement or retention, or the clean verify guarantee supplied by a `clean-shipped` caller.
 - State what you verified and what you could not verify.
 - If you had to stop, name the missing or invalid artifact, the upstream producer that must fix it, the exact command or workflow to regenerate it, and the validation command that proves it is fixed.
+
+## References
+
+- Clean verify auto-retire caller: [../multi-phase-plan/SKILL.md](../multi-phase-plan/SKILL.md).

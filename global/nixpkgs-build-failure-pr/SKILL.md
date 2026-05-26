@@ -5,10 +5,14 @@ description: "Create narrowly scoped nixpkgs pull requests that fix package buil
 
 # nixpkgs-build-failure-pr
 
+Lineage: this skill specializes the generic evidence-backed research dossier pattern for nixpkgs build failures while preserving its domain-specific diagnose, fix, and validation workflow.
+
 ## Shared references
 
 Before publishing or commenting upstream, read the common references in `../nixpkgs-pr-common/references/`:
 
+- Generic research base: [long-horizon-research](../long-horizon-research/SKILL.md) — this skill is a nixpkgs-build-grounded specialization of the generic dossier-producer pattern.
+- Sibling research router: [research-routing](../research-routing/SKILL.md).
 - `decorum.md` for narrow scope, duplicate checks, and missing-data handling.
 - `pr-template.md` before creating or updating a PR body.
 - `nixpkgs-review-gha.md` before dispatching or diagnosing GitHub Actions review.
