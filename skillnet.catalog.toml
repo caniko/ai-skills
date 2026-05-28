@@ -53,13 +53,6 @@ category = "nix"
 tags = ["nix", "nixpkgs"]
 
 [[rules]]
-name = "nixpkgs-pr"
-status = "retired"
-tags = ["nix", "nixpkgs", "retired"]
-related_skills = ["global/nixpkgs-init-pr"]
-collision_note = "Retired legacy entrypoint; use nixpkgs-init-pr for general nixpkgs PR work or nixpkgs-build-failure-pr for build-log-driven fixes."
-
-[[rules]]
 path_prefix = "global/nixpkgs-pr-common"
 status = "reference"
 tags = ["nix", "nixpkgs", "reference"]
@@ -87,16 +80,10 @@ category = "ci-release"
 tags = ["forgejo"]
 
 [[rules]]
-path_prefix = "global/forgejo-runner-ci"
-status = "retired"
-tags = ["forgejo", "retired"]
-related_skills = ["global/codeberg-runner-ci"]
-collision_note = "Retired duplicate runner entrypoint for Codeberg-hosted projects; use codeberg-runner-ci."
-
-[[rules]]
-path_prefix = "global/codeberg-"
+path_prefix = "global/runner"
 category = "ci-release"
-tags = ["codeberg", "forgejo"]
+status = "reference"
+tags = ["forgejo", "runner", "reference"]
 
 [[rules]]
 path_prefix = "global/gitlab-pages"
@@ -117,6 +104,11 @@ tags = ["forgejo", "docs"]
 path_prefix = "global/forgejo-pages"
 category = "docs-sites"
 tags = ["forgejo", "pages"]
+
+[[rules]]
+path_prefix = "global/repo-pages"
+category = "docs-sites"
+tags = ["pages", "reference"]
 
 [[rules]]
 path_prefix = "global/forgejo-site"
@@ -142,6 +134,11 @@ tags = ["planning", "research"]
 name_prefix = "plan-"
 category = "planning"
 tags = ["planning"]
+
+[[rules]]
+name = "plan-and-verify"
+category = "planning"
+tags = ["planning", "large-skill"]
 
 [[rules]]
 path_prefix = "global/consolidate-plan-sets"
@@ -175,6 +172,12 @@ name = "multi-phase-dispatch"
 category = "routing"
 status = "reference"
 tags = ["routing", "planning"]
+
+[[rules]]
+name = "plan-routing-axes"
+category = "routing"
+status = "reference"
+tags = ["routing", "planning", "reference"]
 
 [[rules]]
 path_prefix = "global/imagegen"

@@ -87,7 +87,6 @@ Required fields:
 - For `retire-docs-planning`: pass along which planning content is complete enough to retire and which durable knowledge still needs to be folded into stable docs.
 - For `consolidate-plan-sets`: pass along only unfinished, still-relevant work plus any durable constraints needed by the new monolith plan.
 - For multi-phase plan verify mode: do not duplicate the verifier; use this skill for broader plan-set triage across multiple existing plan directories.
-- **Producer vs supplier mode**: emit the handoff section only when this skill is the user-facing entrypoint. When called internally by `retire-docs-planning`, `consolidate-plan-sets`, or `multi-phase-plan` verify, the caller owns the handoff and this skill does not duplicate it.
 
 ## Anti-Patterns
 

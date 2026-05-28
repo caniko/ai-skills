@@ -9,14 +9,14 @@ description: Create or update a docs-only mdBook site for a Codeberg-hosted proj
 
 This is the Codeberg/Forgejo-hosted wrapper around the generic mdBook docs workflow.
 
-It keeps the docs work in `/home/can/.agents/skills/mdbook-docs/SKILL.md` and adds the host-specific wiring needed for Codeberg Pages published through Forgejo Actions hosted by Codeberg.
+It keeps the docs work in [../mdbook-docs/SKILL.md](../mdbook-docs/SKILL.md) and adds the host-specific wiring needed for Codeberg Pages published through Forgejo Actions hosted by Codeberg.
 
 ## Required references
 
 Load these two skills together:
 
-- `/home/can/.agents/skills/mdbook-docs/SKILL.md` for the actual `docs/`, `book.toml`, flake, ignore-file, and verification workflow.
-- `/home/can/.agents/skills/forgejo-pages/SKILL.md` for `.forgejo/workflows/pages.yaml`.
+- [../mdbook-docs/SKILL.md](../mdbook-docs/SKILL.md) for the actual `docs/`, `book.toml`, flake, ignore-file, and verification workflow.
+- [../forgejo-pages/SKILL.md](../forgejo-pages/SKILL.md) for `.forgejo/workflows/pages.yaml`.
 
 ## Host-specific inputs
 
@@ -32,13 +32,7 @@ If documentation content would need to be invented from missing source material,
 
 ## Workflow
 
-1. Run the generic docs workflow from `/home/can/.agents/skills/mdbook-docs/SKILL.md`.
+1. Run the generic docs workflow from [../mdbook-docs/SKILL.md](../mdbook-docs/SKILL.md).
 2. Apply the Codeberg-specific `site-url` and `git-repository-url` values above.
-3. Use `/home/can/.agents/skills/forgejo-pages/SKILL.md` for Pages deployment wiring.
-4. Verify the local docs build before adding CI:
-
-```sh
-nix build .#docs
-nix build .#site
-nix flake check
-```
+3. Use [../forgejo-pages/SKILL.md](../forgejo-pages/SKILL.md) for Pages deployment wiring.
+4. Verify the local docs build per mdbook-docs before adding CI.

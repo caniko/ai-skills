@@ -40,14 +40,9 @@ Use `rg` / `rg --files` first. Prefer objective evidence over planning prose.
 
 ### 3. Audit existing plans when present
 
-If existing planning docs are in scope, invoke `plan-progress-review` behavior:
+If existing planning docs are in scope, run the [`plan-progress-review`](../plan-progress-review/SKILL.md) audit (it owns the claim-extraction, source-verification, and six-status classification taxonomy). Carry forward only its unfinished, still-relevant work and durable constraints.
 
-- Extract objective claims and acceptance criteria.
-- Verify claims against current source artifacts.
-- Classify items as `done`, `partial`, `not-started`, `obsolete`, `blocked`, or `unknown`.
-- Carry forward only unfinished, still-relevant work and durable constraints.
-
-Do not copy stale sequencing, old routing, checked boxes without proof, or obsolete assumptions into the new dossier.
+Do not copy stale sequencing, old routing, checked boxes without proof, or obsolete assumptions into the new dossier. Use `blocked` for evidence gaps that would change the future work breakdown (see step 4).
 
 ### 4. Stop on missing foundational inputs
 

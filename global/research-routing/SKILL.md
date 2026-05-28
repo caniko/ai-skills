@@ -64,12 +64,5 @@ Next action: invoke the recommended skill directly; this router performs no edit
 
 ## Reference
 
-- Shape precedents: [`gpt-plan-routing`](../gpt-plan-routing/SKILL.md), [`claude-plan-routing`](../claude-plan-routing/SKILL.md)
-- Generic research: [`long-horizon-research`](../long-horizon-research/SKILL.md)
-- Multi-phase prep: [`plan-research`](../plan-research/SKILL.md)
-- Simit-grounded research: [`simit-dependent-fixes`](../simit-dependent-fixes/SKILL.md)
-- Nixpkgs build-grounded research: [`nixpkgs-build-failure-pr`](../nixpkgs-build-failure-pr/SKILL.md)
-- Thething-grounded research: [`host-a-healthcheck`](../host-a-healthcheck/SKILL.md)
-- Plan-audit-grounded research: [`plan-progress-review`](../plan-progress-review/SKILL.md)
-- High-stakes situational summary: [`northstar`](../northstar/SKILL.md)
-- Single-crate workspace decision: [`workspace-check`](../workspace-check/SKILL.md)
+- Specialist targets and their trigger heuristics: the Routing table above.
+- Shape precedents: [`gpt-plan-routing`](../gpt-plan-routing/SKILL.md), [`claude-plan-routing`](../claude-plan-routing/SKILL.md).

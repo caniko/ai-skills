@@ -86,7 +86,7 @@ in {
 Preserve behavior first:
 
 - Keep existing output names stable.
-- Keep simit-managed `nix/treefmt.nix` and `nix/pre-commit.nix` compatible with `simit init-flake --check`.
+- Keep simit-managed `nix/treefmt.nix` and `nix/pre-commit.nix` compatible with `simit init flake --check`.
 - Do not move generated hook files unless the generator already uses that path.
 - Do not delete packages, checks, shells, overlays, or apps because they look unused.
 - Do not change pins, follows relationships, or builders unless the active task requires it.
@@ -117,6 +117,6 @@ Stop and report instead of guessing when:
 - A module needs source files that are missing from the checkout.
 - A package version, binary name, workspace member, or build input cannot be derived from project files.
 - The existing flake has ambiguous custom outputs and no validation command can prove equivalence.
-- `simit init-flake --check --diff` fails after modularization and the diff shows generator-managed files were altered incompatibly.
+- `simit init flake --check --diff` fails after modularization and the diff shows generator-managed files were altered incompatibly.
 
 Report the blocker, the upstream artifact or producer, the command to regenerate or inspect it, and the validation command that proves the fix.

@@ -130,56 +130,17 @@ Use when:
 
 ## Phase 5: Output Report
 
-Print a structured markdown report:
+Print a structured markdown report with these sections:
 
-```markdown
-# Workspace Check Report
+- **Current Metrics**: files, LOC, binary targets (names), largest module + LOC.
+- **Verdict** (RECOMMENDED | CONSIDER | NOT RECOMMENDED) with a 1-3 sentence rationale.
+- **Module Size Map**: per module — files, LOC, classification (normal/large/oversized).
+- **Dependency Graph**: module dependencies, noting any circular dependencies.
+- **Suggested Crate Split** (only when RECOMMENDED or CONSIDER): proposed crate, source modules, rationale; plus ordered Migration Steps and Estimated Effort (size small/medium/large/xlarge, risk low/medium/high, compile-time improvement negligible/moderate/significant).
+- **Circular Dependencies to Resolve**: circular deps that must be broken before splitting.
+- **Feature Flags**: whether any features should become crates.
 
-## Current Metrics
-- **Files**: <N> .rs files
-- **Lines of code**: <N>
-- **Binary targets**: <N> (<list names>)
-- **Largest module**: <name> (<N> LOC)
-
-## Verdict: <RECOMMENDED | CONSIDER | NOT RECOMMENDED>
-
-<1-3 sentence summary of the rationale>
-
-## Module Size Map
-| Module | Files | LOC | Classification |
-|--------|-------|-----|----------------|
-| ...    | ...   | ... | normal/large/oversized |
-
-## Dependency Graph
-<ASCII or bullet-list representation of module dependencies>
-<Note any circular dependencies>
-
-## Suggested Crate Split
-<Only if verdict is RECOMMENDED or CONSIDER>
-
-| Proposed Crate | Source Modules | Rationale |
-|----------------|---------------|-----------|
-| <name>-core    | src/types.rs, src/engine/ | Core types and logic, no I/O |
-| <name>-cli     | src/main.rs, src/tui/ | CLI binary and TUI |
-| ...            | ...           | ... |
-
-### Migration Steps
-1. <Ordered steps to perform the split>
-2. ...
-
-### Estimated Effort
-- **Size**: small | medium | large | xlarge
-- **Risk**: low | medium | high
-- **Compile time improvement**: negligible | moderate | significant
-
-## Circular Dependencies to Resolve
-<List any circular deps that must be broken before splitting>
-
-## Feature Flags
-<Summary of feature analysis and whether any features should become crates>
-```
-
-Do NOT create or modify any project files. This skill is read-only analysis. The report is printed to stdout only.
+Do NOT create or modify any project files. This skill is read-only analysis; the report is printed to stdout only.
 
 ## References
 

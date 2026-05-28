@@ -7,6 +7,8 @@ description: Select the right Claude 4.x model and extended-thinking budget for 
 
 Use this skill to select the right Claude model and extended-thinking budget for a given plan step or workflow, and then **dispatch the work via the Agent tool**. The goal is to match task complexity and role-in-plan to the cheapest combination that meets quality requirements, and execute the routing decision in one motion.
 
+The two decision axes (Task complexity × Role in plan), the provider-agnostic heuristics, and the base output-block template live in [plan-routing-axes](../plan-routing-axes/SKILL.md) — load it first. Everything below is the Claude-specific layer (model tiers + IDs, the per-model thinking ladder, the Agent-tool dispatch contract). Sister skill to `gpt-plan-routing`.
+
 ## Dispatch contract: Agent tool inherits parent effort
 
 The Agent tool exposes a `model` parameter but **no `thinking` / `effort` parameter**. Spawned agents inherit the parent's current effort/thinking level. This means:
@@ -43,22 +45,6 @@ In the brief passed to every Agent that may commit, include the line:
 > Commits and tags in this task MUST use the user's global Git signing defaults. Use plain `git commit` and `git tag` commands. Do not override `commit.gpgsign`, `tag.gpgsign`, `user.signingkey`, or `gpg.*`, and do not use `--no-gpg-sign`.
 
 If signing blocks because the hardware token, pinentry, or GPG agent is unavailable, stop and report the signing-stack blocker. Do not bypass signing to keep unattended work moving.
-
-## Decision variables
-
-Evaluate each plan step on two axes before selecting:
-
-**Task complexity** — how much reasoning is required:
-- Trivial: well-defined input → output, no ambiguity, no tool chaining
-- Moderate: multi-tool, some branching, recoverable errors
-- Complex: ambiguous goals, multi-file/multi-system, requires self-correction
-- Frontier: open-ended, long-horizon, novel problem, hardest evals
-
-**Role in plan** — where the step sits in the execution hierarchy:
-- Leaf node: executes a single concrete action, defined by an orchestrator above it
-- Sub-agent: runs a bounded workflow (3–10 steps), may call leaf tools
-- Orchestrator: decomposes goals, assigns to sub-agents, monitors outcomes
-- Top-level planner: owns the entire plan; handles ambiguity, replanning, inter-agent coordination
 
 ---
 
@@ -101,7 +87,7 @@ Claude's `thinking.budget_tokens` parameter controls how many tokens the model i
 | `extra high` | ~48K tokens | very slow | **Opus 4.7 only** | frontier orchestration; top-level planning over many sub-agents; ambiguous goals that need extensive self-correction. Sonnet does not expose this tier — promote to Opus if you need more than Sonnet's `high` |
 | `max` | model maximum (≥ 64K, model-dependent) | slowest | Opus 4.7, Sonnet 4.6 | hardest async tasks; eval harnesses; long-horizon plans (20h+); novel problems where the model needs every token to converge. Cap this — most plan steps never need it |
 
-**Haiku 4.5 has no extended-thinking lever.** Don't recommend a budget for it. If quality at Haiku falls short, promote the step to Sonnet 4.6 at `medium` rather than trying to dial Haiku up.
+Haiku 4.5 has no row: it has no extended-thinking lever (see Model tiers above; promote to Sonnet rather than dialing Haiku up).
 
 Cost implication: thinking tokens are billed as output tokens. In a multi-step plan, budget-tiering compounds — use the minimum budget that passes your quality bar per step.
 
@@ -126,25 +112,23 @@ Top-level plnr  | Sonnet 4.6/medium  | Sonnet 4.6/high     | Opus 4.7/high      
 
 **Coding-specific note**: Sonnet 4.6 and Haiku 4.5 are both strong on agentic coding. For pure coding leaf work, prefer Haiku 4.5 over Sonnet 4.6/low — comparable quality, lower cost, lower latency, and no thinking-token bill at all.
 
-**Haiku promotion rule**: If a Haiku leaf is producing quality misses, *do not* try to "increase its effort" (no such lever exists). Promote it to Sonnet 4.6 at `low` or `medium` instead. The decision is binary at the Haiku/Sonnet boundary.
-
 **1M-context override**: any phase whose prompt + acceptance criteria + context dump exceeds 200K tokens must use the 1M-context variant of Opus 4.7 or Sonnet 4.6. Chunk or summarize before forcing a Haiku 4.5 step into >200K of context.
+
+A Haiku leaf that misses the quality bar gets promoted to Sonnet, not dialed up — see the Haiku/Sonnet boundary rule under Key heuristics.
 
 ---
 
 ## Key heuristics
 
-**Start at medium, dial from there.** Never default to `high` or above without a clear reason — every step up roughly doubles the thinking-token bill with diminishing returns on well-defined tasks. Always start at `medium` and move up only if the step shows measurable quality loss. This rule applies to Opus and Sonnet; Haiku has no dial to turn.
+The provider-agnostic heuristics (start-at-medium; tier effort within a plan; cheaper-model/high ≈ stronger-model/medium; throughput vs quality) live in [plan-routing-axes](../plan-routing-axes/SKILL.md). Claude-specific additions:
 
-**Sonnet 4.6 at high ≈ Opus 4.7 at medium** for orchestration plan coherence. If you're running Sonnet at `high`, test Opus at `medium` — it's often roughly cost-equivalent and produces tighter plans. Sonnet at `max` is the right escape hatch when you need more than `high` but don't want to switch to Opus; otherwise prefer promoting to Opus.
+**Mapping the cross-provider rules to Claude.** Start-at-medium and effort-tiering apply to Opus and Sonnet (Haiku has no dial). The "cheaper/high ≈ stronger/medium" rule means: if you're running Sonnet at `high`, test Opus at `medium`. For throughput fan-outs prefer Haiku and promote to Sonnet 4.6 / `medium` only on quality misses.
+
+**Sonnet's escape hatch.** Sonnet at `max` is the right move when you need more than `high` but don't want to switch to Opus; otherwise prefer promoting to Opus.
 
 **Skip `extra high` and `max` unless you've benchmarked.** The biggest cost increases sit at the top of the ladder. On Opus, promote `high` → `extra high` → `max` one step at a time, each only after observing quality degradation at the previous tier. On Sonnet the jump is `high` → `max` (no `extra high`); make that jump even more reluctantly because the cost gap is wider.
 
-**Don't try to dial Haiku up.** Haiku 4.5 has no thinking budget. If a Haiku leaf is missing the quality bar, promote it to Sonnet 4.6 at `low`/`medium` — don't add a `thinking` field to a Haiku call. The decision at the Haiku/Sonnet boundary is binary.
-
-**Tier your thinking within a plan.** Use `high`+ only on the orchestrator and on genuinely frontier-complex leaves. Assign `low` / `medium` to the bulk of leaf nodes (or use Haiku, which has no thinking spend at all). Token costs compound across every step, so budget misallocation at scale is expensive.
-
-**Throughput vs quality tradeoff.** For parallel leaf execution (> 10 concurrent steps), prefer Haiku 4.5 to avoid rate limits and control cost. Promote to Sonnet 4.6 / `medium` only for steps that fail quality checks.
+**Haiku/Sonnet boundary is binary.** Haiku 4.5 has no thinking budget — don't add a `thinking` field to a Haiku call. If a Haiku leaf misses the quality bar, promote it to Sonnet 4.6 at `low`/`medium`; don't try to dial Haiku up.
 
 **Prompt caching is load-bearing for plan execution.** Long phase-doc prompts that are dispatched to many sub-agents in parallel should rely on prompt caching. Structure phase files so the stable preamble (Working tree, Goal, Why, Out of scope, Reference) is at the top and the variable per-sub-layer content is at the bottom — the prefix is what's cached.
 
@@ -154,96 +138,26 @@ Top-level plnr  | Sonnet 4.6/medium  | Sonnet 4.6/high     | Opus 4.7/high      
 
 ## Output format for routing decisions
 
-Every routing recommendation MUST include both the routing analysis AND a dispatch block telling the operator how to actually execute it. The dispatch block has two parts: an operator precondition (set effort on the parent before spawning), and the Agent tool call (with model override but no thinking parameter, since the Agent tool doesn't expose one).
+Use the base output block from [plan-routing-axes](../plan-routing-axes/SKILL.md) (Model / Thinking / Rationale / cost multiplier / Upgrade trigger), with the Thinking field carrying a Claude tier — or `n/a` for Haiku. Every recommendation MUST append a **Dispatch** block: an operator precondition (set effort on the parent before spawning) plus the `Agent({...})` call (model override, no thinking parameter — the Agent tool doesn't expose one).
 
-### Sonnet sub-agent
+Example (Sonnet sub-agent):
 
 ```
 Model: claude-sonnet-4-6
 Thinking: medium
-Rationale: sub-agent orchestrating a 5-step coding workflow; moderate complexity; latency-tolerant batch context
+Rationale: sub-agent orchestrating a 5-step coding workflow; moderate complexity; latency-tolerant
 Estimated cost multiplier vs Haiku (thinking-off baseline): ~6×
 Upgrade trigger: if error recovery fails > 20% of steps → promote to Opus 4.7 / high
 
 Dispatch:
-  1. Operator: set parent effort to `medium` (e.g. `/effort medium`) so the spawned agent inherits the right thinking budget.
-  2. Orchestrator: invoke
-     Agent({
-       subagent_type: "general-purpose",
-       description: "<3-5 word summary>",
-       model: "sonnet",
-       prompt: "<self-contained brief that doesn't assume conversation context>"
-     })
+  1. Operator: /effort medium    (so the spawned agent inherits the right thinking budget)
+  2. Agent({ subagent_type: "general-purpose", model: "sonnet", description: "<3-5 word summary>", prompt: "<self-contained brief>" })
 ```
 
-### Opus orchestrator at high effort
+Per-model dispatch variations:
 
-```
-Model: claude-opus-4-7
-Thinking: high
-Rationale: top-level planner over an ambiguous multi-system refactor with risky downstream impact
-Estimated cost multiplier vs Sonnet/medium: ~5×
-Upgrade trigger: if it stalls on replanning loops → promote to extra high (one tier, not two)
+- **Opus orchestrator:** `model: "opus"`; raise the precondition to `/effort high` (or `extra high`) BEFORE spawning — effort cannot be raised at spawn time, only inherited.
+- **Haiku leaf:** `model: "haiku"` (use `subagent_type: "Explore"` for read-only lookups); set `Thinking: n/a` and OMIT the effort precondition line — Haiku ignores inherited thinking budget.
+- **Staying in the main thread:** when the current agent is the right runner (holds load-bearing context), set `Dispatch` step 2 to `(none — continue in main thread; no Agent tool call needed)` and still surface the effort instruction so the operator can adjust.
 
-Dispatch:
-  1. Operator: set parent effort to `high` (e.g. `/effort high`) BEFORE invoking the agent. Agent tool cannot raise thinking budget at spawn time — only inherit.
-  2. Orchestrator: invoke
-     Agent({
-       subagent_type: "general-purpose",
-       description: "<3-5 word summary>",
-       model: "opus",
-       prompt: "<self-contained brief>"
-     })
-```
-
-### Haiku leaf (no thinking field at all)
-
-```
-Model: claude-haiku-4-5-20251001
-Thinking: n/a
-Rationale: high-fan-out mechanical edit; clear tool params; latency-sensitive
-Estimated cost multiplier vs Sonnet/low: ~0.2×
-Upgrade trigger: if quality misses → promote to Sonnet 4.6 / low (no in-model dial available)
-
-Dispatch:
-  1. Operator: no effort change needed (Haiku ignores inherited thinking budget).
-  2. Orchestrator: invoke
-     Agent({
-       subagent_type: "general-purpose",     # or "Explore" for read-only lookups
-       description: "<3-5 word summary>",
-       model: "haiku",
-       prompt: "<self-contained brief>"
-     })
-```
-
-### Staying in the main thread
-
-```
-Model: claude-opus-4-7   (or whichever model is currently running)
-Thinking: medium
-Rationale: <why the current agent is the right runner — usually "holds load-bearing context that would cost more to re-establish in a sub-agent">
-
-Dispatch:
-  1. Operator: confirm parent effort is `medium`; raise via `/effort <tier>` if the routing tier is higher than the current one.
-  2. Spawn agent: (none — continue in main thread; no Agent tool call needed)
-```
-
-### Multi-step plans
-
-When routing a workflow with multiple differently-tiered steps, output one dispatch block per step in execution order. Label them so the operator can step through. Adjacent steps with the same effort tier can share one operator precondition:
-
-```
-=== Step A.1: Add HeroAnnouncement to gossip ===
-Model: claude-sonnet-4-6 / Thinking: medium
-Rationale: ...
-Dispatch:
-  1. Operator: /effort medium
-  2. Agent({ subagent_type: "general-purpose", model: "sonnet", description: "...", prompt: "..." })
-
-=== Step A.2: Fix AutoPlayerDecision leak ===
-Model: claude-sonnet-4-6 / Thinking: high
-Rationale: ...
-Dispatch:
-  1. Operator: /effort high   (raise from medium)
-  2. Agent({ subagent_type: "general-purpose", model: "sonnet", description: "...", prompt: "..." })
-```
+For multi-step workflows, output one labelled block per step in execution order so the operator can step through; adjacent steps at the same effort tier can share one operator precondition.

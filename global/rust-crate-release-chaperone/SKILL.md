@@ -9,15 +9,15 @@ description: "Chaperone Rust crate releases end to end using simit-managed hooks
 
 Load these when the work reaches their scope:
 
-- `/home/can/.agents/skills/rust-crate-release-reference/SKILL.md` for common source-integrity, simit infrastructure, changelog, release-bar, validation, blocker-classification, and publish-boundary rules.
-- `/home/can/.codex/skills/simit-project-init/SKILL.md` for installing and checking simit-managed flake and CI hooks.
-- `/home/can/.agents/skills/rust-crate-release-prep/SKILL.md` only when broader release preparation or component skill routing is needed beyond hook execution.
-- `/home/can/.agents/skills/rust-crate-quality-gates/SKILL.md` for strict validation commands.
-- `/home/can/.agents/skills/rust-crate-publish-workflow/SKILL.md` when the work reaches final publish sequencing, remote tag push, CI publication orchestration, or post-publish crates.io verification.
+- `../rust-crate-release-reference/SKILL.md` for common source-integrity, simit infrastructure, changelog, release-bar, validation, blocker-classification, and publish-boundary rules.
+- `../simit-project-init/SKILL.md` for installing and checking simit-managed flake and CI hooks.
+- `../rust-crate-release-prep/SKILL.md` only when broader release preparation or component skill routing is needed beyond hook execution.
+- `../rust-crate-quality-gates/SKILL.md` for strict validation commands.
+- `../rust-crate-publish-workflow/SKILL.md` when the work reaches final publish sequencing, remote tag push, CI publication orchestration, or post-publish crates.io verification.
 
 ## Core Rule
 
-Load `/home/can/.agents/skills/rust-crate-release-reference/SKILL.md` first and apply its shared release rules throughout the chaperone loop.
+Load `../rust-crate-release-reference/SKILL.md` first and apply its shared release rules throughout the chaperone loop.
 
 Own the release-hook feedback loop. Do not stop at the first hook failure when the failure is fixable in the repository. Diagnose it, patch the project, rerun the failed hook or the narrowest equivalent validation, and continue until the release hooks pass or the remaining blocker requires missing upstream input.
 
@@ -26,7 +26,7 @@ Own the full end-to-end release. Once repository-owned failures are fixed and pu
 ## Chaperone Loop
 
 1. Inspect repository state: `Cargo.toml`, `Cargo.lock`, `CHANGELOG*`, `README*`, `LICENSE*`, `src/`, `tests/`, `docs/`, `flake.nix`, `nix/`, CI workflows, remotes, default branch, tags, recent commits, and current git status.
-2. Install or refresh simit hooks with `simit init-flake` and `simit init-ci --platform <platform>` unless the repository has an explicit documented policy against one of them. Let `simit init-ci` generate `keys/maintainers.gpg`; if signing trust fails, run `simit release trust status`, then `simit release trust init` or `simit release trust check` before reporting a blocker.
+2. Install or refresh simit hooks with `simit init flake` and `simit init ci --platform <platform>` unless the repository has an explicit documented policy against one of them. Let `simit init ci` generate `keys/maintainers.gpg`; on signing-trust failure use the `simit release trust status|init|check` fallback before reporting a blocker (Simit Infrastructure section of `../rust-crate-release-reference/SKILL.md`).
 3. Detect whether the repository should reuse the current version instead of bumping it:
    - Use `simit release sync-up` when repository evidence shows the current version is already the intended release and `HEAD` only contains release-repair work for that same version.
    - Require concrete evidence before taking the sync-up path:
@@ -53,23 +53,8 @@ Own the full end-to-end release. Once repository-owned failures are fixed and pu
 9. For each failure, identify whether it is a code bug, test bug, docs bug, changelog bug, metadata/package bug, Nix/hook drift, dependency policy issue, missing tool, missing credential, or missing upstream fact.
 10. Fix repository-owned bugs directly. Keep patches scoped to the failure. Do not weaken release hooks, delete checks, relax lints, omit changelog entries, or hide failures unless the user explicitly asks and the tradeoff is reported.
 11. Rerun the failed hook/check first, then rerun the full relevant release gate once local failures are cleared.
-12. Load `/home/can/.agents/skills/rust-crate-publish-workflow/SKILL.md` for final publish sequencing once local release gates pass or only remote push / CI publish checks remain.
-13. Verify CI publish prerequisites from authoritative sources before pushing the release:
-   - the repository host is Codeberg/Forgejo and the publish workflow is configured to publish on the repository's release tag convention;
-   - `cargo search <crate-name> --limit 1` or the crates.io API confirms whether the target version is already published;
-   - the repository remote and default branch are correct for the release push;
-   - if repository evidence requires a crates.io owner check, use non-secret read-only commands such as `cargo owner --list <crate-name>` only when they work in the available shell, but do not treat missing local tokens as a reason to publish from the local machine.
-14. If the release commit and tag do not exist yet, create them with the structured message rules below. Keep the tag name aligned with the repository convention and the publish workflow.
-15. Push the release commit and tag to the canonical remote once validation passes. For this skill, the push is the publication trigger; do not run `cargo publish` from the local shell.
-16. Observe the remote publication path:
-   - inspect the Forgejo/Codeberg workflow that should publish the crate;
-   - wait for the publish job outcome when that evidence is available;
-   - if the CI publish fails, diagnose the workflow or repository-owned cause and iterate.
-17. Verify publication from an external source:
-   - `cargo search <crate-name> --limit 1`,
-   - `cargo info <crate-name>` when available, or
-   - the crates.io API / package page.
-   Continue only until the new version is confirmed live or a propagation/CI/registry blocker is identified.
+12. Follow `../rust-crate-publish-workflow/SKILL.md` for the publish sequence (CI publish prerequisites, release commit/tag creation with the structured message rules below, push to the canonical remote, and external crates.io verification) once local release gates pass or only remote push / CI publish checks remain. For this skill the tag push is the publication trigger; do not run `cargo publish` from the local shell.
+13. Chaperone-unique loop: after the push, watch the Forgejo/Codeberg publish workflow. If the CI publish fails, diagnose the workflow or repository-owned cause, fix it, and iterate the relevant steps until the new version is confirmed live on crates.io or a real propagation/CI/registry blocker is identified.
 
 ## Release Commit and Tag Messages
 
@@ -87,19 +72,7 @@ Validation:
 - <command that passed>
 ```
 
-When creating a tag, use an annotated tag named exactly like the crate version, matching simit's tag convention, with a structured message:
-
-```text
-Release <crate> <version>
-
-Summary:
-- <high-signal release change>
-- <high-signal release change>
-
-Validation:
-- <command that passed>
-- <command that passed>
-```
+Use the same structure for the annotated tag, named exactly like the crate version and matching simit's tag convention.
 
 Use facts from `CHANGELOG.md` and the validation commands actually run. Do not use empty, generic, or placeholder messages such as `release <version>` unless no richer facts are available, and if no richer facts are available, stop and report the missing release notes source.
 

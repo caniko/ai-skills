@@ -1,11 +1,11 @@
 ---
 name: nixpkgs-pr-common
-description: "Shared references for nixpkgs PR skills. Use when another nixpkgs PR skill directs you here, or when you need common nixpkgs contribution decorum, automation disclosure rules, live PR template handling, or caniko/nixpkgs-review-gha workflow instructions."
+description: "Shared references for nixpkgs PR skills. Use when another nixpkgs PR skill directs you here, or when you need common nixpkgs contribution decorum, review automation rules, live PR template handling, or caniko/nixpkgs-review-gha workflow instructions."
 ---
 
 # nixpkgs-pr-common
 
-This skill is a reference hub for nixpkgs PR workflows. It is normally loaded by `nixpkgs-init-pr` or `nixpkgs-build-failure-pr`.
+Shared reference — not user-invokable on its own; loaded by `nixpkgs-init-pr` and `nixpkgs-build-failure-pr`.
 
 ## References
 

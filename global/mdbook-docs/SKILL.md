@@ -28,18 +28,7 @@ Read `references/documentation.md` when creating or reorganizing mdBook content.
 
 ### 1. Create or update `docs/`
 
-Use this structure:
-
-```text
-docs/
-  book.toml
-  src/
-    SUMMARY.md
-    introduction.md
-    getting-started/
-      installation.md
-      quick-start.md
-```
+For the `docs/` layout, `SUMMARY.md`, and page conventions, follow `references/documentation.md`.
 
 Use this `book.toml` shape:
 
@@ -94,7 +83,7 @@ site = docs;
 
 Expose `docs` and `site` in `packages`. Add `pkgs.mdbook` to the dev shell and avoid `pkgs.zola` unless another part of the repository still needs it.
 
-If the flake is already large or this update makes `flake.nix` hard to review, modularize using the shared routine at `/home/can/.codex/skills/simit-project-init/references/flake-modularization.md`. Keep `docs` and `site` output names stable.
+If the flake is already large or this update makes `flake.nix` hard to review, modularize using the shared routine at [../simit-project-init/references/flake-modularization.md](../simit-project-init/references/flake-modularization.md). Keep `docs` and `site` output names stable.
 
 ### 3. Update ignored artifacts
 
@@ -110,8 +99,8 @@ Remove stale website build artifacts when deleting a former Zola site.
 
 Use a host-specific Pages skill instead of duplicating CI instructions here:
 
-- `/home/can/.agents/skills/forgejo-pages/SKILL.md` for Codeberg Pages via Forgejo Actions hosted by Codeberg
-- `/home/can/.agents/skills/gitlab-pages/SKILL.md` for GitLab Pages
+- [../forgejo-pages/SKILL.md](../forgejo-pages/SKILL.md) for Codeberg Pages via Forgejo Actions hosted by Codeberg
+- [../gitlab-pages/SKILL.md](../gitlab-pages/SKILL.md) for GitLab Pages
 
 Before adding CI, ensure:
 

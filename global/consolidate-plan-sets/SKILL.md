@@ -7,7 +7,7 @@ description: Consolidate multiple existing planning document sets into one curre
 
 Use this skill to replace many overlapping plan sets with one current monolithic plan set for the remaining work: a single plan directory with an overview and many phase files.
 
-This skill depends on two other skills:
+This skill depends on two others:
 
 - **`plan-progress-review`** — audit existing plans and classify what is done, stale, unfinished, or blocked.
 - **One multi-phase plan flavour** — `multi-phase-plan-codex`, `multi-phase-plan-claude`, or `multi-phase-plan-mixed`. The chosen flavour supplies provider-specific model callouts, routing language, and execution assumptions.

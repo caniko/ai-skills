@@ -25,7 +25,14 @@ Before publishing or commenting upstream, read the common references in `../nixp
 
 3. Implement the package, module, or maintenance change using nixpkgs conventions.
    For new packages, set `strictDeps = true;` and `__structuredAttrs = true;` unless a concrete incompatibility prevents it.
-   For discoverable package updates, prefer `nix-update <attr>` and add `passthru.updateScript = nix-update-script { };` when suitable.
+   For discoverable package updates, prefer `nix-update <attr>` and add `passthru.updateScript = nix-update-script { };` so the package is maintainable by `maintainers/scripts/update.nix` and nixpkgs-update automation. Use `extraArgs` only when the version scheme requires it (branch tracking, GitHub-release-only tracking, custom version regex). Validate the updater before publishing, then keep only intended package-update changes from any generated diff:
+
+   ```bash
+   nix eval --impure --expr 'let pkgs = import ./. { config.allowUnfree = true; }; in pkgs.<attr>.updateScript'
+   nix-shell maintainers/scripts/update.nix --argstr package <attr>
+   ```
+
+   If the updater cannot run, stop and report per the missing-data contract in `../nixpkgs-pr-common/references/decorum.md`.
 
 4. Validate before publishing.
    Run the targeted `nix build .#<attr>` or module/test check, plus smoke tests for relevant executables.

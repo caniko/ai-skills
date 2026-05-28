@@ -16,6 +16,11 @@ Set up a complete web presence for a Codeberg-hosted project:
 
 The combined deployable output places the Zola site at `https://<user>.codeberg.page/<repo>/` and mdBook documentation at `https://<user>.codeberg.page/<repo>/docs/`.
 
+## Required references
+
+- [../mdbook-docs/SKILL.md](../mdbook-docs/SKILL.md) for the `docs/` mdBook site, `book.toml`, documentation-content guidance, the `docs` derivation, and the docs verify recipe. Set `site-url = "/docs/"` (mdBook is nested under the Zola root). This skill adds the Zola `website` derivation and the combined `site` derivation on top.
+- [../repo-pages/SKILL.md](../repo-pages/SKILL.md) (loaded transitively through `forgejo-pages`) for the build → publish model and the base-URL / subpath pitfall.
+
 ## Prerequisites
 
 - The project must be a Nix flake with `flake.nix`.
@@ -24,32 +29,11 @@ The combined deployable output places the Zola site at `https://<user>.codeberg.
 - Gather or infer the project display name, one-line description, key landing-page features, license, author, and documentation sections.
 - If documentation or landing-page content depends on missing source material, stop and report the missing source, required producer, regeneration command, and validation command.
 
-## Documentation guidance
-
-Read `/home/can/.agents/skills/mdbook-docs/references/documentation.md` when creating or reorganizing mdBook content. It is the shared, non-invocable guide for documentation structure, `SUMMARY.md`, page conventions, links, and quality expectations.
-
 ## Workflow
 
 ### 1. Create the documentation site
 
-Create or update `docs/` as an mdBook site. Use this `book.toml` shape for docs served under `/docs/`:
-
-```toml
-[book]
-title = "<Project> Documentation"
-authors = ["<Author>"]
-language = "en"
-src = "src"
-
-[build]
-build-dir = "book"
-
-[output.html]
-site-url = "/docs/"
-default-theme = "coal"
-preferred-dark-theme = "coal"
-git-repository-url = "https://codeberg.org/<user>/<repo>"
-```
+Create or update `docs/` per [../mdbook-docs/SKILL.md](../mdbook-docs/SKILL.md), with `site-url = "/docs/"` and `git-repository-url = "https://codeberg.org/<user>/<repo>"`.
 
 ### 2. Create the presentation site
 
@@ -97,7 +81,7 @@ For `_index.md`, use Zola's `section` variable rather than `page`.
 
 ### 3. Update `flake.nix`
 
-Add derivations for `website`, `docs`, and combined `site`:
+Take the `docs` mdBook derivation from [../mdbook-docs/SKILL.md](../mdbook-docs/SKILL.md). Add the Zola `website` derivation and override `site` to combine the two:
 
 ```nix
 website = pkgs.stdenv.mkDerivation {
@@ -119,23 +103,7 @@ website = pkgs.stdenv.mkDerivation {
   '';
 };
 
-docs = pkgs.stdenv.mkDerivation {
-  pname = "<project>-docs";
-  version = "0.1.0";
-  src = lib.fileset.toSource {
-    root = ./.;
-    fileset = lib.fileset.maybeMissing ./docs;
-  };
-  nativeBuildInputs = [pkgs.mdbook];
-  phases = ["buildPhase" "installPhase"];
-  buildPhase = ''
-    cp -r --no-preserve=mode $src/docs docs
-    mdbook build docs
-  '';
-  installPhase = ''
-    cp -r docs/book $out
-  '';
-};
+# docs = ... (mdBook derivation from mdbook-docs)
 
 site = pkgs.runCommand "<project>-site" {} ''
   mkdir -p $out
@@ -147,7 +115,7 @@ site = pkgs.runCommand "<project>-site" {} ''
 
 Expose `website`, `docs`, and `site` in `packages`. Add `pkgs.zola` and `pkgs.mdbook` to the dev shell.
 
-If the flake is already large or this update makes `flake.nix` hard to review, modularize using the shared routine at `/home/can/.codex/skills/simit-project-init/references/flake-modularization.md`. Keep `website`, `docs`, and `site` output names stable.
+If the flake is already large or this update makes `flake.nix` hard to review, modularize using the shared routine at [../simit-project-init/references/flake-modularization.md](../simit-project-init/references/flake-modularization.md). Keep `website`, `docs`, and `site` output names stable.
 
 ### 4. Update ignored artifacts
 
@@ -160,7 +128,7 @@ website/public/
 
 ### 5. Add or update Pages deployment
 
-Use the `forgejo-pages` skill for Forgejo Actions hosted by Codeberg. Do not duplicate its workflow details here.
+Use the `forgejo-pages` skill for Forgejo Actions hosted by Codeberg (it loads `repo-pages` for the build → publish model and the base-URL / subpath pitfall). Do not duplicate its workflow details here.
 
 Before adding or updating CI, ensure:
 
@@ -171,21 +139,14 @@ Before adding or updating CI, ensure:
 
 ### 6. Verify
 
-Run:
+Verify the docs build per [../mdbook-docs/SKILL.md](../mdbook-docs/SKILL.md), then additionally:
 
 ```sh
 nix build .#website
-nix build .#docs
 nix build .#site
-nix flake check
 ```
 
-For local development:
-
-```sh
-cd website && zola serve
-cd docs && mdbook serve
-```
+For local development, `cd website && zola serve` (docs serve per mdbook-docs).
 
 Clean generated artifacts after verification if they are created in the worktree:
 

@@ -1,18 +1,10 @@
 ---
 name: yeehaw
-description: Execute and inspect yee-haw multi-phase plan directories through the yh MCP phases tools.
-argument_hint: "[plan-dir] | run | status | show"
+description: Execute, inspect, or resume yee-haw multi-phase plan directories through the yh MCP phases tools. Use when the user wants to run a phase plan in the current repository, asks for `/yeehaw run`, `/yeehaw show`, or `/yeehaw status`, or after a `multi-phase-plan-*` flavour skill (`-codex` / `-claude`) writes a phase doc set under `docs/src/planning/<plan-name>/`.
+argument-hint: "[plan-dir] | run | status | show"
 ---
 
 # Yeehaw phase executor
-
-Use this skill when the user wants to inspect, run, or resume a multi-phase plan directory from Claude Code.
-
-## When to use
-
-- After a `multi-phase-plan-*` flavour skill (`-codex` / `-claude`) writes a phase doc set under `docs/src/planning/<plan-name>/`.
-- When the user asks to execute a phase plan in the current repository.
-- When the user asks for `/yeehaw run`, `/yeehaw show`, or `/yeehaw status`.
 
 Do not auto-invoke this from another skill. Suggest `/yeehaw run`; wait for the user to ask for execution.
 

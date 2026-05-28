@@ -7,21 +7,7 @@ description: Select the right GPT-5.x model and reasoning effort level for plan 
 
 Use this skill to select the right model and `reasoning_effort` level for a given plan step or workflow. The goal is to match task complexity and role-in-plan to the cheapest combination that meets quality requirements.
 
-## Decision variables
-
-Evaluate each plan step on two axes before selecting:
-
-**Task complexity** — how much reasoning is required:
-- Trivial: well-defined input → output, no ambiguity, no tool chaining
-- Moderate: multi-tool, some branching, recoverable errors
-- Complex: ambiguous goals, multi-file/multi-system, requires self-correction
-- Frontier: open-ended, long-horizon, novel problem, hardest evals
-
-**Role in plan** — where the step sits in the execution hierarchy:
-- Leaf node: executes a single concrete action, defined by an orchestrator above it
-- Sub-agent: runs a bounded workflow (3–10 steps), may call leaf tools
-- Orchestrator: decomposes goals, assigns to sub-agents, monitors outcomes
-- Top-level planner: owns the entire plan; handles ambiguity, replanning, inter-agent coordination
+The two decision axes (Task complexity × Role in plan), the provider-agnostic heuristics, and the base output-block template live in [plan-routing-axes](../plan-routing-axes/SKILL.md) — load it first. Everything below is the GPT-specific layer (model tiers + pricing, the `reasoning_effort` ladder). Sister skill to `claude-plan-routing`.
 
 ---
 
@@ -93,15 +79,15 @@ Top-level plnr  | 5.5/medium       | 5.5/medium        | 5.5/high          | 5.5
 
 ## Key heuristics
 
-**Start at medium, dial from there.** Never default to `xhigh` without benchmarking — it increases cost 3–5× with diminishing returns on well-defined tasks. Always start at `medium` and move up only if evals show measurable quality gain.
+The provider-agnostic heuristics (start-at-medium; tier effort within a plan; cheaper-model/high ≈ stronger-model/medium; throughput vs quality) live in [plan-routing-axes](../plan-routing-axes/SKILL.md). GPT-specific specializations and additions:
 
-**5.5/medium ≈ 5.4/high** in plan coherence with fewer tokens. If you're running 5.4 at `high`, test 5.5 at `medium` — it's often cheaper and better for orchestration-heavy workloads.
+**`xhigh` is the cost cliff.** Never default to `xhigh` without benchmarking — it increases cost 3–5× over `low` with diminishing returns on well-defined tasks.
 
-**Tier your effort within a plan.** Use `high`/`xhigh` only on the orchestrator; assign `low`/`medium` to leaf nodes. Token costs compound across every step, so effort misallocation at scale is expensive.
+**5.5/medium ≈ 5.4/high** in plan coherence with fewer tokens — the GPT instance of the cheaper/high ≈ stronger/medium rule. If you're running 5.4 at `high`, test 5.5 at `medium`; it's often cheaper and better for orchestration-heavy workloads.
+
+**Throughput fan-outs route to 5.4-mini/low** (> 10 concurrent leaves), promoting to 5.4/medium only on quality misses.
 
 **Long-horizon needs large context.** Steps with > 50 prior plan steps or large codebase context require 5.4+ (1M context). 5.4-mini and 5.3-Codex cap at 400K — chunk or summarize before routing there.
-
-**Throughput vs quality tradeoff.** For parallel leaf execution (> 10 concurrent steps), prefer 5.4-mini/low to avoid rate limits and control cost. Promote to 5.4/medium only for steps that fail quality checks.
 
 **Use `low` before `none` for plan steps.** `none` disables reasoning entirely — suitable only for pure retrieval or classification, not for steps that involve tool selection or multi-step logic. Even a simple plan step benefits from `low` effort.
 
@@ -109,7 +95,7 @@ Top-level plnr  | 5.5/medium       | 5.5/medium        | 5.5/high          | 5.5
 
 ## Output format for routing decisions
 
-When using this skill to make a routing recommendation, output:
+Use the base output block from [plan-routing-axes](../plan-routing-axes/SKILL.md), with the Effort field carrying a GPT `reasoning_effort` level. Example:
 
 ```
 Model: gpt-5.4

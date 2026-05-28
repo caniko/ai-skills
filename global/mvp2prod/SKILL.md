@@ -101,3 +101,5 @@ The working directory contains the fully bootstrapped project with all commits p
 - **Scripted then AI**: Phase 1 is deterministic and idempotent; Phase 2 uses AI for content that requires understanding the codebase
 - **Symlink preservation**: MVP copy preserves symlinks (Unix-specific)
 - **No Docker in Phase 1**: Pure host-side file operations; only Phase 2 uses container tasks
+
+For simit-managed crates.io release readiness, see `../rust-crate-release-prep/SKILL.md`.

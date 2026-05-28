@@ -15,7 +15,7 @@ Use this wrapper when evidence-backed research must feed a multi-phase planner. 
 - When the target is consequential enough that a future planner needs traceable current-state evidence.
 - When the output should become a research dossier with a literal `## Planner Handoff` section.
 
-For non-planning research, invoke `long-horizon-research` directly, or use the planned `research-routing` sibling when it exists.
+For non-planning research, invoke `long-horizon-research` directly, or use the [`research-routing`](../research-routing/SKILL.md) sibling to pick the right specialist.
 
 ## Discovery Alias
 
@@ -23,7 +23,7 @@ This skill is also available as `multi-plan-research` via directory symlink. Use
 
 ## Workflow
 
-1. Establish the planning target: user goal, target repo, and selected downstream flavour. Default downstream flavour: see [`plan-and-verify`](../plan-and-verify/SKILL.md) "Default flavour for prep/plan dispatch".
+1. Establish the planning target: user goal, target repo, and selected downstream flavour (default per the Provider-Default Rule below).
 2. Run the base `long-horizon-research` workflow: discover, audit existing plans when present, stop on blockers, apply the right-size gate, and write the dossier.
 3. If the right-size gate downshifted to a `-findings.md` note, stop. This wrapper has nothing to add to a non-planning investigation; report the findings path and exit.
 4. Otherwise, append `## Planner Handoff` to the dossier and emit the `plan-handoff` schema literally. Fill every required field with concrete evidence-backed content; fill optional fields only when dossier evidence supports them.
@@ -56,4 +56,4 @@ In the final response, state:
 - `long-horizon-research` - base evidence dossier workflow.
 - `plan-handoff` - literal Planner Handoff schema contract.
 - `multi-phase-plan-codex`, `multi-phase-plan-claude`, `multi-phase-plan-mixed` - downstream planning flavours.
-- `research-routing` - planned sibling router for non-planning research selection.
+- `research-routing` - sibling router for non-planning research selection.

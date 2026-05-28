@@ -21,6 +21,6 @@ The README must render correctly on crates.io and include:
 - Minimal compiling usage example.
 - Links to docs.rs and canonical source repository.
 - Supported feature/license/API summary.
-- Validation commands used for release readiness, including `simit init-flake --check --diff`, `simit release trust check`, and `simit init-ci --platform <platform> --check --diff` when release infrastructure is in scope.
+- Validation commands used for release readiness; when release infrastructure is in scope, document the simit check-mode triad from the Simit Infrastructure section of `../rust-crate-release-reference/SKILL.md`.
 
 Keep README claims aligned with actual public API and tests. Do not invent users, benchmarks, compatibility guarantees, or legal interpretations beyond what the code documents.

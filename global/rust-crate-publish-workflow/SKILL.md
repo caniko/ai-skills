@@ -11,14 +11,11 @@ Before actual publish, require:
 
 ```sh
 git status --short
-simit init-flake --check --diff
-simit release trust check
-simit init-ci --platform <platform> --check --diff
 cargo package --list
 cargo publish --dry-run
 ```
 
-Use the platform that matches the repository host (`forgejo` for Codeberg/Forgejo, `github` for GitHub). If the project intentionally has no simit-managed flake or CI, document that repository policy explicitly before falling back to Cargo-only release gates. Also confirm the repository tag policy, version in `Cargo.toml`, changelog/release notes if the project has them, release signing trust-root status, and CI status for the exact commit.
+Run the simit check-mode triad (`simit init flake --check --diff`, `simit release trust check`, `simit init ci --platform <platform> --check --diff`) per the Simit Infrastructure section of `../rust-crate-release-reference/SKILL.md`. Use the platform that matches the repository host (`forgejo` for Codeberg/Forgejo, `github` for GitHub). If the project intentionally has no simit-managed flake or CI, document that repository policy explicitly before falling back to Cargo-only release gates. Also confirm the repository tag policy, version in `Cargo.toml`, changelog/release notes if the project has them, release signing trust-root status, and CI status for the exact commit.
 
 ## Publish Ownership
 
@@ -28,7 +25,7 @@ For Codeberg/Forgejo repositories, do not run `cargo publish` from the local she
 
 If the repository does not have a working CI publish path, or the publish workflow lacks the required secret/configuration on the remote host, treat that as an external blocker and report the exact remote workflow or secret that must be fixed. Never paste tokens into files, CI logs, or chat.
 
-If the publish workflow verifies signed tags and `keys/maintainers.gpg` is missing or stale, run `simit release trust init` or `simit init-ci --platform <platform>` rather than manually exporting GPG material. Block only if simit cannot discover/export `[release.signing].key`, `git config user.signingkey`, or an explicit `--maintainer-key`.
+If the publish workflow verifies signed tags and `keys/maintainers.gpg` is missing or stale, use the simit trust-root path (`simit release trust init` or `simit init ci --platform <platform>`) rather than manually exporting GPG material; see the Simit Infrastructure section of `../rust-crate-release-reference/SKILL.md` for the discovery sources and block condition.
 
 Recommended final sequence for Codeberg/Forgejo:
 

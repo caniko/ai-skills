@@ -6,44 +6,25 @@ description: End-to-end workflow for prep, plan, and verify around multi-phase p
 # Plan-and-verify
 
 A three-mode skill that bookends a multi-agent plan execution and its
-evidence-gathering prelude:
+evidence-gathering prelude (each mode is detailed in its own section below):
 
-0. **`prep`** — decide whether the work needs a dossier before planning.
-   Route fresh research-then-plan flows to **`plan-research`**, route
-   collapsing existing plan sets to **`consolidate-plan-sets`**, or
-   decline prep for small work. `prep` stops at the dossier boundary and
-   tells the user how to invoke `plan --from-dossier <path>` next.
-1. **`plan`** — delegate to a `multi-phase-plan-*` flavour skill to produce a
-   set of standalone phase docs under `docs/src/planning/<plan-name>/`.
-   The flavour is picked up from the user's invocation:
-   - `plan codex <…>` → **`multi-phase-plan-codex`** (GPT-5.x routing).
-   - `plan claude <…>` → **`multi-phase-plan-claude`** (Claude routing +
-     parallel sub-layer CLI bundles).
-   - `plan mixed <…>` → **`multi-phase-plan-mixed`** (cross-provider
-     routing — picks per-phase between Claude and Codex for cost-per-quality
-     efficiency; emits a dispatch script that switches `claude` vs
-     `codex` invocations per sub-layer).
-   - `plan <…>` with no flavour token → apply this skill's canonical
-     default-flavour rule.
-   - `plan --from-dossier <path> <…>` → same flavour selection, but feed the
-     base skill's dossier-aware planning input variant instead of relying only
-     on free text.
-2. **`verify`** — once the phases have been executed (typically by other
-   Codex/Claude sessions), audit the resulting repo state against each
-   phase's "Acceptance criteria" checklist and report pass/fail per item.
-   Verification is flavour-agnostic — all flavours produce the same
-   shape spec (per `multi-phase-plan`), and the only flavour-specific
-   surface (Claude's `run-NN-*.sh` bundles, sub-layer directories) is
-   transparent to the acceptance-criteria reader.
+- **`prep`** — decide whether the work needs a dossier first, routing to
+  **`plan-research`** (fresh research-then-plan) or **`consolidate-plan-sets`**
+  (collapse existing plan sets), or declining for small work. Stops at the
+  dossier boundary.
+- **`plan`** — delegate to a `multi-phase-plan-*` flavour to produce standalone
+  phase docs under `docs/src/planning/<plan-name>/`. Flavour selection and
+  `--from-dossier` handling are in Mode 1.
+- **`verify`** — after the phases are executed, audit repo state against each
+  phase's "Acceptance criteria" and report pass/fail per item. Flavour-agnostic:
+  all flavours share the `multi-phase-plan` shape spec, and sub-layer
+  directories are transparent to the criteria reader.
 
-The modes share no hidden state across invocations. `prep` produces a
-reviewable dossier with a `## Planner Handoff` contract; `plan` produces the
-phase docs; `verify` consumes the phase docs after execution.
-
-When no recognized mode token appears as the first word of the invocation,
-default to **`plan`** mode for backwards compatibility. In other words,
-`/plan-and-verify <task description>` means
-`/plan-and-verify plan <task description>`, not `prep`.
+The modes share no hidden state: `prep` produces a reviewable `## Planner
+Handoff` dossier; `plan` produces the phase docs; `verify` consumes them after
+execution. When no recognized mode token leads the invocation, default to
+**`plan`** for backwards compatibility (`/plan-and-verify <task>` ≡
+`/plan-and-verify plan <task>`, not `prep`).
 
 ## When to use
 
@@ -127,7 +108,7 @@ Invocation:
   default-flavour rule.
 - `/plan-and-verify plan codex <task description>` — explicit codex flavour.
 - `/plan-and-verify plan claude <task description>` — claude flavour, with
-  parallel sub-layer CLI bundles.
+  parallel sub-layer phase docs.
 - `/plan-and-verify plan --from-dossier <path> [task description]` —
   dossier-aware planning; pass the dossier path through to the selected
   flavour's base `multi-phase-plan` input variant.
@@ -141,19 +122,19 @@ Steps:
 
 1. Pick the flavour skill:
    - `multi-phase-plan-codex` — Codex / GPT-5.x execution, routes via
-     `gpt-plan-routing`. Dispatch scripts emit `codex exec` calls.
+     `gpt-plan-routing`.
    - `multi-phase-plan-claude` — Claude execution, routes via
-     `claude-plan-routing`. Dispatch scripts emit `claude --print` calls.
+     `claude-plan-routing`.
    - `multi-phase-plan-mixed` — Cross-provider execution; routes per
      phase/sub-layer through both routing skills and picks the
      `(provider, model, effort)` triple with the best cost-per-quality.
-     Dispatch scripts contain a `case "$provider"` shim that selects
-     `claude` vs `codex` per sub-layer.
 2. Hand the task description to the chosen flavour skill verbatim. All
    three flavours load the **`multi-phase-plan`** generic shape spec and
-   **`multi-phase-dispatch`** (parallel sub-layer model + run-script
-   template) internally, then layer their flavour-specific routing
-   callout block and CLI invocation contract on top.
+   **`multi-phase-dispatch`** (parallel sub-layer model) internally, then
+   layer their flavour-specific routing callout block on top. The flavours
+   produce a standalone phase doc set only — they do **not** emit
+   `run-*.sh` scripts, `run-all.sh`, `case "$provider"` shims, or any
+   dispatch harness; the user runs the phases themselves.
    If the invocation includes `--from-dossier <path>`, pass that through
    instead of re-documenting or re-reading the `plan-handoff` fields here;
    the base **`multi-phase-plan`** skill owns the dossier-aware planning
@@ -161,11 +142,11 @@ Steps:
    claude, and mixed flavour wrappers all honor that dossier input and
    cross-reference the base skill for field reads.
 3. After phase docs land under `docs/src/planning/<plan-name>/`, return
-   the flavour's routing table + parallelism matrix + dispatch
-   instructions (which `run-NN-*.sh` scripts to invoke, in what order)
-   to the user. The mixed flavour additionally surfaces a one-line
-   provider-mix summary so the user can see at a glance how many phases
-   landed on each provider.
+   the flavour's routing table and parallelism matrix to the user, plus a
+   reminder that the user runs each phase themselves (fresh session per
+   phase; no dispatch scripts are generated). The mixed flavour
+   additionally surfaces a one-line provider-mix summary so the user can
+   see at a glance how many phases landed on each provider.
 4. Tell the user that `verify` is available as a follow-up once the
    phases have been executed.
 
@@ -309,22 +290,11 @@ Paradigm diagram:
 └──────────────┘    └──────────────┘    └──────────────┘
 ```
 
-Use `prep` when the planning target needs evidence before phase docs are
-written, or when existing plan directories must be collapsed before a
-current plan can be produced. The short decision tree is:
-
-1. Existing plan dirs are in scope -> dispatch to `consolidate-plan-sets`.
-2. New, non-trivial, multi-day or multi-subsystem work -> dispatch to
-   `plan-research`.
-3. Small, single-session work -> skip prep and invoke `plan` directly,
-   unless the user insisted on prep; in that case `plan-research` may
-   downshift to a findings note through its own right-size gate.
-
-Skip prep for a single fix, a single-session change, or work where the user
-already provided enough current evidence for direct planning. The
-right-size gate in `plan-research` is the fallback for borderline cases, so
-the orchestrator should not synthesize a dossier to make a small task look
-larger than it is.
+Use `prep` per the Mode 0 decision tree when the target needs evidence before
+phase docs are written or when existing plan directories must be collapsed
+first; skip it for a single fix or single-session change where the user already
+supplied enough evidence. `plan-research`'s right-size gate is the borderline
+fallback, so don't synthesize a dossier just to make a small task look larger.
 
 The hand-off boundaries are deliberate. `prep -> plan` pauses so the user
 can review the dossier and resolve open decisions before phase docs exist.
@@ -349,54 +319,31 @@ stays visible with the missing evidence reported.
 
 ### Worked example: WebGPU backend for a Bevy fork
 
-A user wants to add a WebGPU backend to a local Bevy fork, but the current
-renderer state and prior experiments are unclear:
-
 ```bash
 /plan-and-verify prep "add WebGPU backend to bevy fork"
 ```
-
-`prep` sees new, non-trivial work and no named stale plan directory, so it
-routes to `plan-research`. The research pass inspects the fork, audits any
-prior WebGPU experiments, checks renderer/backend constraints, and writes a
-dossier such as `docs/planning/webgpu-backend-research.md` with a filled
-`## Planner Handoff`. The user reviews that dossier and resolves one open
-decision it surfaced, for example whether the first phase should target
-native-only WebGPU or include WASM examples immediately.
-
-The user then asks the planner to consume the dossier explicitly:
+New, non-trivial work with no named stale plan dir → routes to `plan-research`,
+which audits the fork and writes `docs/planning/webgpu-backend-research.md` with
+a filled `## Planner Handoff`. The user reviews it and resolves any open
+decision (e.g. native-only vs. WASM examples first), then:
 
 ```bash
 /plan-and-verify plan --from-dossier docs/planning/webgpu-backend-research.md
 ```
-
-The request dispatches to `multi-phase-plan-codex`, matching the dossier's
-recommended flavour, and passes the dossier path through to the shared
-from-dossier input. The planner reads the handoff according to
-`multi-phase-plan`, then writes a concrete phase set such as
-`docs/src/planning/webgpu-backend/README.md`,
-`docs/src/planning/webgpu-backend/01-renderer-inventory.md`,
-`docs/src/planning/webgpu-backend/02-backend-abstraction.md`, and
-`docs/src/planning/webgpu-backend/03-webgpu-smoke-tests.md`.
-
-Over the next several days, the user runs those phase files in fresh Codex
-sessions. After the changes land, the user asks for the audit pass:
+Dispatches to the dossier's recommended flavour (`multi-phase-plan-codex`),
+which reads the handoff and writes the phase set
+(`docs/src/planning/webgpu-backend/README.md` + `NN-*.md`). The user runs those
+phases in fresh sessions over the following days, then:
 
 ```bash
 /plan-and-verify verify webgpu-backend
 ```
-
-`verify` reads the acceptance criteria from
-`docs/src/planning/webgpu-backend/`, checks the repository state and live
-commands the criteria require, and reports the result. If every criterion
-passes and there are no unresolved gaps or `missed-signal:` surprises, the
-clean-verify path delegates retirement to `retire-docs-planning
-clean-shipped docs/src/planning/webgpu-backend`. Durable backend knowledge
-moves into stable docs such as `docs/src/webgpu.md`, `docs/src/SUMMARY.md`
-is pruned, and the completed plan directory is removed with
-`git rm -r docs/src/planning/webgpu-backend`. The end state is stable
-documentation for the shipped WebGPU backend and no stale planning surface
-left behind.
+`verify` checks repo state + live commands against each phase's acceptance
+criteria. On a clean pass (no gaps, no `missed-signal:` surprises) it delegates
+to `retire-docs-planning clean-shipped docs/src/planning/webgpu-backend`:
+durable knowledge moves to stable docs (`docs/src/webgpu.md`), `SUMMARY.md` is
+pruned, and the plan dir is removed with `git rm -r`. End state: stable shipped
+docs, no stale planning surface.
 
 ## Things to look out for during `verify`
 
@@ -468,11 +415,12 @@ thin.
   Sonnet 4.6 / Haiku 4.5).
 - Sibling skill: `multi-phase-plan-mixed` — cross-provider flavour
   (cheapest-viable routing across Claude + Codex per phase/sub-layer).
-- Shared dispatch: `multi-phase-dispatch` — parallel sub-layer model +
-  `run-NN-<slug>.sh` template + `run-all.sh` orchestrator.
+- Shared dispatch: `multi-phase-dispatch` — parallel sub-layer model;
+  the user runs phases themselves (no orchestration scripts generated).
+- Verify contract + clean-verify auto-retire rule:
+  [`multi-phase-plan`](../multi-phase-plan/SKILL.md) "Mode: `verify`".
 - Routing skills: `gpt-plan-routing` (Codex), `claude-plan-routing` (Claude).
 - Project convention for plan docs:
   `docs/src/planning/<plan-name>/NN-<slug>.md` (single-layer phases) or
-  `docs/src/planning/<plan-name>/NN-<slug>/sub-MM-<slug>.md` (Claude
-  flavour, multi-sub-layer phases), indexed in `docs/src/SUMMARY.md`
-  under a Planning section.
+  `docs/src/planning/<plan-name>/NN-<slug>/sub-MM-<slug>.md` (multi-sub-layer
+  phases), indexed in `docs/src/SUMMARY.md` under a Planning section.

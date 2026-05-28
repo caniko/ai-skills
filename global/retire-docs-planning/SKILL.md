@@ -47,7 +47,7 @@ Split each planning statement into one of three buckets:
 - Claims that require verification from the current repo state before they can be preserved.
 - Unfinished or blocked work that should remain as planning content instead of being retired.
 
-Do not copy phase structure, model-routing notes, branch names, or “run this in a fresh session” instructions into stable docs. Preserve behavior, constraints, invariants, release checks, and maintainer guidance.
+Apply the Migration criteria above when sorting: preserve durable behavior, constraints, invariants, release checks, and maintainer guidance; discard execution scaffolding.
 
 ### 3. Re-verify every time-sensitive claim from source artifacts
 

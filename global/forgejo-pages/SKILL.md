@@ -11,13 +11,18 @@ Adds a Forgejo Actions workflow that builds a static site and publishes it to Co
 
 Use the term **Forgejo Actions hosted by Codeberg**. Avoid "Codeberg Actions"; Codeberg's hosted CI service is Forgejo Actions.
 
-This skill is for Codeberg's shared hosted runners. If the repository should run on our self-hosted runner runner, or the request is for Rust crate CI/release readiness rather than Pages publishing, use `/home/can/.codex/skills/forgejo-runner-ci/SKILL.md` and the Rust crate release CI skill instead.
+This skill is for Codeberg's shared hosted runners. If the repository should run on our self-hosted runner runner, or the request is for Rust crate CI/release readiness rather than Pages publishing, use [../forgejo-runner-ci/SKILL.md](../forgejo-runner-ci/SKILL.md) and the Rust crate release CI skill instead.
 
-## Preconditions
+## Shared Pages model
 
-- The repository is public and available under a free/libre license.
+This skill layers Codeberg/Forgejo specifics on top of the generic repository-Pages model defined in [repo-pages](../repo-pages/SKILL.md). Read that skill for the build → publish flow, branch gating rationale, build-output / publish-directory matching, and the base-URL / subpath pitfall that causes most post-deploy 404s. Everything below is the Codeberg/Forgejo-specific layer.
+
+## Codeberg-specific preconditions
+
+In addition to the generic preconditions in `repo-pages`:
+
+- The repository is public and available under a free/libre license (Codeberg Pages eligibility).
 - Forgejo Actions is enabled in the repository settings: **Settings → Units → Enable Actions**, then save.
-- The site build output is available from a local build command.
 - The target site uses the `codeberg.page` domain. Custom domains still require Codeberg's legacy Pages workflow until the new git-pages method supports them.
 
 ## Defaults
@@ -34,7 +39,7 @@ This skill is for Codeberg's shared hosted runners. If the repository should run
 
 Use `master` instead of `main` only when the target repository actually uses `master`.
 
-## Hosted Runner Limits
+## Hosted runner limits
 
 Codeberg hosted Forgejo Actions runners are constrained. Keep jobs minimal, avoid matrix builds unless there is a strong reason, and do not assume a Docker daemon is available.
 
@@ -95,7 +100,4 @@ jobs:
 ## Notes
 
 - Workflows belong in `.forgejo/workflows/`; Forgejo may also look in `.github/workflows/`, but prefer the native path.
-- `codeberg-small` is the default because site builds with Nix often need more than the tiny runner. Use `codeberg-tiny` only for very lightweight non-Nix builds.
-- Limit deployment to the default branch so draft branches do not publish unfinished content.
 - The `site` input must match the final public Pages URL. For a repository named `pages`, the repository path segment may be omitted if publishing to `https://<user>.codeberg.page/`.
-- `berg --owner-repo <owner>/<repo> repo info --output-mode json` can verify `has_actions`, but `berg` 0.5.5 does not provide an Actions enable command.

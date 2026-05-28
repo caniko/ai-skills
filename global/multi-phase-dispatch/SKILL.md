@@ -108,6 +108,38 @@ what the verify mode checks at the phase level.>
 
 The phase README is for the human reading the plan. It describes how the user is expected to fan out the sub-layers and merge them. It does not prescribe a script or harness.
 
+## Shared flavour skeleton
+
+The three flavour skills (`multi-phase-plan-codex`, `-claude`, `-mixed`) share the same modes, plan workflow, routing-summary framing, and calibration hook. They are defined once here; each flavour adds only its routing skill(s), callout-block template, and routing-specific anti-patterns.
+
+### Modes (inherited from `multi-phase-plan`)
+
+Each flavour is invoked in one of three modes, inherited from [`multi-phase-plan`](../multi-phase-plan/SKILL.md):
+
+- **plan** — the default. Produce the phase doc set per the workflow below. Dossier-aware: when invoked with a Planner Handoff dossier path (per `multi-phase-plan` "Dossier-aware planning"), read the dossier's plan-handoff section and use it as the planning brief. See the base skill for field reads, override rules, and missing-field behavior.
+- **verify** — inherited from `multi-phase-plan`; see its verify section. The user has already executed the phases; verify only audits the result and (on a clean verify) auto-retires.
+- **calibrate** — invoke the base skill's `calibrate` mode; see `multi-phase-plan` and its `references/calibration.md` "Mode: calibrate". The flavour's routing skill(s) are *not* consulted for calibrate — it analyzes past plans, it doesn't route new ones. Shells out to `skillnet calibration walkthrough`; users with the skillnet HM module enabled get this transparently (`programs.skillnet.enable = true` via ai-skills' re-exported HM module).
+
+### Plan workflow
+
+1. Load [`multi-phase-plan`](../multi-phase-plan/SKILL.md) (base shape spec + verify mode) and this skill (parallel sub-layer model).
+2. Inventory the work, group into phases, build the dependency table (per the base skill).
+3. For each phase, decide single-layer vs multi-sub-layer using the eligibility checklist above.
+4. Route each phase (and each sub-layer) through the flavour's routing skill(s); emit the flavour's callout block at the top of each file.
+5. Write phase files / phase directories per the on-disk layout above. **Do not generate run scripts, dispatch shims, log directories, or `run-all.sh` orchestrators.** The user runs each phase themselves in a fresh session.
+6. Wire into `docs/src/SUMMARY.md` if mdBook is in use.
+7. Reply with the flavour's routing summary table, parallelism matrix, and a one-line reminder: *"Run the phases yourself; prompt `verify` when done to audit acceptance criteria."*
+8. **Record for calibration.** Follow the base skill's end-of-plan hook: run `skillnet calibration init <plan-dir>`, and if any meta-heuristic fires, run `skillnet calibration record <plan-dir>`. Surface in the chat reply per the base workflow.
+
+### Routing summary in chat reply
+
+Each flavour replies with a routing summary table (Phase × Layout × Sub-layers × Models × Blocking?, plus a Provider column for the mixed flavour), the parallelism matrix, and any setup notes. No `Dispatch` column — the user picks how they want to run each phase (fresh session, IDE side-pane, Agent tool, etc.).
+
+### Shared anti-patterns (all flavours)
+
+- **Emitting `run-*.sh` scripts, dispatch shims, or `run-all.sh` orchestrators.** Not these skills' job (see "Emitting orchestration scripts" below). The user runs phases themselves. If they want orchestration, they'll wire it themselves or use a separate tool.
+- **Treating "verify" as a re-plan trigger.** Verify reads existing phase docs and audits them against the repo state — it does not rewrite phases or re-route models/providers.
+
 ## Parallelism guidance
 
 Default each phase to "independent unless flagged" — explicit constraints belong in the phase doc, not in tribal knowledge. The base `multi-phase-plan` skill defines the dependency table; sub-layers inherit the same rules within a phase.

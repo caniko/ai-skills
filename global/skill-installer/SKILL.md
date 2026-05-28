@@ -14,8 +14,6 @@ Use the helper scripts based on the task:
 - Install from the curated list when the user provides a skill name.
 - Install from another repo when the user provides a GitHub repo/path (including private repos).
 
-Install skills with the helper scripts.
-
 ## Communication
 
 When listing skills, output approximately as follows, depending on the context of the user's request. If they ask about experimental skills, list from `.experimental` instead of `.curated` and label the source accordingly:

@@ -7,7 +7,7 @@ description: Shared reference skill defining the Planner Handoff schema that ups
 
 ## Purpose
 
-This skill defines the minimal `## Planner Handoff` contract between upstream dossier producers and downstream multi-phase planner consumers. It mirrors the `multi-phase-dispatch` precedent: a shared reference skill owns one cross-skill contract while the producer and consumer skills own their local workflows.
+This skill defines the minimal `## Planner Handoff` contract between upstream dossier producers and downstream multi-phase planner consumers. Like the `multi-phase-dispatch` precedent, this shared reference skill owns one cross-skill contract while producer and consumer skills own their local workflows. Not user-invokable on its own.
 
 ## Schema (required fields)
 

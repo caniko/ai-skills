@@ -5,6 +5,8 @@ description: "Shared Rust crate release readiness doctrine for crates.io prepara
 
 # Rust Crate Release Reference
 
+Shared reference — not user-invokable on its own; loaded by the `rust-crate-*` release skills.
+
 ## Source Integrity
 
 Do not fabricate release metadata, license text, crate descriptions, API behavior, credentials, publication state, changelog facts, or legal text. Discover required facts from the repository, upstream package metadata, Codeberg/crates.io/docs.rs, or user-provided authoritative sources.
@@ -19,16 +21,16 @@ If a required source is missing or invalid, stop and report:
 
 ## Simit Infrastructure
 
-Use `simit` as the canonical generator before hand-writing or repairing Rust crate release flakes and CI. Load `/home/can/.codex/skills/simit-project-init/SKILL.md` whenever release work touches `flake.nix`, `flake.lock`, `nix/`, `.forgejo/workflows/`, or `.github/workflows/`.
+Use `simit` as the canonical generator before hand-writing or repairing Rust crate release flakes and CI. Load `../simit-project-init/SKILL.md` whenever release work touches `flake.nix`, `flake.lock`, `nix/`, `.forgejo/workflows/`, or `.github/workflows/`.
 
 Before running release hooks or validating generated infrastructure, ensure the repository has simit-managed release infrastructure unless it has an explicit documented policy against it:
 
 ```sh
-simit init-flake
-simit init-ci --platform <platform>
+simit init flake
+simit init ci --platform <platform>
 ```
 
-Current simit owns the release maintainer OpenPGP trust root. `simit init-ci`
+Current simit owns the release maintainer OpenPGP trust root. `simit init ci`
 discovers the release signing key from `[release.signing].key`,
 `git config user.signingkey`, or `--maintainer-key`, writes
 `keys/maintainers.gpg`, and blocks only when no exportable key is available.
@@ -57,12 +59,12 @@ If neither `simit` nor the local checkout is available, report the missing tool 
 Validate generated infrastructure with:
 
 ```sh
-simit init-flake --check --diff
+simit init flake --check --diff
 simit release trust check
-simit init-ci --platform <platform> --check --diff
+simit init ci --platform <platform> --check --diff
 ```
 
-Do not substitute bespoke release flakes or workflows when `simit init-flake` or `simit init-ci` can generate or check the required structure.
+Do not substitute bespoke release flakes or workflows when `simit init flake` or `simit init ci` can generate or check the required structure.
 
 ## Changelog Requirement
 
@@ -119,8 +121,7 @@ Treat these as repository-owned and fix them when possible:
 - README examples or docs that do not compile or no longer match the public API.
 - Nix evaluation/build errors caused by project configuration.
 - CI workflow syntax or runner mismatch caused by repository files.
-- Missing or stale `keys/maintainers.gpg` when `simit release trust init` can
-  discover and export the configured signing key.
+- Missing or stale `keys/maintainers.gpg` that simit can regenerate (see Simit Infrastructure for the discovery sources and `simit release trust` commands).
 
 Treat these as blockers unless the user or an authoritative source provides the missing input:
 
@@ -131,8 +132,6 @@ Treat these as blockers unless the user or an authoritative source provides the 
 - Unknown MSRV or compatibility promise when no repo evidence exists.
 - Security/advisory policy decisions that require maintainer judgment.
 - Missing generated artifacts whose upstream producer is outside the repo.
-- Missing release signing key only after `simit release trust status` or
-  `simit release trust init` confirms simit cannot discover/export
-  `[release.signing].key`, `git config user.signingkey`, or an explicit key.
+- Missing release signing key, but only after the `simit release trust` checks in Simit Infrastructure confirm simit cannot discover/export any configured key.
 
 If the active release skill is responsible for end-to-end publication on a Codeberg/Forgejo-hosted project, continue past dry-run through tag push, CI-triggered publish, and external verification that the new version is live on crates.io. Do not publish from the local shell when the repository's publish workflow is the intended path. Stop only for real external blockers such as broken remote workflow configuration, missing remote secrets, network failure, registry rejection, or unverifiable publication state.

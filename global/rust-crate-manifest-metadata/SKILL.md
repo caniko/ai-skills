@@ -24,15 +24,14 @@ For crates.io release readiness, ensure `Cargo.toml` has:
 
 Add `include = [...]` for small library crates when it prevents accidental packaging of generated output or local-only files. Include the manifest, lockfile when intentionally committed, README, license, source, examples/tests/docs that should publish, and exclude build artifacts.
 
-Run:
+Validate package contents with:
 
 ```sh
-simit init-flake --check --diff
 cargo package --list
 cargo publish --dry-run
 ```
 
-If Cargo is unavailable, use the simit-managed Nix dev shell/checks when present. If neither Cargo nor a valid simit-managed dev shell is available, report the exact missing toolchain and defer package validation until a dev shell or CI provides Cargo.
+Run the simit check-mode triad first when release infrastructure is in scope (see the Simit Infrastructure section of `../rust-crate-release-reference/SKILL.md`). If Cargo is unavailable, use the simit-managed Nix dev shell/checks when present. If neither Cargo nor a valid simit-managed dev shell is available, report the exact missing toolchain and defer package validation until a dev shell or CI provides Cargo.
 
 ## docs.rs Metadata
 

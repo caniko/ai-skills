@@ -15,13 +15,7 @@ This file only documents what's specific to Claude:
 1. Model routing via `claude-plan-routing` (Opus 4.7 / Sonnet 4.6 / Haiku 4.5).
 2. The Claude-flavoured "Recommended Claude model" callout block.
 
-## Modes
-
-This skill is invoked in one of three modes, inherited from `multi-phase-plan`:
-
-- **plan** — the default. Produce the phase doc set per the workflow below. Dossier-aware: when invoked with a Planner Handoff dossier path (per [multi-phase-plan](../multi-phase-plan/SKILL.md) "Dossier-aware planning"), reads the dossier's plan-handoff section and uses it as the planning brief. See base skill for field reads, override rules, and missing-field behavior.
-- **verify** — when the user says "verify" (or "check the phases", "did it all land"), do **not** re-plan. Run the verify workflow from `multi-phase-plan` against the most recent (or named) plan directory: read each phase's `## Acceptance criteria`, prove or disprove each item against the current repo state, and emit a per-phase pass/fail report. The user has already executed the phases themselves; verify just audits the result. On a fully successful verify, the post-verify step from `multi-phase-plan` automatically migrates any contributor-worthy knowledge into the project's contributor docs and `git rm`s the plan directory — see the base skill for the migration criteria and retirement steps.
-- **calibrate** — when the user says "calibrate", "tune the heuristics", or "review calibration data", invoke the base skill's `calibrate` mode. See the base `global/multi-phase-plan/SKILL.md` "Mode: calibrate" for the workflow. The calibrate mode shells out to `skillnet calibration walkthrough`; users with the skillnet HM module enabled get this transparently (`programs.skillnet.enable = true` via ai-skills' re-exported HM module). The flavor-specific routing skill (`claude-plan-routing` for claude) is *not* consulted for calibrate — calibrate analyzes past plans, it doesn't route new ones.
+Modes (plan / verify / calibrate), the generic plan workflow, the routing-summary framing, and the calibration hook are shared — see [`multi-phase-dispatch`](../multi-phase-dispatch/SKILL.md) "Shared flavour skeleton". Verify mode is inherited from `multi-phase-plan` — see its verify section.
 
 ## 1. Model routing via `claude-plan-routing`
 
@@ -77,26 +71,7 @@ Examples of valid callout headers:
 > **Recommended Claude model: Haiku 4.5 — thinking `n/a`**
 ```
 
-## Plan workflow
-
-1. Load **`multi-phase-plan`** (base shape spec + verify mode) and **`multi-phase-dispatch`** (parallel sub-layer model).
-2. Inventory the work, group into phases, build the dependency table (per the base skill).
-3. For each phase, decide single-layer vs multi-sub-layer using the eligibility checklist in `multi-phase-dispatch`.
-4. Route each phase (and each sub-layer) through **`claude-plan-routing`**; emit the Claude callout block at the top of each file.
-5. Write phase files / phase directories per the layout in `multi-phase-dispatch`. **Do not generate run scripts, dispatch shims, log directories, or `run-all.sh` orchestrators.** The user runs each phase themselves in a fresh Claude Code session.
-6. Wire into `docs/src/SUMMARY.md` if mdBook is in use.
-7. Reply with the Claude routing summary table, parallelism matrix, and a one-line reminder: *"Run the phases yourself; prompt `verify` when done to audit acceptance criteria."*
-8. **Record for calibration.** Follow the base skill's end-of-plan hook: run `skillnet calibration init <plan-dir>`, and if any meta-heuristic fires, run `skillnet calibration record <plan-dir>`. Surface in the chat reply per the base workflow.
-
-## Routing summary in chat reply
-
-| Phase | Layout | Sub-layers | Models | Blocking? |
-|---|---|---|---|---|
-| 01 | flat | — | Sonnet 4.6 / medium | no |
-| 02 | dir | 3 | Sonnet ×2 (medium, low), Haiku ×1 (no thinking) | no |
-| 03 | flat | — | Opus 4.7 / extra high | depends on 02 |
-
-Plus the parallelism matrix (which phases can fan out together, which must serialise) and any setup notes. No `Dispatch` column — the user picks how they want to run each phase (fresh Claude Code session, IDE side-pane, Agent tool, etc.).
+The Claude routing summary table uses `Models` cells like `Sonnet 4.6 / medium`, `Sonnet ×2 (medium, low), Haiku ×1 (no thinking)`, `Opus 4.7 / extra high`. Run each phase via fresh Claude Code session, IDE side-pane, Agent tool, etc.
 
 ## Claude-specific anti-patterns
 
@@ -105,8 +80,8 @@ Plus the parallelism matrix (which phases can fan out together, which must seria
 - **Writing `extra high` for a Sonnet phase.** Sonnet 4.6's ladder skips that tier. The only valid Sonnet values are `low` / `medium` / `high` / `max`. If a Sonnet phase wants more than `high`, either jump to `max` (rare) or promote the model to Opus 4.7 at the appropriate tier.
 - **Writing any `thinking` value for a Haiku phase.** Haiku 4.5 has no extended-thinking lever. The callout's `thinking` field must be `n/a` (or omitted). If quality misses, promote the *model* to Sonnet 4.6 at `low`/`medium` — don't pretend Haiku has a dial.
 - **Forgetting prompt caching.** Long phase prompts that fan out to many sub-layers benefit from prompt caching. Put the stable preamble (Working tree, Goal, Why, Out of scope) at the top of each sub-layer file and the variable per-sub-layer content at the bottom — the prefix is what the cache keys on.
-- **Emitting `run-*.sh` scripts, dispatch shims, or `run-all.sh` orchestrators.** Not this skill's job. The user runs phases themselves. If they want orchestration, they'll wire it themselves or use a separate tool.
-- **Treating "verify" as a re-plan trigger.** Verify reads existing phase docs and audits them against the repo state — it does not rewrite phases or re-route models.
+
+Shared anti-patterns (no orchestration scripts; verify is not a re-plan trigger) live in [`multi-phase-dispatch`](../multi-phase-dispatch/SKILL.md) "Shared anti-patterns".
 
 ## Reference
 

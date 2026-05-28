@@ -19,13 +19,7 @@ This file documents only what's cross-provider-specific:
 3. The mixed callout block (declares provider explicitly).
 4. Switch-cost rules — provider switching is not free; bias toward grouping adjacent same-provider phases.
 
-## Modes
-
-This skill is invoked in one of three modes, inherited from `multi-phase-plan`:
-
-- **plan** — the default. Produce the phase doc set per the workflow below. Dossier-aware: when invoked with a Planner Handoff dossier path (per [multi-phase-plan](../multi-phase-plan/SKILL.md) "Dossier-aware planning"), reads the dossier's plan-handoff section and uses it as the planning brief. See base skill for field reads, override rules, and missing-field behavior.
-- **verify** — when the user says "verify" (or "check the phases", "did it all land"), do **not** re-plan. Run the verify workflow from `multi-phase-plan` against the most recent (or named) plan directory: read each phase's `## Acceptance criteria`, prove or disprove each item against the current repo state, and emit a per-phase pass/fail report. Verify is provider-agnostic — it audits the result regardless of which provider executed each phase. On a fully successful verify, the post-verify step from `multi-phase-plan` automatically migrates any contributor-worthy knowledge into the project's contributor docs and `git rm`s the plan directory — see the base skill for the migration criteria and retirement steps.
-- **calibrate** — when the user says "calibrate", "tune the heuristics", or "review calibration data", invoke the base skill's `calibrate` mode. See the base `global/multi-phase-plan/SKILL.md` "Mode: calibrate" for the workflow. The calibrate mode shells out to `skillnet calibration walkthrough`; users with the skillnet HM module enabled get this transparently (`programs.skillnet.enable = true` via ai-skills' re-exported HM module). The flavor-specific routing skills (`gpt-plan-routing` and `claude-plan-routing` for mixed) are *not* consulted for calibrate — calibrate analyzes past plans, it doesn't route new ones.
+Modes (plan / verify / calibrate), the generic plan workflow, the routing-summary framing, and the calibration hook are shared — see [`multi-phase-dispatch`](../multi-phase-dispatch/SKILL.md) "Shared flavour skeleton". Verify is provider-agnostic and inherited from `multi-phase-plan` — see its verify section. The mixed flavour consults *both* routing skills at step 4 of the shared plan workflow and emits the mixed callout block (below) at step 5.
 
 ## 1. The efficiency principle
 
@@ -130,20 +124,9 @@ Don't invent effort values that the chosen model doesn't expose — picking `ext
 
 The two-line `Recommended` / `Effort` header makes mixed plans skimmable — a reader can fan through the phase set and see the provider mix at a glance.
 
-## Plan workflow
+## Mixed routing pass
 
-1. Load **`multi-phase-plan`** (base shape + verify mode), **`multi-phase-dispatch`** (parallel sub-layer layout), **`gpt-plan-routing`**, **`claude-plan-routing`**.
-2. Inventory the work, group into phases, build the dependency table.
-3. For each phase, decide single-layer vs multi-sub-layer using the eligibility checklist in `multi-phase-dispatch`.
-4. **Route each phase (and each sub-layer) through both routing skills**, then apply:
-   - The unified routing table for the default pick.
-   - The provider-strengths matrix to override on strength match.
-   - The switch-cost rules to break ties.
-5. Emit the mixed callout block at the top of each file (provider declared explicitly).
-6. Write phase files / phase directories per the layout in `multi-phase-dispatch`. **Do not generate run scripts, dispatch shims, log directories, or `run-all.sh` orchestrators.** The user runs each phase themselves in whichever provider's CLI the callout names.
-7. Wire into `docs/src/SUMMARY.md` if mdBook is in use.
-8. Reply with the mixed routing summary table (with a Provider column), the parallelism matrix, dispatch instructions, and a one-line reminder: *"Run the phases yourself in the provider each callout names; prompt `verify` when done to audit acceptance criteria."*
-9. **Record for calibration.** Follow the base skill's end-of-plan hook: run `skillnet calibration init <plan-dir>`, and if any meta-heuristic fires, run `skillnet calibration record <plan-dir>`. Surface in the chat reply per the base workflow.
+The shared plan workflow lives in [`multi-phase-dispatch`](../multi-phase-dispatch/SKILL.md) "Plan workflow". The mixed flavour specializes its routing step: route each phase (and each sub-layer) through **both** `gpt-plan-routing` and `claude-plan-routing`, then apply the unified routing table for the default pick, the provider-strengths matrix to override on strength match, and the switch-cost rules to break ties. Emit the mixed callout block (provider declared explicitly) at the top of each file. The user runs each phase in whichever provider's CLI the callout names; the one-line dispatch reminder names that provider.
 
 ## Routing summary in chat reply
 
@@ -166,8 +149,8 @@ Plus the parallelism matrix and any setup notes. Include a one-line **provider m
 - **Picking the unit-cheapest model without accounting for retries.** A Haiku/low pick that retries 5 times costs more than a Sonnet/medium pick that lands first try. Optimize *expected total cost*, including likely retries on ambiguous steps.
 - **Ignoring prompt caching when fan-out is large.** A multi-sub-layer phase with 6+ sub-layers sharing a long prompt preamble usually wins by going all-Claude (cached prefix) even when the unit-cheapest models are mixed.
 - **Cross-provider sub-layers that share a working state.** Sub-layers running on different providers don't share session state, prompt cache, or any in-flight reasoning. If two sub-layers in a phase need to be in-sync on anything beyond the merged commit, they must be on the same provider — or, more often, they should not be sub-layers at all (collapse into one).
-- **Emitting `run-*.sh` scripts, provider-switching `case` shims, or `run-all.sh` orchestrators.** Not this skill's job. The user runs phases themselves in the provider the callout names. If they want orchestration, they'll wire it themselves or use a separate tool.
-- **Treating "verify" as a re-plan trigger.** Verify reads existing phase docs and audits them against the repo state — it does not rewrite phases or re-route providers.
+
+Shared anti-patterns (no orchestration scripts — including provider-switching `case` shims; verify is not a re-plan trigger) live in [`multi-phase-dispatch`](../multi-phase-dispatch/SKILL.md) "Shared anti-patterns".
 
 ## Reference
 

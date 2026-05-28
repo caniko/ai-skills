@@ -9,9 +9,7 @@ metadata:
 
 ## Purpose
 
-This skill is a domain-grounded research specialist (simit ecosystem) in the
-family rooted at [long-horizon-research](../long-horizon-research/SKILL.md).
-For non-simit research, see [research-routing](../research-routing/SKILL.md).
+This skill is a domain-grounded research specialist (simit ecosystem); see the Reference section for its place in the research family.
 
 Use `simit projects` as the inventory for downstream Rust projects that have
 simit-managed files or simit feature usage. Fix affected dependents directly,

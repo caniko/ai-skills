@@ -11,6 +11,8 @@ Adds GitLab CI wiring that builds a static site and publishes it through GitLab 
 
 This skill is for Pages deployment only. It assumes the site build already exists locally, typically as `nix build .#site` for Nix flake projects.
 
+For the generic build → publish model, branch-gating rationale, and the base-URL / subpath pitfall shared with other Pages hosts, see [repo-pages](../repo-pages/SKILL.md). Everything below is the GitLab-specific layer.
+
 ## Preconditions
 
 - The project is hosted on GitLab.com or a GitLab instance with Pages enabled.
@@ -70,5 +72,4 @@ publish-pages:
 
 - If the build already writes to `public/`, `pages: true` is enough; keep `pages.publish` only when you need a non-default publish directory or want the path to stay explicit.
 - GitLab automatically appends `pages.publish` to `artifacts:paths`; do not duplicate that block unless the repository already has a reason to manage artifacts manually.
-- If the deployed site returns `404`, inspect the latest Pages job artifacts and confirm `public/index.html` exists.
-- When the final public URL uses a project subpath, make sure the site's own base URL or `site-url` matches that subpath.
+- If the deployed site returns `404`, inspect the latest Pages job artifacts and confirm `public/index.html` exists. (See `repo-pages` for the base-URL / subpath pitfall behind most other 404s.)

@@ -29,12 +29,7 @@ berg --owner-repo OWNER/REPO repo info
 
 If the current directory is not the target repo, always pass `--owner-repo OWNER/REPO`.
 
-3. Use `berg` to confirm the local Codeberg context:
-
-```sh
-git remote -v
-berg --owner-repo OWNER/REPO repo info
-```
+3. Confirm the local Codeberg context with `git remote -v` (cross-check against the `berg repo info` target above).
 
 4. Check whether the release or CI trigger actually reached Codeberg:
 

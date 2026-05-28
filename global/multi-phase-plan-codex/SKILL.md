@@ -15,13 +15,7 @@ This file only documents what's specific to Codex:
 1. Model routing via `gpt-plan-routing`.
 2. The Codex-flavoured "Recommended Codex model" callout block.
 
-## Modes
-
-This skill is invoked in one of three modes, inherited from `multi-phase-plan`:
-
-- **plan** — the default. Produce the phase doc set per the workflow below. Dossier-aware: when invoked with a Planner Handoff dossier path (per [multi-phase-plan](../multi-phase-plan/SKILL.md) "Dossier-aware planning"), reads the dossier's plan-handoff section and uses it as the planning brief. See the base skill for field reads, override rules, and missing-field behavior.
-- **verify** — when the user says "verify" (or "check the phases", "did it all land"), do **not** re-plan. Run the verify workflow from `multi-phase-plan` against the most recent (or named) plan directory: read each phase's `## Acceptance criteria`, prove or disprove each item against the current repo state, and emit a per-phase pass/fail report. The user has already executed the phases themselves; verify just audits the result. On a fully successful verify, the post-verify step from `multi-phase-plan` automatically migrates any contributor-worthy knowledge into the project's contributor docs and `git rm`s the plan directory — see the base skill for the migration criteria and retirement steps.
-- **calibrate** — when the user says "calibrate", "tune the heuristics", or "review calibration data", invoke the base skill's `calibrate` mode. See the base `global/multi-phase-plan/SKILL.md` "Mode: calibrate" for the workflow. The calibrate mode shells out to `skillnet calibration walkthrough`; users with the skillnet HM module enabled get this transparently (`programs.skillnet.enable = true` via ai-skills' re-exported HM module). The flavor-specific routing skill (`gpt-plan-routing` for codex) is *not* consulted for calibrate — calibrate analyzes past plans, it doesn't route new ones.
+Modes (plan / verify / calibrate), the generic plan workflow, the routing-summary framing, and the calibration hook are shared — see [`multi-phase-dispatch`](../multi-phase-dispatch/SKILL.md) "Shared flavour skeleton". Verify mode is inherited from `multi-phase-plan` — see its verify section.
 
 ## 1. Model routing via `gpt-plan-routing`
 
@@ -53,44 +47,15 @@ At the top of every phase file (or sub-layer file), immediately under the `# Pha
 > matches what the matrix would yield.>
 ```
 
-## Plan workflow
+The Codex routing summary table uses `Models` cells like `5.5 medium`, `5.4 ×2, 5.4-mini ×1`, `5.5 high`. Run each phase via fresh `codex exec` session, IDE side-pane, etc.
 
-1. Load **`multi-phase-plan`** (base shape spec + verify mode) and **`multi-phase-dispatch`** (parallel sub-layer model).
-2. Inventory the work, group into phases, build the dependency table (per the base skill).
-3. For each phase, decide single-layer vs multi-sub-layer using the eligibility checklist in `multi-phase-dispatch`.
-4. Route each phase (and each sub-layer) through **`gpt-plan-routing`**; emit the Codex callout block at the top of each file.
-5. Write phase files / phase directories per the layout in `multi-phase-dispatch`. **Do not generate run scripts, dispatch shims, log directories, or `run-all.sh` orchestrators.** The user runs each phase themselves in a fresh Codex session.
-6. Wire into `docs/src/SUMMARY.md` if mdBook is in use.
-7. Reply with the Codex routing summary table, parallelism matrix, and a one-line reminder: *"Run the phases yourself; prompt `verify` when done to audit acceptance criteria."*
-8. **Record for calibration.** Follow the base skill's end-of-plan hook: run `skillnet calibration init <plan-dir>`, and if any meta-heuristic fires, run `skillnet calibration record <plan-dir>`. Surface in the chat reply per the base workflow.
-
-## Routing summary in chat reply
-
-| Phase | Layout | Sub-layers | Models | Blocking? |
-|---|---|---|---|---|
-| 01 | flat | — | 5.5 medium | no |
-| 02 | dir | 3 | 5.4 ×2, 5.4-mini ×1 | no |
-| 03 | flat | — | 5.5 high | depends on 02 |
-
-Plus the parallelism matrix and any setup notes. No `Dispatch` column — the user picks how they want to run each phase (fresh `codex exec` session, IDE side-pane, etc.).
-
-## Example: 5-phase pre-landing-cleanup set
-
-| Phase | Slug | Model | Why |
-|---|---|---|---|
-| A | dice-partition-forget | `5.5 medium` | Diagnosis in hand, fix is 4 lines, but needs smoke-log interpretation to verify. |
-| B | warning-cleanup | `5.5 low` | Three mechanical edits, no design content, no log reading. |
-| C | webpki-deprecations | `5.5 high` | Mechanical edits *plus* a non-trivial path choice (patch vendor / re-vendor / bump). The design call needs context, not raw output volume. |
-| D | crosvm-version-override | `5.5 medium` | External-repo edit + commit + push without supervision; needs judgement on intentional-vs-bug. |
-| E | nixos-scripted-initrd | `5.5 max` | Boot-order, GPU readiness, parallel-VM race exposure. Mediocre work ships a subtle regression. Worth `max`. |
-
-The pattern: route to the cheapest tier that holds the quality bar for *this specific phase's* complexity × role.
+For the worked routing example, see the chessbender 5-phase set in [`multi-phase-plan`](../multi-phase-plan/SKILL.md) "Example".
 
 ## Codex-specific anti-patterns
 
 - **Routing every phase to `max`.** `gpt-plan-routing` explicitly warns against this — it multiplies cost with diminishing returns. Use `low` and `medium` aggressively for mechanical phases; reserve `max` for genuinely frontier-complex work.
-- **Emitting `run-*.sh` scripts, dispatch shims, or `run-all.sh` orchestrators.** Not this skill's job. The user runs phases themselves. If they want orchestration, they'll wire it themselves or use a separate tool.
-- **Treating "verify" as a re-plan trigger.** Verify reads existing phase docs and audits them against the repo state — it does not rewrite phases or re-route models.
+
+Shared anti-patterns (no orchestration scripts; verify is not a re-plan trigger) live in [`multi-phase-dispatch`](../multi-phase-dispatch/SKILL.md) "Shared anti-patterns".
 
 ## Reference
 

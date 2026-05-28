@@ -67,72 +67,13 @@ python3 .agents/skills/plugin-creator/scripts/create_basic_plugin.py my-plugin -
 
 ## Marketplace workflow
 
-- `marketplace.json` always lives at `<repo-root>/.agents/plugins/marketplace.json`.
-- For a home-local plugin, use the same convention with `<home>` as the root:
-  `~/.agents/plugins/marketplace.json` plus `./plugins/<plugin-name>`.
-- Marketplace root metadata supports top-level `name` plus optional `interface.displayName`.
-- Treat plugin order in `plugins[]` as render order in Codex. Append new entries unless a user explicitly asks to reorder the list.
-- `displayName` belongs inside the marketplace `interface` object, not individual `plugins[]` entries.
-- Each generated marketplace entry must include all of:
-  - `policy.installation`
-  - `policy.authentication`
-  - `category`
-- Default new entries to:
-  - `policy.installation: "AVAILABLE"`
-  - `policy.authentication: "ON_INSTALL"`
-- Override defaults only when the user explicitly specifies another allowed value.
-- Allowed `policy.installation` values:
-  - `NOT_AVAILABLE`
-  - `AVAILABLE`
-  - `INSTALLED_BY_DEFAULT`
-- Allowed `policy.authentication` values:
-  - `ON_INSTALL`
-  - `ON_USE`
-- Treat `policy.products` as an override. Omit it unless the user explicitly requests product gating.
-- The generated plugin entry shape is:
+Fast-path defaults (full rules, field guide, and canonical sample JSON for both plugin manifests and marketplace entries: `references/plugin-json-spec.md`):
 
-```json
-{
-  "name": "plugin-name",
-  "source": {
-    "source": "local",
-    "path": "./plugins/plugin-name"
-  },
-  "policy": {
-    "installation": "AVAILABLE",
-    "authentication": "ON_INSTALL"
-  },
-  "category": "Productivity"
-}
-```
-
+- `marketplace.json` lives at `<repo-root>/.agents/plugins/marketplace.json` (repo plugin) or `~/.agents/plugins/marketplace.json` (home-local), each with `./plugins/<plugin-name>` paths.
+- Default new entries to `policy.installation: "AVAILABLE"` and `policy.authentication: "ON_INSTALL"`; override only when the user specifies another allowed value.
+  - Allowed `policy.installation`: `NOT_AVAILABLE`, `AVAILABLE`, `INSTALLED_BY_DEFAULT`.
+  - Allowed `policy.authentication`: `ON_INSTALL`, `ON_USE`.
 - Use `--force` only when intentionally replacing an existing marketplace entry for the same plugin name.
-- If `<repo-root>/.agents/plugins/marketplace.json` does not exist yet, create it with top-level `"name"`, an `"interface"` object containing `"displayName"`, and a `plugins` array, then add the new entry.
-
-- For a brand-new marketplace file, the root object should look like:
-
-```json
-{
-  "name": "[TODO: marketplace-name]",
-  "interface": {
-    "displayName": "[TODO: Marketplace Display Name]"
-  },
-  "plugins": [
-    {
-      "name": "plugin-name",
-      "source": {
-        "source": "local",
-        "path": "./plugins/plugin-name"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
-    }
-  ]
-}
-```
 
 ## Required behavior
 
@@ -141,15 +82,6 @@ python3 .agents/skills/plugin-creator/scripts/create_basic_plugin.py my-plugin -
 - Keep manifest values as placeholders until a human or follow-up step explicitly fills them.
 - If creating files inside an existing plugin path, use `--force` only when overwrite is intentional.
 - Preserve any existing marketplace `interface.displayName`.
-- When generating marketplace entries, always write `policy.installation`, `policy.authentication`, and `category` even if their values are defaults.
-- Add `policy.products` only when the user explicitly asks for that override.
-- Keep marketplace `source.path` relative to repo root as `./plugins/<plugin-name>`.
-
-## Reference to exact spec sample
-
-For the exact canonical sample JSON for both plugin manifests and marketplace entries, use:
-
-- `references/plugin-json-spec.md`
 
 ## Validation
 

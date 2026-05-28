@@ -10,14 +10,12 @@ description: "Enforce strict Rust crate pre-release validation, including simit-
 Run the narrowest equivalent commands provided by the project toolchain. When the crate has or should have simit-managed release infrastructure, validate that first:
 
 ```sh
-simit init-flake --check --diff
+simit init flake --check --diff
 simit release trust check
-simit init-ci --platform <platform> --check --diff
+simit init ci --platform <platform> --check --diff
 ```
 
-If `simit release trust check` fails because the trust root is missing or stale,
-run `simit release trust status` and `simit release trust init` before
-classifying it as a missing-key blocker.
+For the simit trust-root fallback (`simit release trust status|init`) before classifying a missing-key blocker, follow the Simit Infrastructure section of `../rust-crate-release-reference/SKILL.md`.
 
 Then run the generated Nix checks when present, or the raw Cargo equivalents:
 
