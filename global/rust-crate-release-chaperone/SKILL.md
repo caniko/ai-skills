@@ -56,6 +56,27 @@ Own the full end-to-end release. Once repository-owned failures are fixed and pu
 12. Follow `../rust-crate-publish-workflow/SKILL.md` for the publish sequence (CI publish prerequisites, release commit/tag creation with the structured message rules below, push to the canonical remote, and external crates.io verification) once local release gates pass or only remote push / CI publish checks remain. For this skill the tag push is the publication trigger; do not run `cargo publish` from the local shell.
 13. Chaperone-unique loop: after the push, watch the Forgejo/Codeberg publish workflow. If the CI publish fails, diagnose the workflow or repository-owned cause, fix it, and iterate the relevant steps until the new version is confirmed live on crates.io or a real propagation/CI/registry blocker is identified.
 
+## Already-Published Release Handling
+
+If discovery shows the target version is already live on crates.io and the
+corresponding remote tag exists, do not rewrite or move that tag as part of
+normal chaperone cleanup. Verify the published version, tag signature, Codeberg
+release, and publish workflow outcome first.
+
+If additional local validation finds a repository-owned failure after the crate
+is already published:
+
+- Fix and publish a new patch release only when the failure affects the crate
+  artifact, generated publish path, release metadata consumers, or a required
+  release acceptance criterion.
+- For non-artifact repository hygiene failures, such as formatting drift in
+  planning-only documentation that was not part of the published crate and did
+  not block the publish workflow, report the exact failing command and affected
+  paths instead of mutating the completed release.
+- Never claim the already-published version passed a check that actually failed
+  locally. Separate "publish completed" from "post-release validation gap" in
+  the final report.
+
 ## Release Commit and Tag Messages
 
 When the chaperone creates the release commit directly, use a structured message:
