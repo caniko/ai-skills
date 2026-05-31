@@ -1,4 +1,4 @@
 interface:
   display_name: "Nixpkgs PR Common"
   short_description: "Shared nixpkgs PR rules and review references."
-  default_prompt: "Use the shared nixpkgs PR references for contribution decorum, automation disclosure, live PR template handling, and caniko/nixpkgs-review-gha workflow instructions."
+  default_prompt: "Use the shared nixpkgs PR references for contribution decorum, review automation rules, live PR template handling, and caniko/nixpkgs-review-gha workflow instructions."
