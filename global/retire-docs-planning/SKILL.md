@@ -33,7 +33,9 @@ Prefer migrating real contributor knowledge over discarding it; redundancy in st
 
 ### 1. Inventory the published docs and the planning content
 
-- Locate the book navigation or equivalent published-doc entrypoint first.
+- Locate every book navigation or equivalent published-doc entrypoint first
+  (`SUMMARY.md`, sidebars, router manifests), including secondary mdBook
+  trees if the repository has more than one.
 - Enumerate the planning pages that are currently published.
 - Enumerate the stable docs that already exist and could absorb durable knowledge.
 - If the pages describe active or recently executed work, run `plan-progress-review` before classifying content.
@@ -69,7 +71,9 @@ Use the Migration criteria above as the canonical preservation rule. Keep wordin
 - Keep or rewrite any plan that `plan-progress-review` marked `partial`, `not-started`, `blocked`, or `unknown` unless the user explicitly wants it consolidated elsewhere.
 - If an unresolved future roadmap must be retained, move or classify it outside the active planning tree and update navigation instead of deleting it.
 - Remove empty planning directories when practical.
-- Search for leftover references to the retired planning section and resolve them.
+- Search stable docs and source code for leftover references to the retired
+  planning section, title, slug, and user-visible "Phase N" copy, then resolve
+  them.
 
 ### 6. Validate the retirement
 
