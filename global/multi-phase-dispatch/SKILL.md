@@ -118,7 +118,7 @@ Each flavour is invoked in one of three modes, inherited from [`multi-phase-plan
 
 - **plan** — the default. Produce the phase doc set per the workflow below. Dossier-aware: when invoked with a Planner Handoff dossier path (per `multi-phase-plan` "Dossier-aware planning"), read the dossier's plan-handoff section and use it as the planning brief. See the base skill for field reads, override rules, and missing-field behavior.
 - **verify** — inherited from `multi-phase-plan`; see its verify section. The user has already executed the phases; verify only audits the result and (on a clean verify) auto-retires.
-- **calibrate** — invoke the base skill's `calibrate` mode; see `multi-phase-plan` and its `references/calibration.md` "Mode: calibrate". The flavour's routing skill(s) are *not* consulted for calibrate — it analyzes past plans, it doesn't route new ones. Shells out to `skillnet calibration walkthrough`; users with the skillnet HM module enabled get this transparently (`programs.skillnet.enable = true` via ai-skills' re-exported HM module).
+- **calibrate** — invoke the base skill's `calibrate` mode; see `multi-phase-plan` and its `references/calibration.md` "Mode: calibrate". The flavour's routing skill(s) are *not* consulted for calibrate — it analyzes past plans, it doesn't route new ones. Shells out to `skillnet calibration walkthrough`; users with the skillnet HM module enabled have the binary and config available (`programs.skillnet.enable = true` via ai-skills' re-exported HM module), but calibration remains an explicit CLI workflow.
 
 ### Plan workflow
 
