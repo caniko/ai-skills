@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nix Overlay Package"
+  short_description: "Audit Nix overlays and packages"
+  default_prompt: "Use this skill to audit overlays, package overrides, callPackage wiring, overrideAttrs, package-set layering, and binary-cache-sensitive imports."

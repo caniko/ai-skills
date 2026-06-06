@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nix Shell Scripts"
+  short_description: "Harden generated shell scripts"
+  default_prompt: "Use this skill to replace fragile generated shell where structured Nix is better and harden required writeShellScript snippets."

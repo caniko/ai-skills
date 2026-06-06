@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nix Ultra"
+  short_description: "Orchestrate whole-repo Nix cleanup"
+  default_prompt: "Use this skill to survey, route, and verify a whole-repository Nix cleanup."

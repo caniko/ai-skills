@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nix Options Typing"
+  short_description: "Tighten Nix option schemas"
+  default_prompt: "Use this skill to tighten Nix option types, defaults, defaultText, assertions, deprecations, and freeform settings."

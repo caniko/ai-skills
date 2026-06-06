@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nix Dead Code"
+  short_description: "Remove stale and unused Nix code"
+  default_prompt: "Use this skill to find and remove unused modules, stale imports, unreachable options, obsolete overlays, dead outputs, and retired checks."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nix Home Manager"
+  short_description: "Clean Home Manager configurations"
+  default_prompt: "Use this skill to clean Home Manager modules, osConfig fallbacks, user and profile splits, XDG files, and integrated versus standalone evaluation."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nix Test Gates"
+  short_description: "Strengthen Nix validation gates"
+  default_prompt: "Use this skill to strengthen Nix eval, build, flake check, focused host eval, activation-sensitive assertion, and CI gates."
