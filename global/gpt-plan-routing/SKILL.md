@@ -1,6 +1,6 @@
 ---
 name: gpt-plan-routing
-description: Select the right GPT-5.x model and reasoning effort level for plan execution tasks. Use when an agent or orchestrator needs to route a plan step, sub-task, or full workflow to the optimal model+effort combination. Triggers on: "which model should I use for this step", "route this task", "what effort level", or when building multi-agent plans that need tiered model selection.
+description: "Select the right GPT-5.x model and reasoning effort level for plan execution tasks. Use when an agent or orchestrator needs to route a plan step, sub-task, or full workflow to the optimal model+effort combination. Triggers on: \"which model should I use for this step\", \"route this task\", \"what effort level\", or when building multi-agent plans that need tiered model selection."
 ---
 
 # GPT plan execution routing

@@ -1,6 +1,6 @@
 ---
 name: research-routing
-description: Routing meta-skill for research-shaped requests. Given a request that needs evidence-backed investigation, picks the right specialist skill: long-horizon-research (generic), plan-research (multi-phase prep), simit-dependent-fixes (simit-grounded), nixpkgs-build-failure-pr (nixpkgs build-grounded), host-a-healthcheck (host-a-grounded), plan-progress-review (plan-audit-grounded), northstar (high-stakes situational), workspace-check (single-crate-grounded). Decision support only - performs no edits. Use when you have a research-shaped ask but are not sure which specialist owns it.
+description: "Routing meta-skill for research-shaped requests. Given a request that needs evidence-backed investigation, picks the right specialist skill: long-horizon-research (generic), plan-research (multi-phase prep), simit-dependent-fixes (simit-grounded), nixpkgs-build-failure-pr (nixpkgs build-grounded), host-a-healthcheck (host-a-grounded), plan-progress-review (plan-audit-grounded), northstar (high-stakes situational), workspace-check (single-crate-grounded). Decision support only - performs no edits. Use when you have a research-shaped ask but are not sure which specialist owns it."
 ---
 
 # Research routing
