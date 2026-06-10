@@ -1,6 +1,6 @@
 ---
 name: multi-phase-dispatch
-description: Shared reference for the parallel sub-layer model used by `multi-phase-plan-codex`, `multi-phase-plan-claude`, and `multi-phase-plan-mixed`. Defines the sub-layer concept ("a layer consists of several layers"), the eligibility checklist, the on-disk layout for multi-sub-layer phases, and per-sub-layer routing rules. The user runs phases themselves — this skill does NOT generate orchestration scripts. Not user-invokable on its own; flavour skills load it.
+description: Shared reference for the parallel sub-layer model used by `multi-phase-plan-codex`, `multi-phase-plan-claude`, `multi-phase-plan-mixed`, and `multi-phase-plan-opencode`. Defines the sub-layer concept ("a layer consists of several layers"), the eligibility checklist, the on-disk layout for multi-sub-layer phases, and per-sub-layer routing rules. The user runs phases themselves — this skill does NOT generate orchestration scripts. Not user-invokable on its own; flavour skills load it.
 ---
 
 # Multi-phase dispatch (shared parallel-layering reference)
@@ -110,7 +110,7 @@ The phase README is for the human reading the plan. It describes how the user is
 
 ## Shared flavour skeleton
 
-The three flavour skills (`multi-phase-plan-codex`, `-claude`, `-mixed`) share the same modes, plan workflow, routing-summary framing, and calibration hook. They are defined once here; each flavour adds only its routing skill(s), callout-block template, and routing-specific anti-patterns.
+The flavour skills (`multi-phase-plan-codex`, `-claude`, `-mixed`, `-opencode`) share the same modes, plan workflow, routing-summary framing, and calibration hook. They are defined once here; each flavour adds only its routing skill(s), callout-block template, and routing-specific anti-patterns.
 
 ### Modes (inherited from `multi-phase-plan`)
 
@@ -166,3 +166,4 @@ The plan does not lock the user into any one dispatch strategy.
   - **`multi-phase-plan-codex`** — Codex / GPT-5.x routing callout.
   - **`multi-phase-plan-claude`** — Claude routing callout.
   - **`multi-phase-plan-mixed`** — cross-provider routing callout.
+  - **`multi-phase-plan-opencode`** — opencode / DeepSeek v4 routing callout + export mode.

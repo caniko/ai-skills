@@ -30,6 +30,10 @@ Tier shorthand used in the callout block:
 - `5.5 high` → complex orchestration or non-trivial design decisions.
 - `5.5 medium` → routine default for moderate complexity.
 - `5.5 low` → trivial mechanical work.
+- `deepseek-v4-pro high|max` → budget substitute for complex bounded work / cheap orchestration (per `gpt-plan-routing` "Budget override").
+- `deepseek-v4-flash high` → cost-floor leaf / high-fan-out mechanical work.
+
+DeepSeek v4 steps run through Codex's openai-compatible provider config and expose only two effective effort values (`high`, `max`) — never write `low`/`medium` for a DeepSeek callout; see `gpt-plan-routing` "DeepSeek v4 budget tiers".
 
 Match the recommendation to the phase's complexity × role coordinates — don't inflate. Resist the urge to uniformly route to `max` "to be safe".
 
@@ -38,7 +42,7 @@ Match the recommendation to the phase's complexity × role coordinates — don't
 At the top of every phase file (or sub-layer file), immediately under the `# Phase N — Title` heading:
 
 ```markdown
-> **Recommended Codex model: GPT 5.5 <tier>**
+> **Recommended Codex model: <GPT 5.5 <tier> | DeepSeek v4 <Flash high | Pro high|max>>**
 >
 > <One paragraph rationale: complexity, role in plan, what would
 > happen if a smaller model ran this. Reference the gpt-plan-routing
@@ -47,7 +51,7 @@ At the top of every phase file (or sub-layer file), immediately under the `# Pha
 > matches what the matrix would yield.>
 ```
 
-The Codex routing summary table uses `Models` cells like `5.5 medium`, `5.4 ×2, 5.4-mini ×1`, `5.5 high`. Run each phase via fresh `codex exec` session, IDE side-pane, etc.
+The Codex routing summary table uses `Models` cells like `5.5 medium`, `5.4 ×2, 5.4-mini ×1`, `deepseek-v4-flash ×3 (high)`, `5.5 high`. Run each phase via fresh `codex exec` session, IDE side-pane, etc.
 
 For the worked routing example, see the chessbender 5-phase set in [`multi-phase-plan`](../multi-phase-plan/SKILL.md) "Example".
 
@@ -62,5 +66,5 @@ Shared anti-patterns (no orchestration scripts; verify is not a re-plan trigger)
 - Base shape spec + verify mode: **`multi-phase-plan`**.
 - Parallel layering: **`multi-phase-dispatch`**.
 - Model selection: **`gpt-plan-routing`** (routing table + key heuristics).
-- Sister flavours: **`multi-phase-plan-claude`**, **`multi-phase-plan-mixed`**.
+- Sister flavours: **`multi-phase-plan-claude`**, **`multi-phase-plan-mixed`**, **`multi-phase-plan-opencode`**.
 - Project convention: `docs/src/planning/<plan-name>/{NN-<slug>.md | NN-<slug>/}`, indexed in `docs/src/SUMMARY.md`.

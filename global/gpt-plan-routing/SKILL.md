@@ -43,6 +43,22 @@ The two decision axes (Task complexity × Role in plan), the provider-agnostic h
 - Note: not a distinct API model ID; treated as GPT-5.3-Codex at low effort settings. For new builds, use GPT-5.4-mini instead.
 - Use when: cost is the primary constraint and tasks are simple, sequential, and coding-focused
 
+### DeepSeek v4 budget tiers (openai-compatible provider)
+
+Not OpenAI models, but routable from Codex sessions through an openai-compatible `model_providers` entry (`base_url https://api.deepseek.com`, key from `DEEPSEEK_API_KEY`) — and the only models configured in opencode (see `multi-phase-plan-opencode`). Source of truth for the local config: `canix/home/modules/ai/opencode.nix`.
+
+**DeepSeek v4 Pro — budget workhorse**
+- Model ID: `deepseek-v4-pro` (opencode: `deepseek/deepseek-v4-pro`)
+- Context: 775K tokens; 64K output; reasoning + tool calling
+- Use when: latency-tolerant bounded workflows and orchestration where 5.4-class quality isn't required but 5.4-mini quality isn't enough; cost-floor batch pipelines
+
+**DeepSeek v4 Flash — ultra-cheap leaf executor**
+- Model ID: `deepseek-v4-flash` (opencode: `deepseek/deepseek-v4-flash`)
+- Context: 775K tokens; 64K output; reasoning + tool calling
+- Use when: high-fan-out leaf dispatch and mechanical edits where cost dominates; the cheapest viable tier in the table
+
+**Effort caveat:** the DeepSeek v4 effort lever has only **two** effective values in our config — `high` (what `low`/`medium`/`high` variants all resolve to) and `max`. Route DeepSeek steps as `high` or `max` only; the quality dial between the two tiers is the model choice (Flash → Pro), not effort.
+
 ---
 
 ## Effort levels
@@ -74,6 +90,8 @@ Top-level plnr  | 5.5/medium       | 5.5/medium        | 5.5/high          | 5.5
 ```
 
 **Coding-specific override**: replace the model with 5.3-Codex (existing pipelines) or 5.4-mini (new builds) for any step whose output is purely code or terminal commands.
+
+**Budget override (DeepSeek v4)**: when cost is the binding constraint and the step is latency-tolerant, substitute `deepseek-v4-flash/high` for any *Leaf node* or *Sub-agent* cell up to Moderate complexity, and `deepseek-v4-pro/high` for Complex leaf/sub-agent cells or Trivial–Moderate orchestration (`pro/max` only for outliers). Keep Frontier orchestration and top-level planning on GPT-5.5 — the DeepSeek tiers are cost-floor substitutes, not frontier peers. Requires the openai-compatible provider configured (see DeepSeek tier section above).
 
 ---
 

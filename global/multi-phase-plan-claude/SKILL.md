@@ -88,5 +88,5 @@ Shared anti-patterns (no orchestration scripts; verify is not a re-plan trigger)
 - Base shape spec + verify mode: **`multi-phase-plan`**.
 - Parallel layering: **`multi-phase-dispatch`**.
 - Model selection: **`claude-plan-routing`** (routing table + key heuristics).
-- Sister flavours: **`multi-phase-plan-codex`**, **`multi-phase-plan-mixed`**.
+- Sister flavours: **`multi-phase-plan-codex`**, **`multi-phase-plan-mixed`**, **`multi-phase-plan-opencode`**.
 - Project convention: `docs/src/planning/<plan-name>/{NN-<slug>.md | NN-<slug>/}`, indexed in `docs/src/SUMMARY.md`.

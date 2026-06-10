@@ -157,5 +157,5 @@ Shared anti-patterns (no orchestration scripts — including provider-switching 
 - Base shape spec + verify mode: **`multi-phase-plan`**.
 - Parallel layering: **`multi-phase-dispatch`**.
 - Per-provider routing: **`gpt-plan-routing`**, **`claude-plan-routing`**.
-- Sister flavours: **`multi-phase-plan-codex`** (Codex-only), **`multi-phase-plan-claude`** (Claude-only).
+- Sister flavours: **`multi-phase-plan-codex`** (Codex-only), **`multi-phase-plan-claude`** (Claude-only), **`multi-phase-plan-opencode`** (opencode/DeepSeek-only).
 - Project convention: `docs/src/planning/<plan-name>/{NN-<slug>.md | NN-<slug>/}`, indexed in `docs/src/SUMMARY.md`.
