@@ -1,0 +1,85 @@
+---
+name: opencode-permissions
+description: Add, triage, or diagnose opencode bash permission rules in canix (home/modules/ai/opencode.nix). Use when the user pastes an opencode "Permission required" prompt or a list of command patterns (e.g. "- git diff *", "- diffstat *"), asks why opencode prompted or denied a command despite the allow list, or wants a command allowed/asked/denied in opencode. Covers rule placement, safety triage, glob matching semantics, and post-edit verification.
+---
+
+# opencode-permissions
+
+opencode's permission config is declared in Nix at
+`~/canix/Projects/canix/home/modules/ai/opencode.nix` and rendered to
+`~/.config/opencode/opencode.json` by Home Manager. Never edit the JSON — it is
+a store symlink.
+
+## Matching semantics (non-obvious; read before editing)
+
+- Patterns are **globs only** (`*`, `?`). There is NO regex support: a
+  `/^.../ ` key is dead weight and never matches anything.
+- A compound command is split into sub-commands by tree-sitter (pipes, `&&`,
+  `$(...)`, etc.). Each sub-command's **full source text** is matched against
+  every rule, anchored start-to-end (`"cargo *"` → `^cargo( .*)?$`). A
+  trailing ` *` also matches the bare command with no args.
+- Resolution is **last matching rule in alphabetical key order** (Nix sorts
+  JSON keys). `*` (0x2A) sorts before `-`, `/`, and letters, so
+  general-before-specific ordering holds and the most specific match wins.
+  Denies with the same prefix beat allows (`git reset --hard *` deny outsorts
+  `git reset *` ask).
+- The permission dialog lists remember-patterns for **all** sub-commands of
+  the compound command — only the segment(s) that evaluated to `ask` actually
+  triggered the prompt. Most pasted patterns therefore already have rules.
+- Env-prefixed commands (`FOO=1 cargo test`) cannot match `"cargo *"`. The
+  module's `withEnvPrefixes` helper auto-generates tiered twins
+  (`*=*` allow / `*=**` ask / `*=***` deny) for every rule. **Never hand-write
+  `*=*` rules** — add the base rule and the twin is generated.
+
+## Workflow for a pasted pattern list
+
+1. **Filter to what is missing.** For each pattern, check whether a rule
+   already exists: `grep -nF '"<pattern>"' home/modules/ai/opencode.nix` and
+   check the `gitPair` list for git subcommands. Existing patterns were just
+   sibling segments — skip them and tell the user so.
+2. **Triage the missing ones:**
+   - Read-only or formatter (status, list, view, diff, `diffstat`, plumbing
+     like `rev-parse`, `hash-object`) → `allow`.
+   - Repo-local writes already weaker than an existing allow (e.g. `git rm`
+     vs the standing `rm *` allow; `git add`; commit) → `allow`.
+   - Recoverable-but-surprising (checkout, rebase, reset, restore, force
+     push, `stash drop`) → `ask`.
+   - Irreversible or system-level (`reset --hard`, `clean`, sudo, disk tools,
+     service restarts) → `deny`.
+   - **Bare file path as a command** (e.g. `cli/src/foo.rs *`) → do NOT add a
+     rule. It is a malformed model command; `"*" = "ask"` catching it is
+     correct. Tell the user to reject once; the model self-corrects.
+3. **Place the rule:**
+   - git subcommand → add `(gitPair "<sub> *" "<action>")` alphabetically in
+     the `foldl'` list. `gitPair` emits both `git <sub>` and `git -C * <sub>`.
+   - anything else → add `"<cmd> *" = "<action>";` alphabetically in the
+     matching commented section of the flat attrset.
+   - Flags only match in the written position: `"git branch -D *"` does not
+     catch `git branch foo -D`. Add a `"<cmd> * --flag *"` variant when the
+     flag is the dangerous part (see the push force rules).
+4. **Verify** the rendered rules:
+
+   ```sh
+   cd ~/canix/Projects/canix
+   nix eval .#nixosConfigurations.runner.config.home-manager.users.can.programs.opencode.settings.permission.bash --json \
+     | jq -r 'to_entries[] | select(.key | test("<cmd>")) | "\(.key) = \(.value)"'
+   ```
+
+   Expect the base rule, the `git -C *` twin (for gitPair), and the `*=*`
+   env twin, all with the intended action.
+5. **Remind the user**: rules take effect only after `canix rebuild switch`
+   AND restarting opencode sessions started before the switch — opencode
+   caches the global config with an infinite TTL.
+
+## Diagnosing "opencode ignored my rule"
+
+opencode logs every evaluation. Find what a command actually matched:
+
+```sh
+grep -h "evaluated" ~/.local/share/opencode/log/*.log | grep -E '"action":"(ask|deny)"' | tail -30
+```
+
+Each line shows the sub-command (`pattern=...`) and the winning rule
+(`action={"pattern":...}`). `pattern":"*"` means no rule matched — usually an
+env prefix, a genuinely missing rule, or a session still running on a
+pre-switch config (check log timestamps against the last rebuild).
