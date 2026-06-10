@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tzu Goal Prompt"
+  short_description: "Create grounded prompts from tzu harness claims"
+  default_prompt: "Use $tzu-goal-prompt to build a grounded goal prompt from the current tzu harness state."
