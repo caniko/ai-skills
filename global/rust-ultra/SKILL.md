@@ -37,15 +37,15 @@ If the crate is a Bevy / headless workspace that needs it, add `--no-default-fea
 ## Phase 1 — Survey & score
 
 1. **Detect project shape.** Workspace vs single crate; per-crate `lib` / `bin`; presence of `unsafe`, an async runtime (`tokio` / `async-std`), `tracing` / `log`, a `[features]` table, Bevy, and a Nix flake. List **every** source file with its line count.
-2. **Score each concern** that has a grep/filesize preflight: `score = Σ(occurrences × weight)` across non-test source. Exclude `target/`, `vendor/`, and test files. For the FileSize preflight (code-reorg): files **>500 lines** score **3** each, files **<30 lines** score **1** each.
+2. **Score each concern** that has a grep/filesize preflight: `score = Σ(occurrences × weight)` across non-test source. Exclude `target/`, `vendor/`, and test files. For the FileSize preflight (code-reorg): files **>500 lines** score **3** each, files **<30 lines** score **1** each. Concerns whose preflight is **"none"** have no quantitative prefilter; mark them **run** unless a project-shape gate or explicit `--skip` excludes them.
 3. **Apply `--sensitivity`** to each concern's threshold:
    - `low` ⇒ threshold ×3 (skip more — only strong signals run)
    - `medium` ⇒ threshold ×1 (default)
    - `high` ⇒ clamp threshold to **1** (run on the slightest signal)
-   A concern **RUNS** when `score ≥ adjusted threshold`. Concerns whose preflight is **"none"** are opt-in: run them only when `--only` names them, or always when the user asks for release-readiness.
+   A concern with a quantitative preflight **RUNS** when `score ≥ adjusted threshold`. A concern whose preflight is **"none"** **RUNS** by default after project-shape gates because it is qualitative/tool-driven rather than score-driven.
 4. **Gate by project shape:**
    - `rust-api-guidelines` and `rust-doc-public-api` are most valuable for **lib** crates.
-   - `rust-msrv` and `rust-feature-flags` are for **release-readiness**.
+   - `rust-msrv` runs when Rust toolchain/package metadata is present; it is not release-only.
    - `rust-unsafe-soundness` runs **only if `unsafe` exists** (skip at 0 unsafe).
    - `rust-observability` runs only if `tracing` / `log` is present or the user requests it.
    - If a single crate is **large**, suggest running the `workspace-check` skill first (it decides whether the crate should become a Cargo workspace before deeper reorg).
@@ -105,7 +105,7 @@ Then **report**:
 | 6 | rust-concurrency | Correctness | grep `.await`×1,`Mutex`×2,`RwLock`×2,`tokio::spawn`×2,`block_on`×3,`Arc<`×1 ≥ **8** | Connectome | yes | Qualitative |
 | 7 | rust-security | Correctness | grep `unsafe `×3,`transmute`×5,`Command::new`×2,`from_raw`×4,`as *const`×3,`as *mut`×3,`std::ptr::`×3,`libc::`×2 ≥ **6** | ScopeLocal | yes | Indicative |
 | 8 | rust-code-reorg | Design | FileSize: files >500 lines ×3, files <30 lines ×1 ≥ **3** | Connectome | yes (Opus plan @ max, multi-agent ≤4, monumental ≥8 files) | Quantitative |
-| 9 | rust-type-safety | Design | none (qualitative — run on request / when primitive-obsessed) | Connectome | yes | Qualitative |
+| 9 | rust-type-safety | Design | none (qualitative — always run after project-shape gates) | Connectome | yes | Qualitative |
 | 10 | rust-trait-design | Design | grep `dyn `×1,`Box<dyn`×2,`&dyn `×1 ≥ **8** | Tiling | yes | Indicative |
 | 11 | rust-error-architecture | Design | grep `Box<dyn Error`×3,`Box<dyn std::error::Error`×3,`, String>`×2,`Err(format!`×2,`thiserror`×1 ≥ **5** | Connectome | yes | Qualitative |
 | 12 | rust-performance | Design | grep `.clone()`×1,`.to_vec()`×2,`.to_string()`×1,`.collect()`×1,`&Vec<`×2,`&String`×2,`format!(`×1 ≥ **12** | ScopeLocal | no | Qualitative |
@@ -114,10 +114,10 @@ Then **report**:
 | 15 | rust-api-guidelines | Polish | (lib crates) grep `pub struct `×1,`pub enum `×1,`pub trait `×2,`pub fn get_`×2,`pub fn `×1 ≥ **6** | ScopeLocal | no | Qualitative |
 | 16 | rust-test-gaps | Polish | grep `pub fn `×1,`pub async fn `×1 ≥ **5** | ScopeLocal | yes | Qualitative |
 | 17 | rust-observability | Polish | grep `println!`×2,`eprintln!`×2,`dbg!`×3,`tracing::`×1,`log::`×1 ≥ **5** | ScopeLocal | no | Qualitative |
-| 18 | rust-deps-unused | Dependencies | none (run on request; cargo-udeps signal) | ToolDriven | no | Qualitative |
+| 18 | rust-deps-unused | Dependencies | none (tool-driven — always run after project-shape gates) | ToolDriven | no | Qualitative |
 | 19 | rust-feature-flags | Dependencies | grep `[features]`×3,`#[cfg(feature`×1,`optional = true`×2,`default = [`×2 ≥ **3** (skip if no [features]) | ToolDriven | no | Indicative |
-| 20 | rust-msrv | Dependencies | none (run on release-readiness) | ToolDriven | no | Qualitative |
-| 21 | rust-deps-adopt | Dependencies | none (run on request) | ScopeLocal | yes | Qualitative |
+| 20 | rust-msrv | Dependencies | none (tool-driven — always run when Rust package metadata is present) | ToolDriven | no | Qualitative |
+| 21 | rust-deps-adopt | Dependencies | none (qualitative — always run after project-shape gates) | ScopeLocal | yes | Qualitative |
 
 **eval semantics:**
 - **Quantitative** — the preflight score is the metric; converged when it reaches 0.
