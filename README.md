@@ -1,11 +1,11 @@
 # caniko's AI Skills
 
-This repository is the canonical store for global skills at `ai-skills/global/<name>/`. Per-project skills live in each project's own repository at `<project>/.skills/<name>/`; `~/.claude/skills`, `~/.agents/skills`, `<project>/.claude/skills`, and `<project>/.agents/skills` are generated views, not authored content. The old `<ai-skills>/projects/` tree is obsolete local state and may be removed after validation.
+This repository is the canonical store for global skills at `ai-skills/global_skills/<name>/`. Per-project skills live in each project's own repository at `<project>/.skills/<name>/`; `~/.claude/skills`, `~/.agents/skills`, `<project>/.claude/skills`, and `<project>/.agents/skills` are generated views, not authored content. The old `<ai-skills>/projects/` tree is obsolete local state and may be removed after validation.
 
 ## Layout
 
 ```text
-global/
+global_skills/
   <skill-name>/              # canonical global skills
 
 docs/planning/
@@ -28,7 +28,7 @@ Configuration:
 Author global skills directly in this repository:
 
 ```sh
-$EDITOR global/<name>/SKILL.md
+$EDITOR global_skills/<name>/SKILL.md
 skillnet view sync
 ```
 

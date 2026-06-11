@@ -2,6 +2,7 @@ skills_root = "~/canix/Projects/ai-skills"
 mirror_root = "~/canix/Projects/ai-skills"
 
 [global]
+canonical_path = "~/canix/Projects/ai-skills/global_skills"
 views = [
   { label = "claude", path = "~/.claude/skills" },
   { label = "agents", path = "~/.agents/skills" },
@@ -30,7 +31,6 @@ path = "~/canix/Projects/CourseOfLife"
 [[projects]]
 name = "fragpipe-mcp"
 path = "~/canix/Projects/fragpipe-mcp"
-
 
 [[projects]]
 name = "nix-crossbow"
