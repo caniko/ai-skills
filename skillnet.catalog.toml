@@ -310,18 +310,6 @@ status = "reference"
 tags = ["code-review", "reference"]
 
 [[rules]]
-project = "goose"
-category = "project-runtime"
-tags = ["goose"]
-
-[[rules]]
-project = "goose"
-name_prefix = "code-review"
-category = "review"
-tags = ["code-review", "large-skill"]
-collision_note = "Goose-specific review guidance; use only inside the Goose project mirror."
-
-[[rules]]
 project = "CourseOfLife"
 category = "domain-workflow"
 tags = ["cv", "career"]

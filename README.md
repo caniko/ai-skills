@@ -1,6 +1,6 @@
 # caniko's AI Skills
 
-This repository is the canonical store for global skills at `ai-skills/global/<name>/`. Under the Option B canonical-store model, per-project skills live in each project's own repository at `<project>/.skills/<name>/`; `~/.claude/skills`, `~/.agents/skills`, `<project>/.claude/skills`, `<project>/.agents/skills`, and `<ai-skills>/projects/<name>/` are generated symlink views, not authored content.
+This repository is the canonical store for global skills at `ai-skills/global/<name>/`. Per-project skills live in each project's own repository at `<project>/.skills/<name>/`; `~/.claude/skills`, `~/.agents/skills`, `<project>/.claude/skills`, and `<project>/.agents/skills` are generated views, not authored content. The old `<ai-skills>/projects/` tree is obsolete local state and may be removed after validation.
 
 ## Layout
 
@@ -42,7 +42,7 @@ $EDITOR .skills/<name>/SKILL.md
 skillnet project sync --name <project>
 ```
 
-`skillnet project sync` regenerates that project's in-repo consumer views and the ai-skills `projects/<name>/` aggregator symlink.
+`skillnet project sync` regenerates that project's in-repo working copy and consumer views from `.skills`.
 
 ## Fresh Host Bootstrap
 

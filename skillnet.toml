@@ -31,9 +31,6 @@ path = "~/canix/Projects/CourseOfLife"
 name = "fragpipe-mcp"
 path = "~/canix/Projects/fragpipe-mcp"
 
-[[projects]]
-name = "goose"
-path = "~/canix/Projects/upstream/goose"
 
 [[projects]]
 name = "nix-crossbow"
