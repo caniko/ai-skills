@@ -122,8 +122,8 @@ tags = ["planning", "multi-phase"]
 
 [[rules]]
 name = "multi-phase-plan"
-status = "reference"
-tags = ["planning", "multi-phase", "reference", "large-skill"]
+category = "planning"
+tags = ["planning", "multi-phase", "large-skill"]
 
 [[rules]]
 path_prefix = "global/long-horizon-research"
@@ -155,29 +155,6 @@ path_prefix = "global/northstar"
 category = "planning"
 tags = ["planning"]
 
-[[rules]]
-name = "claude-plan-routing"
-category = "routing"
-status = "reference"
-tags = ["routing", "claude"]
-
-[[rules]]
-name = "gpt-plan-routing"
-category = "routing"
-status = "reference"
-tags = ["routing", "gpt"]
-
-[[rules]]
-name = "multi-phase-dispatch"
-category = "routing"
-status = "reference"
-tags = ["routing", "planning"]
-
-[[rules]]
-name = "plan-routing-axes"
-category = "routing"
-status = "reference"
-tags = ["routing", "planning", "reference"]
 
 [[rules]]
 path_prefix = "global/imagegen"

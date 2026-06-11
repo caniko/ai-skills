@@ -40,7 +40,7 @@ Prefer domain ownership over generic research whenever the domain skill has requ
 
 This is not a dispatcher. It returns a recommendation and rationale; the caller invokes the chosen skill themselves.
 
-This is not a plan-execution model selector. Use [`gpt-plan-routing`](../gpt-plan-routing/SKILL.md) or [`claude-plan-routing`](../claude-plan-routing/SKILL.md) for model/effort routing.
+This is not a plan-execution model selector. Use the `carter` CLI (via [`multi-phase-plan`](../multi-phase-plan/SKILL.md)) for model/effort routing.
 
 This is not an edit workflow. It should not patch files, run domain commands, or perform the research inside this skill.
 
@@ -65,4 +65,4 @@ Next action: invoke the recommended skill directly; this router performs no edit
 ## Reference
 
 - Specialist targets and their trigger heuristics: the Routing table above.
-- Shape precedents: [`gpt-plan-routing`](../gpt-plan-routing/SKILL.md), [`claude-plan-routing`](../claude-plan-routing/SKILL.md).
+- Model/effort routing: the `carter` CLI, invoked via [`multi-phase-plan`](../multi-phase-plan/SKILL.md).

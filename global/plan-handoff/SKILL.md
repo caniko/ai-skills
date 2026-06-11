@@ -1,13 +1,13 @@
 ---
 name: plan-handoff
-description: Shared reference skill defining the Planner Handoff schema that upstream producers (long-horizon-research wrappers, consolidate-plan-sets, plan-progress-review) emit and downstream planner skills (multi-phase-plan and its flavours) consume. Not user-invokable on its own; loaded by other skills.
+description: Shared reference skill defining the Planner Handoff schema that upstream producers (long-horizon-research wrappers, consolidate-plan-sets, plan-progress-review) emit and the downstream planner skill (multi-phase-plan) consumes. Not user-invokable on its own; loaded by other skills.
 ---
 
 # Plan handoff (shared Planner Handoff schema reference)
 
 ## Purpose
 
-This skill defines the minimal `## Planner Handoff` contract between upstream dossier producers and downstream multi-phase planner consumers. Like the `multi-phase-dispatch` precedent, this shared reference skill owns one cross-skill contract while producer and consumer skills own their local workflows. Not user-invokable on its own.
+This skill defines the minimal `## Planner Handoff` contract between upstream dossier producers and the downstream multi-phase planner consumer. This shared reference skill owns one cross-skill contract while producer and consumer skills own their local workflows. Not user-invokable on its own.
 
 ## Schema (required fields)
 
@@ -15,7 +15,7 @@ Every `## Planner Handoff` section must include exactly these required fields, u
 
 - **Dossier path** — string; absolute or repo-relative path to the dossier file the handoff sits in.
 - **Current-state summary** — paragraph; the planner's starting picture.
-- **Recommended planner flavour** — enum plus rationale; one of `multi-phase-plan-codex`, `multi-phase-plan-claude`, or `multi-phase-plan-mixed`, with the producer's reasoning.
+- **Routing constraints** — the carter routing constraints the plan should honor, with rationale: `none` (route across all enabled providers), a provider restriction (`--provider claude|codex|opencode`), and/or `--budget` when cost is the binding constraint.
 - **Work that should become phases** — bulleted list; one bullet per candidate phase slice.
 - **Known blockers** — bulleted list; producer-asserted blockers the planner must preserve, not plan around.
 - **Acceptance evidence to preserve** — bulleted list; verifiable claims the produced phase set must protect.
@@ -45,9 +45,9 @@ Minimal template:
 
 <one paragraph summarizing the planner's starting picture>
 
-### Recommended planner flavour
+### Routing constraints
 
-<one of multi-phase-plan-codex, multi-phase-plan-claude, or multi-phase-plan-mixed, with reasoning>
+<`none`, or carter flags such as `--provider claude` / `--budget`, with reasoning>
 
 ### Work that should become phases
 
@@ -87,7 +87,7 @@ Required fields have these precedence rules:
 
 - `Dossier path`, `Current-state summary`, `Work that should become phases`, `Known blockers`, and `Acceptance evidence to preserve` override competing free-text prompt context unless the user explicitly says the dossier is stale or superseded.
 - `Known blockers` are hard constraints. Preserve them as blockers in the generated phase set; do not turn them into implementation phases unless the user explicitly supplies the missing upstream artifact or decision.
-- `Recommended planner flavour` is advisory routing input. If the invoked consumer is a different flavour than the recommendation, the consumer should state the mismatch and continue only when that mismatch is intentional from the current user request.
+- `Routing constraints` are advisory routing input for the carter calls. If the user's free-text request names different constraints, the consumer should state the mismatch and follow the user, continuing only when the mismatch is intentional.
 - Optional fields are advisory. Consult them when present; ignore them when absent.
 
 ## Producer obligations
@@ -107,13 +107,8 @@ Producers should omit optional fields when evidence is insufficient. Absence is 
 
 ## Reference
 
-- Precedent for shared-reference skill: **`multi-phase-dispatch`**.
 - Current producer skills:
   - **`long-horizon-research`**.
   - **`consolidate-plan-sets`**.
   - **`plan-progress-review`**.
-- Downstream consumer skills:
-  - **`multi-phase-plan`**.
-  - **`multi-phase-plan-codex`**.
-  - **`multi-phase-plan-claude`**.
-  - **`multi-phase-plan-mixed`**.
+- Downstream consumer skill: **`multi-phase-plan`** (routing via the `carter` CLI).

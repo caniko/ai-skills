@@ -89,7 +89,7 @@ Top-level shape; `worktype` is `null` or one of `refactor`, `migration`, `cleanu
   "plan": {
     "id": "<uuid>",
     "name": "<slug>",
-    "flavor": "codex|claude|mixed",
+    "flavor": "codex|claude|mixed|opencode",
     "worktype": null,
     "created_at": 0,
     "phase_count": 0,
@@ -141,7 +141,7 @@ Run `skillnet calibration init <plan-dir>` to bootstrap; `skillnet calibration s
 
 skillnet applies **auto-tags** at `record` time from the sidecar's plan metadata:
 
-- `flavor:<codex|claude|mixed>`
+- `flavor:<codex|claude|mixed|opencode>` — now derived from the carter routing constraint in effect: `mixed` when unconstrained, otherwise the `--provider` value
 - `worktype:<refactor|migration|cleanup|feature|infra|docs|other>` when set
 - `scope:<single-repo|multi-repo|cross-org>` from `repo_spread`
 - `risk:<low|mixed|high>` from `routing_dist`

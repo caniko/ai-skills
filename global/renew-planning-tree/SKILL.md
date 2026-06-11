@@ -1,6 +1,6 @@
 ---
 name: renew-planning-tree
-description: Consolidate and retire an outdated planning documentation tree by auditing stale, complete, partial, blocked, and unknown plan sets; producing one current multi-phase plan set with a chosen provider flavour; folding durable knowledge into stable docs; pruning published navigation; and scheduling or deleting residual planning files. Use when a repo has `docs/src/planning`, roadmap phase sets, execution matrices, old verify snapshots, or mixed complete/partial plans that should become one active plan surface.
+description: Consolidate and retire an outdated planning documentation tree by auditing stale, complete, partial, blocked, and unknown plan sets; producing one current multi-phase plan set (routed per phase through the carter CLI); folding durable knowledge into stable docs; pruning published navigation; and scheduling or deleting residual planning files. Use when a repo has `docs/src/planning`, roadmap phase sets, execution matrices, old verify snapshots, or mixed complete/partial plans that should become one active plan surface.
 ---
 
 # Renew Planning Tree
@@ -11,7 +11,7 @@ This skill composes existing skills:
 
 - `plan-progress-review` for evidence-backed classification.
 - `consolidate-plan-sets` for the single active replacement plan.
-- A multi-phase flavour, usually named by the user (`multi-phase-plan-codex`, `multi-phase-plan-claude`, or `multi-phase-plan-mixed`).
+- `multi-phase-plan` for the phase shape and per-phase carter-routed model callouts.
 - `retire-docs-planning` for durable-knowledge migration and planning-surface removal.
 
 ## Workflow
@@ -20,7 +20,7 @@ This skill composes existing skills:
 
 Locate published documentation entrypoints first: `docs/src/SUMMARY.md`, sidebars, route manifests, or README navigation. Inventory both published plan entries and unlinked planning files under the requested tree.
 
-If no multi-phase flavour is explicit, ask for the executor/provider before writing the replacement plan. If a flavour is explicit, use it.
+Extract routing constraints from the user's wording (provider restriction, budget pressure) per [`plan-and-verify`](../plan-and-verify/SKILL.md) "Default routing for prep/plan dispatch"; absent any, carter routes across every enabled provider.
 
 ### 2. Run Progress Review
 
@@ -71,9 +71,9 @@ Create exactly one active plan directory, normally:
 docs/src/planning/<current-plan-name>/
 ```
 
-Use the selected multi-phase flavour's README and phase-file structure. The README must include:
+Use `multi-phase-plan`'s README and phase-file structure. The README must include:
 
-- model/provider callout,
+- the carter routing recommendation for plan-set orchestration,
 - scope and current-state summary,
 - evidence-backed status table for old plan families,
 - phase table with dependencies and safe parallelism,
@@ -112,7 +112,7 @@ If the docs build is blocked by unrelated concurrent edits, report the blocker a
 
 Final output must state:
 
-- selected multi-phase flavour,
+- routing constraints in effect (or `none`),
 - replacement plan directory and phase count,
 - old plan sets represented, retired, retained, or blocked,
 - durable knowledge folded into stable docs,
@@ -134,7 +134,5 @@ Final output must state:
 - `plan-progress-review`
 - `consolidate-plan-sets`
 - `retire-docs-planning`
-- `multi-phase-plan-codex`
-- `multi-phase-plan-claude`
-- `multi-phase-plan-mixed`
+- `multi-phase-plan` (model routing via the `carter` CLI)
 - `plan-handoff`

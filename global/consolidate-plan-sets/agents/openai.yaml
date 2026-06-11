@@ -1,4 +1,4 @@
 interface:
   display_name: "Consolidate Plan Sets"
   short_description: "Collapse existing plan sets into one plan"
-  default_prompt: "Use $plan-and-verify prep consolidate with the canonical planner-flavour rule to consolidate existing plan sets into one current monolith plan."
+  default_prompt: "Use $plan-and-verify prep consolidate with the canonical routing-constraint rule to consolidate existing plan sets into one current monolith plan."

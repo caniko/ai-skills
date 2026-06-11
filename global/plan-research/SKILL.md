@@ -1,13 +1,13 @@
 ---
 name: plan-research
-description: Pre-plan research wrapper around long-horizon-research that emits the plan-handoff schema for direct consumption by multi-phase-plan and its flavours. Use before multi-phase-plan-codex, multi-phase-plan-claude, or multi-phase-plan-mixed when the planning target needs evidence-backed research first. Also discoverable as multi-plan-research (alias). Default downstream flavour follows [plan-and-verify](../plan-and-verify/SKILL.md) "Default flavour for prep/plan dispatch".
+description: Pre-plan research wrapper around long-horizon-research that emits the plan-handoff schema for direct consumption by multi-phase-plan. Use before multi-phase-plan when the planning target needs evidence-backed research first. Also discoverable as multi-plan-research (alias). Routing constraints follow [plan-and-verify](../plan-and-verify/SKILL.md) "Default routing for prep/plan dispatch".
 ---
 
 # Plan Research
 
 ## Purpose
 
-Use this wrapper when evidence-backed research must feed a multi-phase planner. Load `long-horizon-research` as the base research workflow, load `plan-handoff` as the schema contract, and pair the resulting dossier with `multi-phase-plan-codex`, `multi-phase-plan-claude`, or `multi-phase-plan-mixed`.
+Use this wrapper when evidence-backed research must feed a multi-phase planner. Load `long-horizon-research` as the base research workflow, load `plan-handoff` as the schema contract, and pair the resulting dossier with `multi-phase-plan` (which routes models via the `carter` CLI).
 
 ## When to use
 
@@ -23,23 +23,23 @@ This skill is also available as `multi-plan-research` via directory symlink. Use
 
 ## Workflow
 
-1. Establish the planning target: user goal, target repo, and selected downstream flavour (default per the Provider-Default Rule below).
+1. Establish the planning target: user goal, target repo, and any routing constraints (default per the Routing-Constraint Rule below).
 2. Run the base `long-horizon-research` workflow: discover, audit existing plans when present, stop on blockers, apply the right-size gate, and write the dossier.
 3. If the right-size gate downshifted to a `-findings.md` note, stop. This wrapper has nothing to add to a non-planning investigation; report the findings path and exit.
 4. Otherwise, append `## Planner Handoff` to the dossier and emit the `plan-handoff` schema literally. Fill every required field with concrete evidence-backed content; fill optional fields only when dossier evidence supports them.
 5. In the same dossier, add `## Candidate Phase Boundaries` with dependency table and parallelism notes. The schema's optional `Candidate phase boundaries` field references this section.
-6. End the dossier with a planner brief: the exact prompt and context the user should feed to the selected `multi-phase-plan-*` flavour so it can consume the dossier.
+6. End the dossier with a planner brief: the exact prompt and context the user should feed to `multi-phase-plan` so it can consume the dossier.
 
-## Provider-Default Rule
+## Routing-Constraint Rule
 
-Default downstream flavour: see [`plan-and-verify`](../plan-and-verify/SKILL.md) "Default flavour for prep/plan dispatch". This wrapper follows that routing rule when it fills `Recommended planner flavour` in the Planner Handoff.
+Routing constraints: see [`plan-and-verify`](../plan-and-verify/SKILL.md) "Default routing for prep/plan dispatch". This wrapper follows that rule when it fills `Routing constraints` in the Planner Handoff (`none` when the user named no provider or budget pressure).
 
 ## Output Standard
 
 In the final response, state:
 
 - Dossier path.
-- Downstream flavour selected.
+- Routing constraints recorded.
 - Planner Handoff completeness: required fields filled and which optional fields were populated.
 - Whether the base downshifted to a findings note.
 
@@ -47,13 +47,13 @@ In the final response, state:
 
 - Emitting the handoff section in prose instead of the `plan-handoff` schema.
 - Padding optional fields when evidence is absent.
-- Recommending a flavour that conflicts with the canonical
-  `plan-and-verify` dispatch rule or the user's explicit provider signal.
-- Routing models or writing phase files; that belongs to the selected `multi-phase-plan-*` flavour.
+- Recording routing constraints that conflict with the canonical
+  `plan-and-verify` rule or the user's explicit provider signal.
+- Routing models or writing phase files; that belongs to `multi-phase-plan` (and the `carter` CLI it calls).
 
 ## Reference
 
 - `long-horizon-research` - base evidence dossier workflow.
 - `plan-handoff` - literal Planner Handoff schema contract.
-- `multi-phase-plan-codex`, `multi-phase-plan-claude`, `multi-phase-plan-mixed` - downstream planning flavours.
+- `multi-phase-plan` - downstream planner (model routing via the `carter` CLI).
 - `research-routing` - sibling router for non-planning research selection.

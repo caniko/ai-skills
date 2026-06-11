@@ -1,6 +1,6 @@
 ---
 name: consolidate-plan-sets
-description: Consolidate multiple existing planning document sets into one current monolithic plan set after auditing what has already landed. Use when a repository has several active or stale plan directories, phase sets, roadmap checklists, or migration plans that should be collapsed into one active plan directory. Always invoke this together with a multi-phase plan flavour such as `multi-phase-plan-codex`, `multi-phase-plan-claude`, or `multi-phase-plan-mixed` so the resulting consolidated set uses the target provider's routing language and execution assumptions.
+description: Consolidate multiple existing planning document sets into one current monolithic plan set after auditing what has already landed. Use when a repository has several active or stale plan directories, phase sets, roadmap checklists, or migration plans that should be collapsed into one active plan directory. Always invoke this together with `multi-phase-plan` so the resulting consolidated set uses its phase shape and carter-routed model callouts.
 ---
 
 # Consolidate Plan Sets
@@ -10,9 +10,9 @@ Use this skill to replace many overlapping plan sets with one current monolithic
 This skill depends on two others:
 
 - **`plan-progress-review`** — audit existing plans and classify what is done, stale, unfinished, or blocked.
-- **One multi-phase plan flavour** — `multi-phase-plan-codex`, `multi-phase-plan-claude`, or `multi-phase-plan-mixed`. The chosen flavour supplies provider-specific model callouts, routing language, and execution assumptions.
+- **`multi-phase-plan`** — supplies the phase shape and the model callouts, routed per phase through the `carter` CLI.
 
-If no multi-phase flavour is explicit in the user request, do not write the consolidated plan set. Ask which executing provider the plan targets. In `plan-and-verify prep consolidate` invocations, the orchestrator picks the default — see [`plan-and-verify`](../plan-and-verify/SKILL.md) "Default flavour for prep/plan dispatch". When invoked standalone, this skill still asks.
+Routing constraints (provider restriction, budget pressure) come from the user's wording; absent any, carter routes across every enabled provider. In `plan-and-verify prep consolidate` invocations the orchestrator extracts them — see [`plan-and-verify`](../plan-and-verify/SKILL.md) "Default routing for prep/plan dispatch".
 
 ## Workflow
 
@@ -52,18 +52,18 @@ Default location:
 docs/src/planning/<consolidated-plan-name>/
 ```
 
-Use the selected multi-phase flavour for provider-specific routing language and phase-file structure, but collapse the old plan families into one directory. The output is still a multi-phase plan set: `README.md` plus `NN-<slug>.md` phase files, with optional sub-layer directories when the selected flavour and work decomposition require them.
+Use `multi-phase-plan` for phase-file structure and carter-routed callouts, but collapse the old plan families into one directory. The output is still a multi-phase plan set: `README.md` plus `NN-<slug>.md` phase files, with optional sub-layer directories when the work decomposition requires them.
 
 The consolidated plan set must include:
 
-- `README.md` as the plan-set orchestrator index, with provider/model recommendation callout from the selected flavour.
+- `README.md` as the plan-set orchestrator index, with the carter routing recommendation for plan-set orchestration.
 - Scope: which old plan sets were consolidated.
 - Current state summary from `plan-progress-review`.
 - Phase table with dependency order and safe parallelism.
 - Parallelism layer in `README.md`: execution waves that show which phases can run at the same time, what each wave unlocks, and when the plan is exhausted.
-- A `## Planner Handoff` section in `README.md` that emits the `plan-handoff` schema literally, using its required fields and optional fields only when evidence supports them. Fill required fields from the consolidated `README.md` path, `plan-progress-review` current-state summary, selected multi-phase flavour, surviving phase-table work, known audit blockers, and whole-set acceptance criteria.
+- A `## Planner Handoff` section in `README.md` that emits the `plan-handoff` schema literally, using its required fields and optional fields only when evidence supports them. Fill required fields from the consolidated `README.md` path, `plan-progress-review` current-state summary, the routing constraints in effect, surviving phase-table work, known audit blockers, and whole-set acceptance criteria.
 - Whole-set acceptance criteria.
-- One standalone phase file per remaining work slice, following the selected multi-phase flavour's required shape.
+- One standalone phase file per remaining work slice, following `multi-phase-plan`'s required shape.
 - A coverage or retirement report proving how each old plan set's intent is represented, retired, retained, or rejected.
 - Files likely touched, pitfalls, blocked items, and recovery steps in the relevant phase files.
 - References to durable source artifacts, not to stale plan prose unless the old plan is the only historical source.
@@ -100,7 +100,7 @@ If the task is only to draft the consolidated set, leave old plans in place and 
 
 ## Output Standard
 
-- Name the selected multi-phase flavour and why it matches the intended executing provider.
+- Name the routing constraints in effect (or `none`) and why they match the intended execution.
 - State where the consolidated plan set was written and how many phase files it contains.
 - List old plan sets as `represented`, `retired`, `retained`, or `out of scope`.
 - State what was verified and what could not be verified.
@@ -111,7 +111,7 @@ If the task is only to draft the consolidated set, leave old plans in place and 
 - Do not create several new plan sets. This skill produces exactly one consolidated plan set.
 - Do not flatten a large plan family into one summary file. "Monolithic" means one active plan directory, not one markdown file.
 - Do not merge stale assumptions just because they appear in multiple plans.
-- Do not invent a provider recommendation; use the selected multi-phase flavour's routing rules.
+- Do not invent a model recommendation; every callout comes from a recorded `carter route` invocation.
 - Do not delete an old plan before its remaining useful work is represented or intentionally rejected.
 
 ## Reference
