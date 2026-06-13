@@ -1,6 +1,6 @@
 ---
 name: forgejo-codeberg-ci
-description: "Troubleshoot Codeberg/Forgejo CI using the `forgejo-cli` first. Use when investigating Codeberg Actions or Forgejo workflow runs, publish failures, stuck jobs, tag-triggered releases, missing crates.io publishes, or repository-side CI state on codeberg.org. Prefer `forgejo-cli` for repository targeting and context discovery before falling back to Forgejo Actions pages or API endpoints."
+description: "Troubleshoot Codeberg/Forgejo CI using `fj` first, with git/curl fallback. Use when investigating Forgejo Actions workflow runs on Codeberg, publish failures, stuck jobs, tag-triggered releases, missing crates.io publishes, or repository-side CI state on codeberg.org."
 ---
 
 # Forgejo Codeberg CI
@@ -9,27 +9,27 @@ Use this skill for Codeberg-hosted CI troubleshooting.
 
 ## Core Rule
 
-Use `forgejo-cli` first whenever the target is a Codeberg/Forgejo repository. Do not start with ad hoc HTML scraping or generic web search when `forgejo-cli` can establish the repo target or confirm local Codeberg context.
+Use `fj` first whenever the target is a Codeberg/Forgejo repository. Do not start with generic web search when `fj`, git, or targeted Codeberg endpoints can establish the repo target or confirm local Codeberg context.
 
 ## Workflow
 
-1. Confirm `forgejo-cli` is available:
+1. Confirm `fj` is available:
 
 ```sh
-command -v forgejo-cli
-forgejo-cli --help
+command -v fj
+fj --help
 ```
 
-2. Target the repository with `forgejo-cli` before anything else:
+2. Target the repository with `fj` before anything else:
 
 ```sh
-forgejo-cli repo info
-forgejo-cli --owner-repo OWNER/REPO repo info
+fj repo view
+fj repo view OWNER/REPO
 ```
 
-If the current directory is not the target repo, always pass `--owner-repo OWNER/REPO`.
+If the current directory is not the target repo, always pass `OWNER/REPO` to `fj repo view` and `-r OWNER/REPO` to `fj actions`.
 
-3. Confirm the local Codeberg context with `git remote -v` (cross-check against the `forgejo-cli repo info` target above).
+3. Confirm the local Codeberg context with `git remote -v` (cross-check against the `fj repo view` target above).
 
 4. Check whether the release or CI trigger actually reached Codeberg:
 
@@ -38,9 +38,14 @@ git ls-remote --heads origin
 git ls-remote --tags origin
 ```
 
-5. If `forgejo-cli` exposes the needed CI/action capability in the installed version, use it instead of scraping.
+5. Use `fj actions` for CI task operations when possible:
 
-6. If the installed `forgejo-cli` does not expose Actions/CI subcommands, keep `forgejo-cli` as the source of repo targeting, then inspect Forgejo Actions state from the matching repository endpoints:
+```sh
+fj actions -r OWNER/REPO tasks
+fj actions -r OWNER/REPO dispatch WORKFLOW_FILE BRANCH_OR_TAG
+```
+
+6. If `fj` does not expose the needed run/job detail, keep `fj` as the source of repo targeting, then inspect Forgejo Actions state from the matching repository endpoints:
 
 ```sh
 curl -fsSL "https://codeberg.org/OWNER/REPO/actions"

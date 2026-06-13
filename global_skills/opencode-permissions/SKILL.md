@@ -5,8 +5,11 @@ description: Add, triage, or diagnose opencode bash permission rules in canix (h
 
 # opencode-permissions
 
-opencode's permission config is declared in Nix at
-`~/canix/Projects/canix/home/modules/ai/opencode.nix` and rendered to
+opencode's baseline permission config is declared in Nix at
+`~/canix/Projects/canix/home/modules/ai/opencode.nix`. Operator-added
+rules are generated into
+`~/canix/Projects/canix/home/modules/ai/opencode-permissions.nix` by
+`canix opencode permission`. Both are rendered to
 `~/.config/opencode/opencode.json` by Home Manager. Never edit the JSON — it is
 a store symlink.
 
@@ -34,9 +37,10 @@ a store symlink.
 ## Workflow for a pasted pattern list
 
 1. **Filter to what is missing.** For each pattern, check whether a rule
-   already exists: `grep -nF '"<pattern>"' home/modules/ai/opencode.nix` and
-   check the `gitPair` list for git subcommands. Existing patterns were just
-   sibling segments — skip them and tell the user so.
+   already exists: `grep -nF '"<pattern>"' home/modules/ai/opencode.nix
+   home/modules/ai/opencode-permissions.nix` and check the `gitPair` list for
+   git subcommands. Existing patterns were just sibling segments — skip them
+   and tell the user so.
 2. **Triage the missing ones:**
    - Read-only or formatter (status, list, view, diff, `diffstat`, plumbing
      like `rev-parse`, `hash-object`) → `allow`.
@@ -49,11 +53,22 @@ a store symlink.
    - **Bare file path as a command** (e.g. `cli/src/foo.rs *`) → do NOT add a
      rule. It is a malformed model command; `"*" = "ask"` catching it is
      correct. Tell the user to reject once; the model self-corrects.
-3. **Place the rule:**
-   - git subcommand → add `(gitPair "<sub> *" "<action>")` alphabetically in
-     the `foldl'` list. `gitPair` emits both `git <sub>` and `git -C * <sub>`.
-   - anything else → add `"<cmd> *" = "<action>";` alphabetically in the
-     matching commented section of the flat attrset.
+3. **Add the rule with the CLI, not by hand-editing Nix:**
+   - The current CLI shape is `canix opencode permission add <section> <key> <action>`.
+     Examples:
+     ```sh
+     canix opencode permission add bash 'diffstat *' allow
+     canix opencode permission add bash 'ssh *' ask
+     canix opencode permission add tool webfetch deny
+     ```
+   - Sections are `bash`, `tool`, and `external-dir`; actions are `allow`,
+     `ask`, and `deny`.
+   - For git subcommands, pass the natural opencode pattern such as
+     `canix opencode permission add bash 'git diff *' allow`. The CLI expands
+     `git ...` like `gitPair`, writing both `git <sub>` and `git -C * <sub>`
+     generated rules and avoiding duplicates.
+   - The CLI is idempotent: same-action duplicates are skipped, and an
+     existing generated rule with a different action is updated.
    - Flags only match in the written position: `"git branch -D *"` does not
      catch `git branch foo -D`. Add a `"<cmd> * --flag *"` variant when the
      flag is the dangerous part (see the push force rules).

@@ -9,7 +9,7 @@ argument-hint: "[path] [--sensitivity low|medium|high] [--plan-first] [--only <c
 Rust Ultra takes a whole crate or workspace from "works" to "polished" in one driven pass. It operates on two work layers:
 
 1. **Deterministic host fixes** — `cargo fmt`, `cargo clippy --fix`, `cargo fix`, `cargo check`. These are mechanical, run by this orchestrator directly (no LLM judgment), and committed step by step.
-2. **LLM concern skills** — the 21 sibling `rust-*` skills, each owning one housekeeping concern (dead code, unwrap audit, error architecture, trait design, …). This orchestrator decides which to run, in what order, and how deeply to plan, then invokes each via the Skill tool.
+2. **LLM concern skills** — the sibling `rust-*` skills, each owning one housekeeping concern (dead code, unwrap audit, error architecture, trait design, ...). This orchestrator decides which to run, in what order, and how deeply to plan, then invokes each through the available skill mechanism.
 
 This skill is **full-auto**: it executes. Pass `--plan-first` to gate on human approval after the survey, before any concern edits.
 
@@ -17,9 +17,9 @@ It complements but does **not** replace the release skills (`rust-crate-quality-
 
 ## How invocation works
 
-Each concern below is a separate skill named `rust-<concern>` (e.g. `rust-dead-code`, `rust-error-architecture`). These are **user-level** skills installed under `~/.claude/skills/`. To run one, invoke it with the **Skill** tool — let it do its own work and report back. This orchestrator never reimplements a concern; it only decides **which** concerns run, in what **order**, with how much **planning**, and **loops until convergence**.
+Each concern below is a separate skill named `rust-<concern>` (e.g. `rust-dead-code`, `rust-error-architecture`). These skills may come from the current session's available skill list or from generated global views such as `~/.claude/skills` / `~/.agents/skills`. To run one, invoke it through the available skill mechanism, let it do its own work, and report back. This orchestrator never reimplements a concern; it only decides **which** concerns run, in what **order**, with how much **planning**, and **loops until convergence**.
 
-**Verify before invoking.** Not every `rust-<concern>` skill is guaranteed to be installed. Before invoking a concern via the Skill tool, confirm the skill is present (e.g. it appears in the available-skills list). If a concern is selected by the survey but its skill is **not installed**, **skip it and log it as deferred** ("skill not installed") rather than fabricating a Skill invocation. Never invent a skill name.
+**Verify before invoking.** Not every `rust-<concern>` skill is guaranteed to be installed. Before invoking a concern, confirm the skill is present (e.g. it appears in the available-skills list). If a concern is selected by the survey but its skill is **not installed**, **skip it and log it as deferred** ("skill not installed") rather than fabricating an invocation. Never invent a skill name.
 
 Default arguments: path = current crate/workspace root, `--sensitivity medium`, no `--plan-first`, no `--only`/`--skip`.
 
@@ -28,7 +28,7 @@ Default arguments: path = current crate/workspace root, `--sensitivity medium`, 
 Run the following in order. Commit each step with a conventional, atomic message. If a step fails irrecoverably, STOP and report — do not start concern work on a red tree.
 
 1. `cargo fmt` — commit `style: cargo fmt`.
-2. `cargo clippy --fix --allow-dirty --allow-staged --all-targets`, then verify with `cargo clippy --all-targets -- -D warnings`. If warnings remain, hand off to the `fix-clippy-errors` skill (invoke via the Skill tool) and re-verify. Commit `fix: auto-fix clippy lints`.
+2. `cargo clippy --fix --allow-dirty --allow-staged --all-targets`, then verify with `cargo clippy --all-targets -- -D warnings`. If warnings remain, hand off to the `fix-clippy-errors` skill and re-verify. Commit `fix: auto-fix clippy lints`.
 3. `cargo fmt` again (the clippy fixes may have churned formatting) — commit if it changed anything.
 4. `cargo check --all-targets` — **must pass** before any concern work. On failure, try `cargo fix --allow-dirty --allow-staged --all-targets` then re-check; if still broken, fix the compile error yourself before proceeding.
 
@@ -63,7 +63,7 @@ For each concern:
   - `Connectome` ⇒ consider the dependency graph and cross-module ripple.
   - `ScopeLocal` ⇒ no cross-boundary context needed.
   - `ToolDriven` ⇒ a cargo tool (e.g. `cargo-udeps`, `cargo-msrv`) drives it.
-- **Invoke** the `rust-<concern>` skill via the Skill tool (after confirming it is installed — see "How invocation works") and let it do the work.
+- **Invoke** the `rust-<concern>` skill through the available skill mechanism (after confirming it is installed — see "How invocation works") and let it do the work.
 - **VERIFY before moving on:** `cargo fmt && cargo clippy --all-targets -- -D warnings && cargo check --all-targets && cargo test`. **Commit atomically per concern.** If verification fails, run the deterministic recovery (`cargo fix` → `cargo fmt`); if still broken, fix it before continuing. **Never leave the tree red.**
 
 ## Phase 3 — Convergence

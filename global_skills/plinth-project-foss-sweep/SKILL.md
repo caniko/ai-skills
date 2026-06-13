@@ -16,6 +16,8 @@ Apply `plinth-project` consistently across owned FOSS repositories while keeping
 - Exclude `upstream/`, `worktrees/`, `assesments/`, scratch/temp repos, vendored nested repos, and obvious third-party forks unless the user explicitly names them.
 - Stop on missing foundational metadata. Report the missing artifact, why it is required, the upstream command/workflow to create it, and the validation command.
 - Preserve existing `website/plinth-project.toml`; only fill missing generated-safe fields after reading the repo.
+- Treat any existing non-Plinth website setup as a migration blocker unless the repo already has a valid `website/plinth-project.toml`. Do not silently adapt or replace another site generator.
+- If a required landing-page feature cannot be represented by `plinth-project`, stop and report the missing feature, why it is required, the upstream producer `~/canix/Projects/solo/plinth`, the workflow to add or fix it there, and the `plinth-project check/build` validation command.
 
 ## Discovery Workflow
 
@@ -32,7 +34,7 @@ Apply `plinth-project` consistently across owned FOSS repositories while keeping
 
 2. Discover recent owned FOSS candidates:
    ```sh
-   ~/canix/Projects/ai-skills/global/plinth-project-foss-sweep/scripts/discover-recent-owned-foss.sh \
+   ~/canix/Projects/ai-skills/global_skills/plinth-project-foss-sweep/scripts/discover-recent-owned-foss.sh \
      --root ~/canix/Projects \
      --since 5-months \
      --dry-run
@@ -50,7 +52,7 @@ Apply `plinth-project` consistently across owned FOSS repositories while keeping
 Use the sweep script for broad runs:
 
 ```sh
-~/canix/Projects/ai-skills/global/plinth-project-foss-sweep/scripts/plinth-project-sweep.sh \
+~/canix/Projects/ai-skills/global_skills/plinth-project-foss-sweep/scripts/plinth-project-sweep.sh \
   --root ~/canix/Projects \
   --since 5-months \
   --dry-run
@@ -59,10 +61,11 @@ Use the sweep script for broad runs:
 For each `target` repo:
 
 1. Check `git status --short`. Do not overwrite unrelated local changes.
-2. Inspect `README*`, license/COPYING, remotes, package manifests, existing `website/plinth-project.toml`, and generated output.
-3. If config is missing, create `website/plinth-project.toml` from real repo metadata only.
-4. If config exists, preserve authored content and refresh only missing generated-safe fields.
-5. Validate:
+2. Inspect `README*`, license/COPYING, remotes, package manifests, existing `website/plinth-project.toml`, any non-Plinth website setup, and generated output.
+3. If a non-Plinth website setup exists and `website/plinth-project.toml` is absent or invalid, block the migration and report the required Plinth project-site gap.
+4. If config is missing and no migration blocker exists, create `website/plinth-project.toml` from real repo metadata only.
+5. If config exists, preserve authored content and refresh only missing generated-safe fields.
+6. Validate:
    ```sh
    plinth-project check --config website/plinth-project.toml
    plinth-project build --config website/plinth-project.toml

@@ -12,7 +12,7 @@ Audit the codebase for dead code:
 4. Check for test helpers that are no longer used by any test
 
 Remove all confirmed dead code. Do not remove code that is part of a public API.
-If unsure whether something is used, leave it and add a `// TODO: verify usage` comment.
+If unsure whether something is used, leave it in place and report the unresolved evidence gap in the final response; do not add placeholder TODO comments as a substitute for proof.
 Commit removals with a clear description of what was removed and why.
 
 ## Rust specifics

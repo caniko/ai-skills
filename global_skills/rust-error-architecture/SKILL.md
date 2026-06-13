@@ -1,6 +1,6 @@
 ---
 name: rust-error-architecture
-description: Improve the error TYPE design of a Rust crate — coherent typed error enums, #[from]/#[source] composition, #[non_exhaustive] public errors, no leaked anyhow/Box<dyn Error> in library signatures. Use when asked to design error types, replace stringly-typed errors, adopt thiserror, stop returning Box<dyn Error>/anyhow from a library API, or separate recoverable errors from bugs. Message wording and Display text quality belong to rust-error-messages, not here. Part of the rust-ultra Rust improvement arsenal.
+description: Improve the error TYPE design of a Rust crate — coherent typed error enums, #[from]/#[source] composition, #[non_exhaustive] public errors, no leaked anyhow or boxed dyn Error in library signatures. Use when asked to design error types, replace stringly-typed errors, adopt thiserror, stop returning boxed dyn Error or anyhow from a library API, or separate recoverable errors from bugs. Message wording and Display text quality belong to rust-error-messages, not here. Part of the rust-ultra Rust improvement arsenal.
 ---
 
 # Rust: Error Type Architecture

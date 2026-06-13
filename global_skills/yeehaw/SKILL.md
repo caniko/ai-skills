@@ -1,6 +1,6 @@
 ---
 name: yeehaw
-description: Execute, inspect, or resume yee-haw multi-phase plan directories through the yh MCP phases tools. Use when the user wants to run a phase plan in the current repository, asks for `/yeehaw run`, `/yeehaw show`, or `/yeehaw status`, or after `multi-phase-plan` writes a phase doc set under `docs/src/planning/<plan-name>/`.
+description: Execute, inspect, or resume yee-haw multi-phase plan directories through the yh MCP phases tools. Use when the user wants to run a phase plan in the current repository, asks for `/yeehaw run`, `/yeehaw show`, or `/yeehaw status`, or after `multi-phase-plan` writes a phase doc set under `docs/src/planning/PLAN-NAME/`.
 argument-hint: "[plan-dir] | run | status | show"
 ---
 

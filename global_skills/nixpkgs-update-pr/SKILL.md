@@ -1,6 +1,6 @@
 ---
 name: nixpkgs-update-pr
-description: "Create and shepherd nixpkgs pull requests that UPDATE an existing package to a newer version: bump version/rev/source hash, refresh language lock or vendor hashes (cargoHash, vendorHash, npmDepsHash), absorb upstream restructures (moved sourceRoot, new build system, Cargo/Go/npm workspace and lockfile changes), validate the rebuild and binaries, push to a fork, open a draft PR with the live template, and run caniko/nixpkgs-review-gha. Use for version bumps, `pname: old -> new`, unstable-date bumps, `cargoHash`/`vendorHash` out-of-date refreshes, and updates that break because upstream reorganized. For brand-new packages or general PRs use `nixpkgs-init-pr`; for build failures on the current version use `nixpkgs-build-failure-pr`."
+description: "Create and shepherd nixpkgs pull requests that UPDATE an existing package to a newer version: bump version/rev/source hash, refresh language lock or vendor hashes (cargoHash, vendorHash, npmDepsHash), absorb upstream restructures (moved sourceRoot, new build system, Cargo/Go/npm workspace and lockfile changes), validate the rebuild and binaries, push to a fork, open a draft PR with the live template, and run caniko/nixpkgs-review-gha. Use for version bumps, pname old to new changes, unstable-date bumps, `cargoHash`/`vendorHash` out-of-date refreshes, and updates that break because upstream reorganized. For brand-new packages or general PRs use `nixpkgs-init-pr`; for build failures on the current version use `nixpkgs-build-failure-pr`."
 ---
 
 # nixpkgs-update-pr

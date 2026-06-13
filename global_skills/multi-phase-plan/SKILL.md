@@ -1,6 +1,6 @@
 ---
 name: multi-phase-plan
-description: Break a non-trivial refactor, migration, or cleanup into a set of standalone markdown phase documents, each self-contained enough that a fresh agent session can pick it up cold. Routing is deterministic — every phase (and sub-layer) gets its model + effort recommendation from the `carter` CLI, which selects across all configured providers (claude, codex, opencode). This is the single multi-phase skill; it replaces the former -codex/-claude/-mixed/-opencode flavours. Triggers on "break this into phases", "create a multi-phase plan", "codex plan", "claude plan", "opencode plan", "deepseek plan", "mixed plan", "cheapest viable plan", "one phase per session", "phase doc set", "export to <provider>", or "verify".
+description: Break a non-trivial refactor, migration, or cleanup into a set of standalone markdown phase documents, each self-contained enough that a fresh agent session can pick it up cold. Routing is deterministic — every phase (and sub-layer) gets its model + effort recommendation from the `carter` CLI, which selects across all configured providers (claude, codex, opencode). This is the single multi-phase skill; it replaces the former -codex/-claude/-mixed/-opencode flavours. Triggers on "break this into phases", "create a multi-phase plan", "codex plan", "claude plan", "opencode plan", "deepseek plan", "mixed plan", "cheapest viable plan", "one phase per session", "phase doc set", "export to provider", or "verify".
 ---
 
 # Multi-phase plan document set
@@ -376,7 +376,7 @@ Reroute does not change phase boundaries, sub-layer splits, or dependency tables
 
 - **Hand-routing.** Writing a model/effort recommendation without running carter (or contradicting its output without stating why and at the user's request). The callout's `carter route` line is the audit trail.
 - **README content that phase files depend on.** The README is required for coordination, but each phase file must still be readable cold.
-- **Cross-references between phase files for actual content.** Cross-references for *context* are fine ("Phase D must land first — see [04-…](./04-…)"). Cross-references that hide a step force the agent to read both files. Inline the step.
+- **Cross-references between phase files for actual content.** Cross-references for *context* are fine ("Phase D must land first; see `04-...`"). Cross-references that hide a step force the agent to read both files. Inline the step.
 - **Conditional phases ("only do this if X").** If a phase's existence is conditional, write the decision criterion as its own initial step inside the phase, not as a wrapping "do we need this?" guard.
 - **Generic acceptance criteria.** "Tests pass" / "builds cleanly" / "no regressions" are not acceptance criteria. Name specific test targets, warning counts, log-line presence/absence.
 - **Inflating complexity to route every phase to the top tier.** carter reserves `max` for explicit outliers; if every phase claims frontier complexity, the complexity assessment is wrong, not the router.

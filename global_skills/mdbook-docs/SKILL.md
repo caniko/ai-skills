@@ -81,7 +81,7 @@ docs = pkgs.stdenv.mkDerivation {
 site = docs;
 ```
 
-Expose `docs` and `site` in `packages`. Add `pkgs.mdbook` to the dev shell and avoid `pkgs.zola` unless another part of the repository still needs it.
+Expose `docs` and `site` in `packages`. Add `pkgs.mdbook` to the dev shell.
 
 If the flake is already large or this update makes `flake.nix` hard to review, modularize using the shared routine at [../simit-project-init/references/flake-modularization.md](../simit-project-init/references/flake-modularization.md). Keep `docs` and `site` output names stable.
 
@@ -93,7 +93,7 @@ Ignore mdBook output:
 docs/book/
 ```
 
-Remove stale website build artifacts when deleting a former Zola site.
+Remove stale generated site artifacts when deleting a former landing site.
 
 ### 4. Hand off deployment wiring
 

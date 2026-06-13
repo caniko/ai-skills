@@ -30,12 +30,12 @@ Use `# Section Title` lines for section headers and Markdown links for pages:
 ```markdown
 # Summary
 
-[Introduction](./introduction.md)
+Introduction page: `./introduction.md`
 
 # Getting Started
 
-- [Installation](./getting-started/installation.md)
-- [Quick Start](./getting-started/quick-start.md)
+- Installation page: `./getting-started/installation.md`
+- Quick Start page: `./getting-started/quick-start.md`
 ```
 
 Every linked file must exist. Do not add placeholder chapters unless the user explicitly wants stubs.

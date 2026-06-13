@@ -70,6 +70,6 @@ simit projects list --kind generic --json
 Then rerun:
 
 ```sh
-~/canix/Projects/ai-skills/global/plinth-project-foss-sweep/scripts/discover-recent-owned-foss.sh --dry-run
-~/canix/Projects/ai-skills/global/plinth-project-foss-sweep/scripts/plinth-project-sweep.sh --dry-run --limit 3
+~/canix/Projects/ai-skills/global_skills/plinth-project-foss-sweep/scripts/discover-recent-owned-foss.sh --dry-run
+~/canix/Projects/ai-skills/global_skills/plinth-project-foss-sweep/scripts/plinth-project-sweep.sh --dry-run --limit 3
 ```

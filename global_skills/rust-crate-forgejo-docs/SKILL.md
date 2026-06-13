@@ -1,6 +1,6 @@
 ---
 name: rust-crate-forgejo-docs
-description: "Add Forgejo/Codeberg Pages documentation for Rust crates preparing for crates.io. Use for docs-only mdBook sites, optional Zola landing plus docs, Nix packages.docs/site outputs, Pages workflow integration, and docs content aligned with crate README/rustdoc."
+description: "Add Forgejo/Codeberg Pages documentation for Rust crates preparing for crates.io. Use for docs-only mdBook sites, optional plinth-project landing plus docs, Nix packages.docs/site outputs, Pages workflow integration, and docs content aligned with crate README/rustdoc."
 ---
 
 # Rust Crate Forgejo Docs

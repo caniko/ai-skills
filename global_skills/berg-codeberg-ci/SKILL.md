@@ -1,6 +1,6 @@
 ---
 name: berg-codeberg-ci
-description: "Troubleshoot Codeberg/Forgejo CI using the `berg` CLI first. Use when investigating Codeberg Actions or Forgejo workflow runs, publish failures, stuck jobs, tag-triggered releases, missing crates.io publishes, or repository-side CI state on codeberg.org. Prefer `berg` for repository targeting and context discovery before falling back to Forgejo Actions pages or API endpoints."
+description: "Troubleshoot Codeberg/Forgejo CI using the `berg` CLI when available, with `fj`/git/curl fallback. Use when investigating Forgejo Actions workflow runs on Codeberg, publish failures, stuck jobs, tag-triggered releases, missing crates.io publishes, or repository-side CI state on codeberg.org."
 ---
 
 # Berg Codeberg CI
@@ -9,25 +9,28 @@ Use this skill for Codeberg-hosted CI troubleshooting.
 
 ## Core Rule
 
-Use `berg` first whenever the target is a Codeberg/Forgejo repository. Do not start with ad hoc HTML scraping or generic web search when `berg` can establish the repo target or confirm local Codeberg context.
+Use `berg` first whenever it is installed and the target is a Codeberg/Forgejo repository. If `berg` is missing, use `fj` for Forgejo API operations and git/curl for targeting and read-only state checks. Do not start with generic web search when local tools can establish the repo target or confirm Codeberg context.
 
 ## Workflow
 
-1. Confirm `berg` is available:
+1. Confirm which local tool is available:
 
 ```sh
 command -v berg
+command -v fj
 berg --help
+fj --help
 ```
 
-2. Target the repository with `berg` before anything else:
+2. Target the repository before anything else:
 
 ```sh
 berg repo info
 berg --owner-repo OWNER/REPO repo info
+fj repo view OWNER/REPO
 ```
 
-If the current directory is not the target repo, always pass `--owner-repo OWNER/REPO`.
+If the current directory is not the target repo, always pass `--owner-repo OWNER/REPO` for `berg`, `OWNER/REPO` to `fj repo view`, or `-r OWNER/REPO` to `fj actions`.
 
 3. Confirm the local Codeberg context with `git remote -v` (cross-check against the `berg repo info` target above).
 
@@ -38,9 +41,9 @@ git ls-remote --heads origin
 git ls-remote --tags origin
 ```
 
-5. If `berg` exposes the needed CI/action capability in the installed version, use it instead of scraping.
+5. If `berg` exposes the needed CI/action capability in the installed version, use it. Otherwise use `fj actions -r OWNER/REPO tasks` for task listing.
 
-6. If the installed `berg` does not expose Actions/CI subcommands, keep `berg` as the source of repo targeting, then inspect Forgejo Actions state from the matching repository endpoints:
+6. If neither CLI exposes the needed Actions detail, keep the CLI-derived owner/repo as the source of targeting, then inspect Forgejo Actions state from the matching repository endpoints:
 
 ```sh
 curl -fsSL "https://codeberg.org/OWNER/REPO/actions"
