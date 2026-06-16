@@ -35,6 +35,7 @@ Phase 4 — Organize the module tree
    - Flatten nesting beyond 3 levels
    - Move misplaced items to their logical module
    - When two modules have circular imports, extract shared behavior into a trait in a parent module to break the cycle
+   - **Extract local helpers into shared methods on the type they operate on.**  If a module defines a `fn internal(...)` that constructs an `ErrorResponse`, move it onto `ErrorResponse` as a method rather than leaving it as a free function in the consuming module.  The rule: a function that only touches fields/methods of type `T` should live as an inherent method on `T`, not as a local helper in a module that happens to create `T` values.
 8. Every module entry point must have documentation explaining its purpose
 9. Add barrel exports at the project root for key public types
 

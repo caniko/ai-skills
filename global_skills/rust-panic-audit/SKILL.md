@@ -10,18 +10,29 @@ Audit non-test code for panics that are NOT unwrap/expect — indexing, slicing,
 2. Replace runtime-bounded indexing with `.get(i)` / `.get(a..b)` and explicitly handle the `None` case — propagate an error, clamp, or skip — rather than letting an out-of-range access abort the process.
 3. Scan integer arithmetic (`+ - * <<`) on values derived from input, lengths, or accumulation; determine whether the operands can overflow (note `<<` panics in debug when the shift amount is ≥ the type's bit width). Replace with `checked_*` (and handle the `None`), `saturating_*`, or `wrapping_*` — choosing deliberately and stating which semantics the call site actually wants.
 4. Find every `as` cast that narrows or changes signedness (e.g. `as usize`, `as u32`, `as u8`, `as i32`) where the source is signed, wider, or runtime-controlled. Replace lossy casts with `TryInto`/`TryFrom` and handle the conversion error; leave only casts that are provably lossless or intentionally truncating with a comment saying so.
-5. Find division and remainder where the divisor can be zero; guard the divisor or use `checked_div`/`checked_rem` and handle the zero case. Also flag `i*::MIN / -1` and `i*::MIN % -1`, which panic.
-6. Find `[T; N]` fixed-array access with a runtime index — same treatment as slice indexing.
-7. Find `panic!`, `unreachable!`, `assert!`, `assert_eq!`, and `debug_assert!` that fire on external/untrusted input (network, files, CLI, deserialized data); convert those to returned errors. Assertions on genuine internal invariants may stay.
-8. Where a panic genuinely encodes an unreachable invariant, keep it but document the invariant in a comment explaining why it cannot fire.
-9. Preserve behavior for all valid inputs — checked operations must produce the identical result on the in-range/non-overflowing path; only the out-of-bounds path changes from abort to handled.
-10. Do not touch test code, benches, or `unwrap`/`expect` (that is rust-unwrap-audit), and do not add general precondition guards beyond the panic sites you are removing (that is rust-fail-fast).
+5. Also flag `as` casts that appear safe but multiply a widening and a narrowing in the same expression — notably `u64 as i64`, which silently loses values above `i64::MAX`. Prefer using the source type's semantic domain: if a value is always positive (TTL, count, size), change its declared type to `u32` or `u64` so that any `as i64` at the boundary is a provably safe widening cast (`u32 as i64` always fits; `u64 as i64` does not). When the source type cannot change, use `i64::try_from(x)?` instead of `x as i64`.
+6. Find division and remainder where the divisor can be zero; guard the divisor or use `checked_div`/`checked_rem` and handle the zero case. Also flag `i*::MIN / -1` and `i*::MIN % -1`, which panic.
+7. Find `[T; N]` fixed-array access with a runtime index — same treatment as slice indexing.
+8. Find `panic!`, `unreachable!`, `assert!`, `assert_eq!`, and `debug_assert!` that fire on external/untrusted input (network, files, CLI, deserialized data); convert those to returned errors. Assertions on genuine internal invariants may stay.
+9. Where a panic genuinely encodes an unreachable invariant, keep it but document the invariant in a comment explaining why it cannot fire.
+10. Preserve behavior for all valid inputs — checked operations must produce the identical result on the in-range/non-overflowing path; only the out-of-bounds path changes from abort to handled.
+11. Do not touch test code, benches, or `unwrap`/`expect` (that is rust-unwrap-audit), and do not add general precondition guards beyond the panic sites you are removing (that is rust-fail-fast).
 
 Commit with a summary of how many indexing, arithmetic, cast, and division panics were hardened and which were intentionally retained as documented invariants.
 
 ## Rust specifics
 
-Prefer `slice.get(i)` / `slice.get(range)` over `slice[i]`; use `usize::try_from(x)?` instead of `x as usize` when `x` is signed or wider. Use `a.checked_add(b).ok_or(...)?` (and `checked_sub`/`checked_mul`/`checked_shl`) for fallible arithmetic, `saturating_*`/`wrapping_*` when those semantics are wanted, and `n.checked_div(d)` / `n.checked_rem(d)` for possibly-zero (or `MIN / -1`) divisors. Temporarily add `#![warn(clippy::indexing_slicing, clippy::arithmetic_side_effects, clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_possible_wrap)]` to surface candidates. Run `cargo clippy --all-targets` and `cargo test` to confirm no behavior changed; if available, `cargo build` with `overflow-checks = true` on the release profile keeps overflow panics from being silently wrapped away.
+Prefer `slice.get(i)` / `slice.get(range)` over `slice[i]`; use `usize::try_from(x)?` instead of `x as usize` when `x` is signed or wider. Use `a.checked_add(b).ok_or(...)?` (and `checked_sub`/`checked_mul`/`checked_shl`) for fallible arithmetic, `saturating_*`/`wrapping_*` when those semantics are wanted, and `n.checked_div(d)` / `n.checked_rem(d)` for possibly-zero (or `MIN / -1`) divisors.
+
+Distinguish safe widening casts from unsafe narrowing casts:
+- **Safe widening** — `u32 as i64`, `u16 as u32`, `u8 as u64` — always fit, leave these alone.
+- **Unsafe narrowing** — `u64 as i32`, `i64 as u32`, `u64 as usize` on 32-bit — replace with `TryInto`/`try_from`.
+- **Ambiguous sign change** — `u64 as i64` (widening bit-width, narrowing semantic range) — values ≥ `i64::MAX` lose meaning. If the source is logically non-negative (TTL, count, size), change its declared type to `u32` so the cast becomes a safe widening (`u32 as i64`). If the source type is fixed, use `i64::try_from(x)?`.
+
+Temporarily add `#![warn(clippy::indexing_slicing, clippy::arithmetic_side_effects, clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_possible_wrap)]` to surface candidates.
+When auditing cast safety, also enable `clippy::unnecessary_cast` to find casts that are always lossless and can be removed entirely.
+
+Run `cargo clippy --all-targets` and `cargo test` to confirm no behavior changed; if available, `cargo build` with `overflow-checks = true` on the release profile keeps overflow panics from being silently wrapped away.
 
 ## Relevance heuristic (preflight)
 
