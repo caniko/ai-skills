@@ -31,10 +31,15 @@ category = "rust"
 tags = ["rust", "lint"]
 
 [[rules]]
-path_prefix = "global/simit-project-init"
+path_prefix = "global/simit-rust-project-init"
 category = "rust"
 tags = ["rust", "flake"]
 related_skills = ["global/rust-project-flake"]
+
+[[rules]]
+path_prefix = "global/simit-python-project-init"
+category = "agent-tools"
+tags = ["python", "flake"]
 
 [[rules]]
 path_prefix = "global/mvp2prod"

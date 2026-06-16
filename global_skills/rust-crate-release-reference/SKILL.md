@@ -21,7 +21,7 @@ If a required source is missing or invalid, stop and report:
 
 ## Simit Infrastructure
 
-Use `simit` as the canonical generator before hand-writing or repairing Rust crate release flakes and CI. Load `../simit-project-init/SKILL.md` whenever release work touches `flake.nix`, `flake.lock`, `nix/`, `.forgejo/workflows/`, or `.github/workflows/`.
+Use `simit` as the canonical generator before hand-writing or repairing Rust crate release flakes and CI. Load `../simit-rust-project-init/SKILL.md` whenever release work touches `flake.nix`, `flake.lock`, `nix/`, `.forgejo/workflows/`, or `.github/workflows/`.
 
 Before running release hooks or validating generated infrastructure, ensure the repository has simit-managed release infrastructure unless it has an explicit documented policy against it:
 

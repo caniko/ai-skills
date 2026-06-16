@@ -9,7 +9,7 @@ description: Create or uplift Rust project Nix flakes using crane, with simit as
 
 Always build Rust packages with crane. Do not use `rustPlatform.buildRustPackage`, naersk, fenix builders, ad hoc `cargo build` derivations, or shell-only flakes as the primary build path unless the user explicitly asks to compare alternatives.
 
-For Rust crate release work, load `../simit-project-init/SKILL.md` and run `simit init flake` before hand-writing or repairing release flakes. Treat simit's generated flake structure as authoritative unless it reports that manual integration is required; this skill then covers the project-specific crane follow-up work.
+For Rust crate release work, load `../simit-rust-project-init/SKILL.md` and run `simit init flake` before hand-writing or repairing release flakes. Treat simit's generated flake structure as authoritative unless it reports that manual integration is required; this skill then covers the project-specific crane follow-up work.
 
 Prefer rs-harbor when it fits the project:
 
@@ -36,7 +36,7 @@ For exact starter flakes and module snippets, read [patterns.md](references/patt
 
 3. Implement narrowly:
    - Add or update `flake.nix`.
-   - Add small `nix/*.nix` files only when they reduce clutter or match existing project style. When modularizing or optimizing a large flake, use the shared routine at `../simit-project-init/references/flake-modularization.md`.
+   - Add small `nix/*.nix` files only when they reduce clutter or match existing project style. When modularizing or optimizing a large flake, use the shared routine at `../simit-rust-project-init/references/flake-modularization.md`.
    - Keep package, check, and dev shell names predictable: `packages.default`, `checks.{default,clippy,fmt,nextest?}`, `devShells.default`.
    - For workspaces, build from the workspace root and add extra named packages only when the user needs multiple binaries.
 

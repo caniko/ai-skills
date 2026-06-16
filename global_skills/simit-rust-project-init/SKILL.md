@@ -1,9 +1,9 @@
 ---
-name: simit-project-init
-description: Apply simit project initialization to Rust projects or Rust workspaces. Use when Codex should run or wire `simit init flake` and `simit init ci`, refresh generated flake and CI files, validate simit-managed output, or optimize a flake that simit patched. This skill is for applying simit to any project, not for changing simit itself.
+name: simit-rust-project-init
+description: Apply simit project initialization to Rust/Cargo projects or Rust workspaces. Use when Codex should run or wire `simit init flake` and `simit init ci`, refresh generated Rust flake and CI files, validate simit-managed output, or optimize a Rust flake that simit patched. This skill is for applying simit to Rust projects, not for changing simit itself.
 ---
 
-# Simit Project Init
+# Simit Rust Project Init
 
 ## Purpose
 

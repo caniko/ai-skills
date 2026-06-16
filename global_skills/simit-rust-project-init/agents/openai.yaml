@@ -1,0 +1,4 @@
+interface:
+  display_name: "Simit Rust Project Init"
+  short_description: "Apply simit Rust flake and CI initialization"
+  default_prompt: "Use $simit-rust-project-init to apply simit flake and CI wiring to this Rust project."

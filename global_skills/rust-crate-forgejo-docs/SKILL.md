@@ -7,7 +7,7 @@ description: "Add Forgejo/Codeberg Pages documentation for Rust crates preparing
 
 ## Required References
 
-For docs-only sites, load [../forgejo-docs/SKILL.md](../forgejo-docs/SKILL.md). For a landing page plus docs, load [../forgejo-site/SKILL.md](../forgejo-site/SKILL.md). When adding docs as part of Rust crate release prep, also load [../simit-project-init/SKILL.md](../simit-project-init/SKILL.md) and keep any Nix or CI integration compatible with `simit init flake` and `simit init ci`.
+For docs-only sites, load [../forgejo-docs/SKILL.md](../forgejo-docs/SKILL.md). For a landing page plus docs, load [../forgejo-site/SKILL.md](../forgejo-site/SKILL.md). When adding docs as part of Rust crate release prep, also load [../simit-rust-project-init/SKILL.md](../simit-rust-project-init/SKILL.md) and keep any Nix or CI integration compatible with `simit init flake` and `simit init ci`.
 
 ## Default For Small Library Crates
 

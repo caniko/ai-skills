@@ -7,7 +7,7 @@ description: "Add or audit simit-managed Nix release tooling for Rust crates bef
 
 ## Required References
 
-Before editing Nix files for Rust crate release work, load `../simit-project-init/SKILL.md`, then `../rust-project-flake/SKILL.md`.
+Before editing Nix files for Rust crate release work, load `../simit-rust-project-init/SKILL.md`, then `../rust-project-flake/SKILL.md`.
 
 Use `simit init flake` as the canonical first edit/check for release flakes (validate with `simit init flake --check --diff`). Follow its generated structure where possible. Use the Rust project flake skill only for project-specific follow-up work that simit does not generate cleanly; it owns the crane mandate.
 
