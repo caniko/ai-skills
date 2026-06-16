@@ -47,6 +47,13 @@ git commit -m "Imperative summary"
 5. Repeat until `git status --short` is clean or only intentionally uncommitted
    files remain. Report the remaining files if anything is left.
 
+6. Update the changelog. Look for version metadata in the repository
+   (`Cargo.toml`, `package.json`, `pyproject.toml`, `VERSION`, etc.). If
+   explicit versioning is found, add changelog entries under `[Unreleased]`
+   summarizing each commit group's behavioral change. If no versioning is
+   found, skip this step. Commit the changelog as a separate `docs:` or
+   `chore:` commit.
+
 ## Guardrails
 
 - Never run destructive cleanup (`git reset --hard`, `git checkout --`,
@@ -60,6 +67,8 @@ git commit -m "Imperative summary"
 - Do not amend or rebase existing commits unless the user specifically asks.
 - Use conventional, imperative commit subjects that describe the grouped
   behavior, not the file operation.
+- Update the changelog after all grouped commits are done when the repo has
+  explicit versioning; commit it as a separate `docs:` or `chore:` commit.
 
 ## Validation
 
@@ -67,7 +76,10 @@ Run checks that are proportional to the change and practical in the current
 repo. At minimum:
 
 - `git diff --cached --check` before each commit
+- `git diff --cached --check` before the changelog commit
 - `git status --short` after the last commit
+- Changelog entries are present under `[Unreleased]` when the repo has
+  explicit versioning
 - Any focused test, formatter, or validation command that is obvious from the
   files changed
 
