@@ -1,4 +1,4 @@
 interface:
   display_name: "Nix Ultra"
-  short_description: "Orchestrate whole-repo Nix cleanup"
-  default_prompt: "Use this skill to survey, route, and verify a whole-repository Nix cleanup."
+  short_description: "Run a complete staged Nix repository improvement pass."
+  default_prompt: "Use $nix-ultra to audit and improve this entire Nix repository, preserving outputs and validating every affected evaluation surface."
