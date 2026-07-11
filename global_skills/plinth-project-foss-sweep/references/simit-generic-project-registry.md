@@ -33,7 +33,7 @@ The extension should support:
 simit projects discover-git ~/canix/Projects --owned caniko,memorycircuits --since "5 months ago" --dry-run --json
 simit projects list --json --kind generic
 simit projects scan --prune --kind generic
-simit projects move-plan --root ~/canix/Projects/foss/owned --json
+simit projects move-plan --root ~/canix/Projects/repos/owned --json
 ```
 
 If command names differ during implementation, preserve these semantics:
@@ -55,7 +55,7 @@ Before moving a repo:
 - nested repos are not accidentally moved as part of a parent repo
 - registry update and filesystem move are reported as a reversible plan
 
-Use `~/canix/Projects/foss/owned/<repo>` as the default proposed destination for owned FOSS projects unless the user provides a different canonical tree.
+Use `~/canix/Projects/repos/owned/<repo>` as the default proposed destination for owned FOSS projects unless the user provides a different canonical tree.
 
 ## Validation
 
@@ -70,6 +70,6 @@ simit projects list --kind generic --json
 Then rerun:
 
 ```sh
-~/canix/Projects/ai-skills/global_skills/plinth-project-foss-sweep/scripts/discover-recent-owned-foss.sh --dry-run
-~/canix/Projects/ai-skills/global_skills/plinth-project-foss-sweep/scripts/plinth-project-sweep.sh --dry-run --limit 3
+~/canix/Projects/repos/owned/codeberg.org/caniko/ai-skills/global_skills/plinth-project-foss-sweep/scripts/discover-recent-owned-foss.sh --dry-run
+~/canix/Projects/repos/owned/codeberg.org/caniko/ai-skills/global_skills/plinth-project-foss-sweep/scripts/plinth-project-sweep.sh --dry-run --limit 3
 ```

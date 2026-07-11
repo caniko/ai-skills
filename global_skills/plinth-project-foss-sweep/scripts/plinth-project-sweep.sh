@@ -104,10 +104,10 @@ path_list_contains() {
 plinth_project_cmd() {
   if command -v plinth-project >/dev/null 2>&1; then
     printf 'plinth-project'
-  elif command -v cargo >/dev/null 2>&1 && [[ -f ~/canix/Projects/solo/plinth/Cargo.toml ]]; then
-    printf 'cargo run --manifest-path ~/canix/Projects/solo/plinth/Cargo.toml --package plinth-project --'
-  elif command -v nix >/dev/null 2>&1 && [[ -f ~/canix/Projects/solo/plinth/flake.nix ]]; then
-    printf 'nix run ~/canix/Projects/solo/plinth#plinth-project --'
+  elif command -v cargo >/dev/null 2>&1 && [[ -f ~/canix/Projects/repos/owned/codeberg.org/caniko/plinth/Cargo.toml ]]; then
+    printf 'cargo run --manifest-path ~/canix/Projects/repos/owned/codeberg.org/caniko/plinth/Cargo.toml --package plinth-project --'
+  elif command -v nix >/dev/null 2>&1 && [[ -f ~/canix/Projects/repos/owned/codeberg.org/caniko/plinth/flake.nix ]]; then
+    printf 'nix run ~/canix/Projects/repos/owned/codeberg.org/caniko/plinth#plinth-project --'
   else
     printf ''
   fi

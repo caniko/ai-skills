@@ -5,7 +5,7 @@ description: Review canix personal Plinth/static sites through Plinth's Pkl-back
 
 # Plinth Personal Visual Review
 
-Use this for personal sites declared under `~/canix/Projects/canix`.
+Use this for personal sites declared under `~/canix/Projects/repos/owned/gitlab.com/caniko/canix`.
 
 ## Workflow
 

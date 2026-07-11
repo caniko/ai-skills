@@ -187,7 +187,7 @@ while IFS= read -r gitdir; do
   remote="$(remote_fetch_url "$repo")"
   owner="$(owner_from_remote "$remote")"
   license="$(license_file "$repo")"
-  proposed="~/canix/Projects/foss/owned/$(basename "$repo")"
+  proposed="~/canix/Projects/repos/owned/$(basename "$repo")"
 
   if [[ -z "$remote" ]]; then
     printf 'needs-user-review\t%s\t%s\t-\t%s\tmissing-remote\t%s\n' "$rel" "${last%%T*}" "${license:-no-license}" "$proposed"
