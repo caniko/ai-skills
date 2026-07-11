@@ -1,7 +1,6 @@
 ---
 name: rust-workspace-check
 description: Check whether a single-crate Rust project should be converted to a Cargo workspace. Applies file-count and LOC thresholds before performing analysis.
-argument-hint: [project-dir]
 ---
 
 # rust-workspace-check — Cargo Workspace Readiness Assessment
@@ -144,5 +143,5 @@ Do NOT create or modify any project files. This skill is read-only analysis; the
 
 ## References
 
-- Generic research base: [long-horizon-research](../long-horizon-research/SKILL.md) — rust-workspace-check is a narrowly scoped research specialist. For broader Rust-project investigation, use the base.
+- Generic research base: [evidence-first-research](../evidence-first-research/SKILL.md) — rust-workspace-check is a narrowly scoped research specialist. For broader Rust-project investigation, use the base.
 - Sibling research router: [research-routing](../research-routing/SKILL.md).

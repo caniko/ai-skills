@@ -7,7 +7,7 @@ description: "Create narrowly scoped nixpkgs pull requests that fix package buil
 
 Lineage: this skill specializes the generic evidence-backed research dossier pattern for nixpkgs build failures while preserving its domain-specific diagnose, fix, and validation workflow.
 
-- Generic research base: [long-horizon-research](../long-horizon-research/SKILL.md) — this skill is a nixpkgs-build-grounded specialization of the generic dossier-producer pattern.
+- Generic research base: [evidence-first-research](../evidence-first-research/SKILL.md) — this skill is a nixpkgs-build-grounded specialization of the generic evidence-first research pattern.
 - Sibling research router: [research-routing](../research-routing/SKILL.md).
 
 ## Shared references

@@ -1,6 +1,6 @@
 ---
 name: research-routing
-description: "Routing meta-skill for research-shaped requests. Given a request that needs evidence-backed investigation, picks the right specialist skill: long-horizon-research (generic), simit-dependent-fixes (simit-grounded), nixpkgs-build-failure-pr (nixpkgs build-grounded), canix/host-a-status (host-a-grounded), plan-progress-review (plan-audit-grounded), northstar (high-stakes situational), rust-workspace-check (single-crate-grounded). Decision support only - performs no edits. Use when you have a research-shaped ask but are not sure which specialist owns it."
+description: "Routing meta-skill for research-shaped requests. Given a request that needs evidence-backed investigation, picks the right specialist skill: evidence-first-research (generic, including concise orientation), simit-dependent-fixes (simit-grounded), nixpkgs-build-failure-pr (nixpkgs build-grounded), canix/host-a-status (host-a-grounded), plan-progress-review (plan-audit-grounded), rust-workspace-check (single-crate-grounded). Decision support only - performs no edits. Use when you have a research-shaped ask but are not sure which specialist owns it."
 ---
 
 # Research routing
@@ -17,16 +17,16 @@ Use this skill to route a research-shaped request to the right specialist before
 | Nixpkgs build failure | [`nixpkgs-build-failure-pr`](../nixpkgs-build-failure-pr/SKILL.md) | User supplies a failing nix build log, ofborg failure, Hydra failure, compiler error, dependency failure, or derivation failure; goal is a nixpkgs PR fix |
 | Thething host health | `canix/host-a-status` (project-local) | Mentions host-a, a specific NixOS host; checking reachability, post-deploy sanity, aliveness, failed units, or host health. Use the canix project-local skill, which composes `canix-host-status`. |
 | Audit existing plan sets | [`plan-progress-review`](../plan-progress-review/SKILL.md) | User asks for progress/status/retirement/consolidation of existing plan dirs, phase docs, roadmap checklists, migration plans, or planning directories |
-| High-stakes pre-implementation summary | [`northstar`](../northstar/SKILL.md) | Complicated situation with many constraints, partial truths, competing paths, or consequential decisions; needs a concise orienting summary before implementation planning |
+| High-stakes pre-implementation summary | [`evidence-first-research`](../evidence-first-research/SKILL.md) | Complicated situation with many constraints, partial truths, competing paths, or consequential decisions; needs the concise orientation-brief mode before implementation planning |
 | Single-crate-vs-workspace decision | [`rust-workspace-check`](../rust-workspace-check/SKILL.md) | Single-crate Rust project; deciding whether file count, LOC, module shape, or growth pressure justify a Cargo workspace |
-| Anything else | [`long-horizon-research`](../long-horizon-research/SKILL.md) | Fall-through for generic evidence-backed investigation and durable research dossiers |
+| Anything else | [`evidence-first-research`](../evidence-first-research/SKILL.md) | Fall-through for generic evidence-backed investigation, with findings, orientation-brief, or dossier output selected after discovery |
 
 ## Decision tree
 
 1. Does the request name a registered domain: simit, nixpkgs build failure, host-a, or a single-crate workspace decision? Recommend the corresponding specialist. Thething health is owned by the canix project-local skill.
 2. Is the request asking to audit existing plans, phase docs, roadmap checklists, or planning directories? Recommend `plan-progress-review`.
-3. Is the request asking for a concise summary of a complicated situation before implementation? Recommend `northstar`.
-4. Otherwise recommend `long-horizon-research`.
+3. Is the request asking for a concise summary of a complicated situation before implementation? Recommend `evidence-first-research` in orientation-brief mode.
+4. Otherwise recommend `evidence-first-research`.
 
 ## Multi-route handling
 
@@ -45,7 +45,7 @@ This is not an edit workflow. It should not patch files, run domain commands, or
 
 ## Anti-patterns
 
-- Picking `long-horizon-research` for a domain that has a specialist; that defeats the point of the router.
+- Picking `evidence-first-research` for a domain that has a specialist; that defeats the point of the router.
 - Routing every request through this skill; most requests are clear enough to invoke the relevant skill directly.
 - Treating any "audit" request as `plan-progress-review`; require plan, phase, roadmap, migration, or planning-document language.
 - Invoking the selected skill on the user's behalf from this router; recommend first, execute only when the caller explicitly proceeds.
@@ -57,7 +57,7 @@ When using this skill to make a routing recommendation, output:
 ```
 Recommended skill: simit-dependent-fixes
 Rationale: the request is simit-grounded and asks about downstream breakage after a release migration.
-Fallback: long-horizon-research only if the simit registry context is irrelevant or unavailable.
+Fallback: evidence-first-research only if the simit registry context is irrelevant or unavailable.
 Next action: invoke the recommended skill directly; this router performs no edits.
 ```
 

@@ -177,5 +177,5 @@ Close with:
 
 ## Reference
 
-- Generic research base: [long-horizon-research](../long-horizon-research/SKILL.md) — this skill is a simit-grounded specialization of the generic dossier-producer pattern. Use the base directly for non-simit research.
+- Generic research base: [evidence-first-research](../evidence-first-research/SKILL.md) — this skill is a simit-grounded specialization of the generic evidence-first research pattern. Use the base directly for non-simit research.
 - Sibling research router: [research-routing](../research-routing/SKILL.md) — picks the right research specialist when the request is ambiguous between simit and other domains.
