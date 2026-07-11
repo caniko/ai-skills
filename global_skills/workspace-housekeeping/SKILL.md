@@ -45,7 +45,8 @@ Do not remove directories merely because they are named `target`; LLVM and
 kernel source trees use that name for real files. Do not remove archives or
 quarantine trees while performing routine generated-state cleanup.
 Protect any candidate containing tracked files; repository history outranks
-the generated-state naming heuristic.
+the generated-state naming heuristic. Report generated trees owned by another
+user as permission blockers and do not invoke elevated deletion implicitly.
 
 ## Apply the approved cleanup
 
