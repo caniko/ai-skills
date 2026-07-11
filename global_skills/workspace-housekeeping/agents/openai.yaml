@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workspace Housekeeping"
+  short_description: "Safely audit and clean a mixed Git project workspace"
+  default_prompt: "Audit the Projects workspace, classify stale and generated material, and apply only approved cleanup with Git and registry validation."
