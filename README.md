@@ -18,10 +18,11 @@ Top-level generated catalog files:
 - `ROUTING.md`
 - `SKILL_CONFLICTS.md`
 
-Configuration:
+Configuration is centralized per user by Skillnet:
 
-- `skillnet.toml` declares this repo root and the project repositories whose `.skills/` directories are canonical.
-- `skillnet.catalog.toml` declares catalog metadata and taxonomy rules.
+- `$XDG_CONFIG_HOME/skillnet/skillnet.toml` declares this repo root and the project repositories whose `.skills/` directories are canonical.
+- `$XDG_CONFIG_HOME/skillnet/skillnet.catalog.toml` declares catalog metadata and taxonomy rules.
+- Older checkouts that still contain repository-local config can migrate it with `skillnet config migrate`; the command preserves the configured database and subscription state.
 
 ## Authoring
 
@@ -46,7 +47,7 @@ skillnet project sync --name <project>
 
 ## Fresh Host Bootstrap
 
-Clone this repository and every project repository listed in `skillnet.toml`, then run:
+Clone this repository and every project repository listed in the centralized Skillnet config, then run:
 
 ```sh
 home-manager switch
