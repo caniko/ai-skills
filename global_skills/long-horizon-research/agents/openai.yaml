@@ -1,4 +1,0 @@
-interface:
-  display_name: "Long-Horizon Research"
-  short_description: "Prepare citation-backed research dossiers"
-  default_prompt: "Use $long-horizon-research to prepare an evidence-backed dossier for a consequential investigation."
