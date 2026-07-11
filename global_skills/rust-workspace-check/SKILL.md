@@ -53,93 +53,11 @@ If both thresholds are met, print the metrics and continue.
 
 ---
 
-## Phase 3: Structural Analysis
+## Phase 3 onward
 
-Perform these analyses on the codebase. For each, gather concrete evidence with file paths and line counts.
-
-### 3.1 Module Size Inventory
-
-List all top-level modules (files directly in `src/` and directories in `src/` with `mod.rs` or named modules). For each, report:
-- File count (1 for single files, N for directories)
-- Total LOC
-- Whether it has submodules
-
-Flag modules exceeding 2,000 LOC as "large" and modules exceeding 5,000 LOC as "oversized".
-
-### 3.2 Binary Target Analysis
-
-For each binary target (`[[bin]]` in Cargo.toml, or `src/main.rs`):
-- Identify which modules it imports/uses
-- Estimate what fraction of `src/lib.rs` (or the crate root) it actually needs
-- Determine if binary targets share code or are largely independent
-
-Binary targets that use disjoint subsets of the codebase are strong candidates for separate crates.
-
-### 3.3 Dependency Direction Analysis
-
-For each major module (>500 LOC), trace its `use crate::` imports to build a dependency graph:
-- List which other modules it depends on
-- Check for circular dependencies (A uses B and B uses A)
-- Identify clusters of modules that are tightly coupled (many mutual imports) vs. loosely coupled (few or no shared imports)
-
-Circular dependencies between would-be crates are blockers for splitting.
-
-### 3.4 Feature Flag Analysis
-
-Check `Cargo.toml` for `[features]`. For each feature:
-- Identify which source files are gated behind `#[cfg(feature = "...")]`
-- Determine if the feature-gated code is self-contained (could be its own crate)
-- Note if features gate entire modules vs. scattered conditionals
-
-### 3.5 Compile Time Assessment
-
-Estimate compile time impact:
-- Total LOC is a rough proxy (>20K LOC single-crate projects benefit significantly from splitting)
-- Count proc-macro dependencies (these force serial compilation and benefit from isolation)
-- Check if `build.rs` exists (build scripts block downstream compilation)
-- Note if there are expensive generic instantiations or heavy macro usage
-
----
-
-## Phase 4: Workspace Recommendation
-
-Based on the analysis, produce one of three verdicts:
-
-### Verdict: RECOMMENDED
-Use when:
-- There are clear, low-coupling boundaries between module clusters
-- Multiple binary targets use disjoint code subsets
-- LOC exceeds 20K and compile times would meaningfully improve
-- Feature-gated code is self-contained enough to be a separate crate
-
-### Verdict: CONSIDER
-Use when:
-- Some natural boundaries exist but circular dependencies need resolution first
-- The project would benefit but the effort is high relative to the gain
-- Only one dimension (e.g., large LOC but tightly coupled) supports splitting
-
-### Verdict: NOT RECOMMENDED
-Use when:
-- Modules are tightly coupled with many circular dependencies
-- The project is above thresholds but only marginally
-- There is only one binary target and no natural crate boundaries
-- The refactoring effort would exceed the compile-time and maintenance benefits
-
----
-
-## Phase 5: Output Report
-
-Print a structured markdown report with these sections:
-
-- **Current Metrics**: files, LOC, binary targets (names), largest module + LOC.
-- **Verdict** (RECOMMENDED | CONSIDER | NOT RECOMMENDED) with a 1-3 sentence rationale.
-- **Module Size Map**: per module — files, LOC, classification (normal/large/oversized).
-- **Dependency Graph**: module dependencies, noting any circular dependencies.
-- **Suggested Crate Split** (only when RECOMMENDED or CONSIDER): proposed crate, source modules, rationale; plus ordered Migration Steps and Estimated Effort (size small/medium/large/xlarge, risk low/medium/high, compile-time improvement negligible/moderate/significant).
-- **Circular Dependencies to Resolve**: circular deps that must be broken before splitting.
-- **Feature Flags**: whether any features should become crates.
-
-Do NOT create or modify any project files. This skill is read-only analysis; the report is printed to stdout only.
+After both thresholds pass, read [analysis.md](references/analysis.md) for the
+structural analysis, verdict, and report contract. Do not create or modify
+project files; print the read-only report.
 
 ## References
 

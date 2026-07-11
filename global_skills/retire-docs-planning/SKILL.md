@@ -7,13 +7,15 @@ description: Retire obsolete planning or roadmap documentation by mapping durabl
 
 Use this skill to remove planning sections from published documentation without losing knowledge that now belongs in the stable docs.
 
-Read [references/retirement-checklist.md](references/retirement-checklist.md) at the start of the run. Read [references/lessons.md](references/lessons.md) before editing anything, and update it before you finish.
+Read [references/retirement-checklist.md](references/retirement-checklist.md) and
+[references/retirement-rules.md](references/retirement-rules.md) at the start of
+the run. `lessons.md` is historical provenance; do not append a task log to it.
 
 When retirement depends on whether a plan actually landed, invoke **`plan-progress-review`** first unless the caller explicitly uses `clean-shipped <plan-dir>`. Use its status report to decide which planning pages are complete enough to retire, which unfinished work must stay visible, and which claims are blocked by missing evidence.
 
 ## Modes
 
-- **`general`** (default) — run the full workflow: inventory, classify, re-verify time-sensitive claims, fold durable knowledge into stable docs, remove the planning surface, validate, and self-improve.
+- **`general`** (default) — run the full workflow: inventory, classify, re-verify time-sensitive claims, fold durable knowledge into stable docs, remove the planning surface, and validate.
 - **`clean-shipped <plan-dir>`** (fast path) — for callers that have already proven `<plan-dir>` fully shipped. Skip steps 1-3: inventory, classify, and re-verify. Start at step 4, then run step 5 and step 6. For step 5, remove the plan with `git rm -r <plan-dir>` and prune any `SUMMARY.md` entries that pointed at it. This mode expects the caller to have proven every acceptance criterion passed and that there are no `missed-signal:` surprises. The retirement is unconditional: **do not prompt, do not ask for confirmation, do not list "durable bits worth preserving" for user approval**.
 
 ## Migration criteria
@@ -84,16 +86,12 @@ Use the Migration criteria above as the canonical preservation rule. Keep wordin
   them before the final stale-reference search so search indexes and rendered
   HTML do not retain deleted planning text.
 
-### 7. Self-improve before you finish
+### 7. Promote only novel rules
 
-This skill must improve itself on every successful run.
-
-Before ending the task:
-
-1. Append at least one dated lesson to [references/lessons.md](references/lessons.md).
-2. If the lesson changes the default workflow, patch `SKILL.md` in the same run.
-3. Keep lessons short, concrete, and reusable across repositories.
-4. Prefer improving the workflow text over accumulating redundant lessons when the same issue recurs.
+Update `retirement-rules.md` only when a new, reusable invariant is proven and
+the skill repository is explicitly in scope. Replace a weaker rule instead of
+appending a task-specific anecdote. Keep dated provenance in Git history, not in
+the runtime-loaded skill.
 
 ## Output Standard
 

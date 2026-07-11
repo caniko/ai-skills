@@ -23,7 +23,10 @@ In addition to the generic preconditions in `repo-pages`:
 
 - The repository is public and available under a free/libre license (Codeberg Pages eligibility).
 - Forgejo Actions is enabled in the repository settings: **Settings → Units → Enable Actions**, then save.
-- The target site uses the `codeberg.page` domain. Custom domains still require Codeberg's legacy Pages workflow until the new git-pages method supports them.
+- The target site uses either `codeberg.page` or a verified custom domain. For
+  custom domains, use git-pages with `server: codeberg.page` and ensure the
+  deployment-mode-specific DNS authorization is present; do not add a legacy
+  `.domains` file unless the site is explicitly retained on Pages Server v2.
 
 ## Defaults
 
@@ -35,6 +38,7 @@ In addition to the generic preconditions in `repo-pages`:
 - Deploy action: `https://codeberg.org/git-pages/action@v2`
 - Deploy source: `result/`
 - Site URL: `https://${{ forge.repository_owner }}.codeberg.page/<repo>/`
+- Custom site URL: `https://<custom-domain>/` with `server: codeberg.page`
 - Token: `${{ forge.token }}`
 
 Use `master` instead of `main` only when the target repository actually uses `master`.
@@ -63,9 +67,10 @@ Use flakes only when the workflow intentionally consumes flake outputs, such as 
 3. If Actions is disabled, the repository owner must enable **Settings → Units → Enable Actions** in the Codeberg UI. Local tools may be able to read the setting, but do not assume they can enable it.
 4. Confirm the build command and output directory. For Nix flake sites, default to `nix build .#site` and `result/`.
 5. Select the smallest runner that fits the expected build time. For docs-only jobs with prebuilt tools, consider `codeberg-tiny`. For Nix site builds, start with `codeberg-small` and use `codeberg-medium` or `codeberg-small-lazy` if local evidence suggests more headroom is required.
-6. Create `.forgejo/workflows/pages.yaml`.
-7. Replace `<repo>` in the `site` URL with the actual repository name.
-8. Validate the build command locally when feasible.
+6. For a custom domain, verify the required CNAME/TXT authorization before editing the workflow; `codeberg-pages-dns` owns the DNS model.
+7. Create `.forgejo/workflows/pages.yaml`.
+8. Replace `<repo>` or `<custom-domain>` in the `site` input with the actual public URL.
+9. Validate the build command locally when feasible.
 
 ## Default template
 
@@ -93,6 +98,18 @@ jobs:
         uses: https://codeberg.org/git-pages/action@v2
         with:
           site: "https://${{ forge.repository_owner }}.codeberg.page/<repo>/"
+          token: ${{ forge.token }}
+          source: result/
+```
+
+For a custom domain, keep the same action and source but add the git-pages
+server selector:
+
+```yaml
+        uses: https://codeberg.org/git-pages/action@v2
+        with:
+          site: https://<custom-domain>/
+          server: codeberg.page
           token: ${{ forge.token }}
           source: result/
 ```

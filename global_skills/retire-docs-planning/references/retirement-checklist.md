@@ -33,5 +33,5 @@ Use this checklist at the start of every run.
 
 - Search for stale references to the retired planning section.
 - Inspect the diff for accidental loss of durable knowledge.
-- Record at least one dated lesson in `references/lessons.md`.
-- If the lesson should change the default workflow, patch `SKILL.md` too.
+- Promote only a novel, reusable rule to `references/retirement-rules.md` when
+  the skill repository is explicitly in scope; do not append a task log.

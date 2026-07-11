@@ -5,18 +5,32 @@ name = "correctness"
 skill = "rust-correctness"
 stage = "correctness"
 profiles = ["concurrency", "fail-fast", "panic-paths", "unwraps"]
+threshold = 8
+signals = [".await:1", "Mutex:2", "RwLock:2", "tokio::spawn:2", "block_on:3", "unwrap():1", "panic!(:3", "unreachable!(:2"]
+overlap_mode = "connectome"
+eval = "qualitative"
 
 [[concern]]
 name = "security"
 skill = "rust-security"
 stage = "security"
 profiles = ["security", "unsafe-soundness"]
+threshold = 6
+signals = ["unsafe :3", "transmute:5", "Command::new:2", "from_raw:4", "std::ptr:: :3", "libc:: :2"]
+shape_gate = "unsafe-or-command"
+overlap_mode = "scope-local"
+eval = "indicative"
 
 [[concern]]
 name = "api-design"
 skill = "rust-api-design"
 stage = "design"
 profiles = ["api-guidelines", "errors", "traits", "type-safety"]
+threshold = 5
+signals = ["dyn :1", "Box<dyn:2", "Box<dyn Error:3", ", String>:2", "Err(format!:2", "thiserror:1"]
+shape_gate = "library-or-public-api"
+overlap_mode = "connectome"
+eval = "qualitative"
 
 [[concern]]
 name = "quality"
@@ -31,9 +45,18 @@ profiles = [
   "public-docs",
   "test-gaps",
 ]
+threshold = 5
+signals = ["#[allow(dead_code)]:3", "TODO: remove:2", "pub fn :1", "pub struct :1", "println!:2", "tracing:: :1", ".clone():1", ".collect():1"]
+overlap_mode = "scope-local"
+eval = "qualitative"
 
 [[concern]]
 name = "dependencies"
 skill = "rust-dependencies"
 stage = "dependencies"
 profiles = ["breaking-upgrade", "adopt", "unused", "features", "msrv"]
+threshold = 3
+signals = ["[features]:3", "cfg(feature:1", "optional = true:2", "workspace.dependencies:1", "rust-version:1"]
+shape_gate = "cargo-metadata"
+overlap_mode = "tool-driven"
+eval = "qualitative"

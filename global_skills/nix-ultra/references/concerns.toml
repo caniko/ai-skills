@@ -5,33 +5,57 @@ name = "correctness"
 skill = "nix-correctness"
 stage = "correctness"
 profiles = ["eval-failures", "store-purity"]
+threshold = 6
+signals = ["throw:2", "assert:2", "mkForce:2", "types.raw:2", "builtins.getFlake:4", "fetchGit:4", "/home/:3", "/data/:3"]
+overlap_mode = "connectome"
+eval = "qualitative"
 
 [[concern]]
 name = "security"
 skill = "nix-security"
 stage = "security"
 profiles = ["secrets"]
+threshold = 8
+signals = ["age.secrets:3", "sops.secrets:3", "LoadCredential:3", "environmentFile:2", 'mode = "0444":2', "password:1", "secret:1"]
+overlap_mode = "connectome"
+eval = "qualitative"
 
 [[concern]]
 name = "module-architecture"
 skill = "nix-module-design"
 stage = "design"
 profiles = ["module-design", "options-typing", "data-boundaries", "home-manager"]
+threshold = 8
+signals = ["mkMerge:2", "mkIf:1", "mkForce:3", "imports =:1", "options.:2", "mkOption:2", "types.raw:4", "freeformType:3", "osConfig:2", "homeConfigurations:2"]
+overlap_mode = "connectome"
+eval = "qualitative"
 
 [[concern]]
 name = "flake-architecture"
 skill = "nix-flake-architecture"
 stage = "design"
 profiles = ["flake-outputs", "inputs", "overlays-packages"]
+threshold = 8
+signals = ["perSystem:2", "flakeModules:2", "follows:1", "legacyPackages:2", "checks:1", "formatter:1", "overlays:3", "overrideAttrs:3", "callPackage:2", "mkDerivation:2"]
+overlap_mode = "connectome"
+eval = "qualitative"
 
 [[concern]]
 name = "code-health"
 skill = "nix-code-health"
 stage = "polish"
 profiles = ["module-layout", "dead-code", "format-style", "shell-scripts"]
+threshold = 3
+signals = ["file-size>500:3", "file-size<30:1", "TODO: remove:3", "deprecated:2", "with pkgs;:4", "writeShellApplication:3"]
+overlap_mode = "connectome"
+eval = "quantitative"
 
 [[concern]]
 name = "test-gates"
 skill = "nix-test-gates"
 stage = "gates"
 profiles = ["test-gates"]
+threshold = 6
+signals = ["checks.:2", "formatter:2", "pre-commit:1", "runCommand:2", "assertRule:3", "nixosConfigurations:2"]
+overlap_mode = "scope-local"
+eval = "qualitative"

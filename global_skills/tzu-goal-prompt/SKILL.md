@@ -26,13 +26,16 @@ Use this skill to turn existing harness evidence into a prompt that a future age
 From a project root with local `tzu` state:
 
 ```sh
-python ~/canix/Projects/ai-skills/global/tzu-goal-prompt/scripts/tzu_goal_prompt.py
+python3 ~/canix/Projects/ai-skills/global_skills/tzu-goal-prompt/scripts/tzu_goal_prompt.py
 ```
+
+If `python3` is absent, enter the project's documented Python/Nix environment
+first; do not substitute an untracked interpreter or rewrite the script.
 
 With explicit state and external harness files:
 
 ```sh
-python ~/canix/Projects/ai-skills/global/tzu-goal-prompt/scripts/tzu_goal_prompt.py \
+python3 ~/canix/Projects/ai-skills/global_skills/tzu-goal-prompt/scripts/tzu_goal_prompt.py \
   --state-json /path/to/project-state.json \
   --harness-output /path/to/other-harness.md \
   --output /tmp/tzu-goal-prompt.md
@@ -41,7 +44,7 @@ python ~/canix/Projects/ai-skills/global/tzu-goal-prompt/scripts/tzu_goal_prompt
 Run the script's built-in checks:
 
 ```sh
-python ~/canix/Projects/ai-skills/global/tzu-goal-prompt/scripts/tzu_goal_prompt.py --self-test
+python3 ~/canix/Projects/ai-skills/global_skills/tzu-goal-prompt/scripts/tzu_goal_prompt.py --self-test
 ```
 
 ## Output Rules

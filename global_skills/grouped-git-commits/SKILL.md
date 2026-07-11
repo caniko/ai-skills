@@ -1,102 +1,57 @@
 ---
 name: grouped-git-commits
-description: Automatically commit every current Git worktree change in coherent, reviewable groups. Use when the user asks to commit, says "commit" or "commit again", asks to commit everything, split a dirty tree into sensible commits, preserve staged and unstaged work while committing, or prepare local changes for later publishing without pushing. Each invocation is a fresh pass that commits all changes currently present, including changes created since an earlier invocation.
+description: Automatically commit every current Git worktree change in coherent, reviewable groups. Use when the user asks to commit, commit again, commit everything, split a dirty tree, preserve staged and unstaged work, or prepare local changes without pushing. Each invocation commits all work present at invocation time.
 ---
 
 # Grouped Git Commits
 
-## Overview
-
-Create small, truthful commits from an existing dirty worktree without losing
-user changes or inventing intent. The workflow is discovery-first: inspect the
-actual diff, group by behavioral purpose, commit each group, then confirm the
-final state. Do not ask for confirmation or wait for a second scope decision:
-the request to commit authorizes committing every uncommitted change in the
-current repository.
-
-## Invocation contract
-
-- Treat every invocation as an independent commit pass.
-- Commit all uncommitted work present at invocation time: staged and unstaged
-  tracked changes, untracked files, and deletions.
-- Do not leave files aside as “intentional,” “unrelated,” or “not part of the
-  request.” Group them into additional truthful commits instead.
-- If a later prompt says `commit` again, repeat the complete discovery,
-  grouping, staging, committing, and final-state check for any worktree changes
-  created since the previous pass.
-- If the worktree is already clean, report that no commit was needed and do not
-  create an empty commit.
+Treat each invocation as an independent pass over every staged, unstaged,
+untracked, and deleted path. The request authorizes committing all current
+work; do not leave files aside as unrelated. If clean, report that no commit
+was needed and do not create an empty commit.
 
 ## Workflow
 
-1. Inspect repository state before staging anything:
+1. Discover before staging:
 
-```bash
-git status --short
-git branch --show-current
-git diff --stat
-git diff --cached --stat
-```
+   ```sh
+   git status --short
+   git branch --show-current
+   git diff --stat
+   git diff --cached --stat
+   ```
 
-2. Read the relevant diffs. Use `git diff -- <paths>` and
-   `git diff --cached -- <paths>` for tracked changes; use `rg --files` and
-   targeted `sed`/`nl` for untracked trees. Do not rely on filenames alone.
+2. Read tracked diffs and inspect untracked files with `rg --files` and
+   targeted views. Group by behavioral purpose: code/tests, CI/build/release,
+   docs/plans, generated lock/manifest changes, and separable formatting.
+3. Stage explicit pathspecs and check before each commit:
 
-3. Group changes by one primary purpose per commit. Prefer these boundaries:
+   ```sh
+   git add <paths>
+   git diff --cached --stat
+   git diff --cached --check
+   git commit -m "Imperative summary"
+   ```
 
-- Functional code and matching tests
-- CI, packaging, release, or build tooling
-- Documentation or planning artifacts
-- Generated lockfile or manifest updates tied to the change that caused them
-- Mechanical formatting only when it is separable
-
-4. Stage pathspecs explicitly for each group:
-
-```bash
-git add path/to/file path/to/dir
-git diff --cached --stat
-git diff --cached --check
-git commit -m "Imperative summary"
-```
-
-5. Repeat until `git status --short` is clean. Report every commit created and
-   verify that no uncommitted files remain.
-
-6. Update the changelog. Look for version metadata in the repository
-   (`Cargo.toml`, `package.json`, `pyproject.toml`, `VERSION`, etc.). If
-   explicit versioning is found, add changelog entries under `[Unreleased]`
-   summarizing each commit group's behavioral change. If no versioning is
-   found, skip this step. Commit the changelog as a separate `docs:` or
-   `chore:` commit.
+4. Repeat discovery until `git status --short` is clean. Report every commit.
+5. If the repository has explicit version metadata, add `[Unreleased]`
+   changelog entries for the grouped behavioral changes as a separate docs or
+   chore commit; otherwise skip changelog work.
 
 ## Guardrails
 
-- Never run destructive cleanup (`git reset --hard`, `git checkout --`,
-  `git clean`) unless the user explicitly requested it.
-- Do not silently fold unrelated staged changes into the next commit. If
-  staged state does not match the intended group, inspect it and either commit
-  it as its own group or restage deliberately; every change must still be
-  committed during this invocation.
-- Do not fabricate missing context. If a required generated artifact,
-  validation source, or upstream input is absent, stop and report the exact
-  missing item and the command or workflow needed to regenerate it.
-- Do not amend or rebase existing commits unless the user specifically asks.
-- Use conventional, imperative commit subjects that describe the grouped
-  behavior, not the file operation.
-- Update the changelog after all grouped commits are done when the repo has
-  explicit versioning; commit it as a separate `docs:` or `chore:` commit.
+- Never run `git reset --hard`, `git checkout --`, or `git clean` without
+  explicit user authorization.
+- Do not silently fold staged changes into a mismatched group; commit them as
+  their own truthful group or deliberately restage them.
+- Do not amend or rebase existing commits unless requested.
+- If a required generated artifact or validation source is missing, stop and
+  report its producer, regeneration workflow, and validation command.
+- Use conventional imperative subjects describing behavior, not file moves.
 
-## Validation
+## Final validation
 
-Run checks that are proportional to the change and practical in the current
-repo. At minimum:
-
-- `git diff --cached --check` before each commit
-- `git diff --cached --check` before the changelog commit
-- `git status --short` after the last commit
-- Changelog entries are present under `[Unreleased]` when the repo has
-  explicit versioning
-- Any focused test, formatter, or validation command that is obvious from the
-  files changed
-
-If validation is skipped, say exactly why.
+Require `git diff --cached --check` before every commit, a clean
+`git status --short` afterward, changelog entries when versioning requires
+them, and any obvious focused test/formatter for the changed files. Report any
+skipped validation and why.

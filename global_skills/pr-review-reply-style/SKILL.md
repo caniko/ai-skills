@@ -9,9 +9,8 @@ Use this skill when writing a PR review-thread reply after handling feedback.
 
 ## Style
 
-Use the configured `human-written-like` skill for shared generic style rules
-when that consumer provides it; this repository does not own that view-only
-skill.
+Use any configured shared human-written style guidance when the consumer
+provides it; this repository does not own a separate style skill.
 
 PR-specific additions:
 

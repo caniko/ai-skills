@@ -56,72 +56,12 @@ Choose **orientation brief** when the user needs a concise, evidence-backed situ
 
 Otherwise choose **research dossier**. If only one downshift signal applies, keep the dossier concise and do not pad it with optional work.
 
-## Output modes
+## Output modes and reporting
 
-### Findings note
-
-Write at the nearest established planning-doc location with suffix `-findings.md`:
-
-```markdown
-# <Topic> Findings
-
-## Goal And Trigger
-## Root Cause(s)
-## Evidence
-## Recommended Fix
-## Optional Follow-Ups
-## Open Decisions
-```
-
-Omit empty optional sections. Cite files and lines, command output, commits, logs, or explicit user-provided sources.
-
-### Orientation brief
-
-Use these headings exactly unless the user requests another format:
-
-```markdown
-# <Topic> Orientation Brief
-
-## Northstar
-## Current Reality
-## Goal State
-## Path Through Complexity
-## Risks And Unknowns
-## Guardrails
-## Immediate Next Move
-```
-
-Keep it compact and implementation-aware. Separate facts from assumptions, tie each direction to the goal, name uncertainty, and make tradeoffs explicit enough for a later plan. This mode is not a substitute for evidence collection.
-
-### Research dossier
-
-Create one durable markdown dossier unless the user explicitly requests chat-only output. Prefer locations in this order:
-
-1. `docs/src/planning/<slug>-research.md` when the repository has mdBook planning docs;
-2. `docs/planning/<slug>-research.md` when that planning directory exists;
-3. the nearest established docs/planning equivalent.
-
-Use this shape:
-
-```markdown
-# <Topic> Research Dossier
-
-## Goal And Trigger
-## Current Reality
-## Evidence Inventory
-## Existing Plan Status
-## Work That Should Survive
-## Blockers And Missing Artifacts
-## Risks And Constraints
-## Candidate Next Steps
-## Open Decisions For The User
-```
-
-Omit `Existing Plan Status` when no existing plans are in scope. Keep every evidence claim traceable to a file, command, log, issue, or explicit user-provided source.
-
-## Output standard
-
-State the selected output mode and path (when a file was written), key blockers, whether existing plans were audited, and the commands or checks run. If blocked before writing, report the missing-artifact details and do not produce speculative conclusions.
+Use [`output-modes.md`](references/output-modes.md) for the three output
+templates, selection guidance, durable-dossier locations, and reporting
+standard. Keep every evidence claim traceable and report blockers instead of
+speculating.
 
 ## Guardrails
 

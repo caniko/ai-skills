@@ -5,7 +5,8 @@ description: "Shared references for nixpkgs PR skills. Use when another nixpkgs 
 
 # nixpkgs-pr-common
 
-Shared reference — not user-invokable on its own; loaded by `nixpkgs-init-pr` and `nixpkgs-build-failure-pr`.
+Shared reference — not user-invokable on its own; loaded by
+`nixpkgs-init-pr`, `nixpkgs-update-pr`, and `nixpkgs-build-failure-pr`.
 
 ## Branch targeting
 
@@ -19,7 +20,8 @@ channel release script and must never be used as merge targets.
 - Read `references/decorum.md` before writing commit messages, PR summaries, or upstream comments.
 - Read `references/pr-template.md` before creating or updating a nixpkgs PR body.
 - Read `references/nixpkgs-review-gha.md` before dispatching or diagnosing the external review workflow.
-- Read the `human-written-like` skill for the generic style guide (no boilerplate, no emoji, no clause-separator dashes, sound like an engineer).
+- Write concise, factual prose: no boilerplate, invented claims, or decorative
+  formatting. Keep policy language and reviewer replies specific to the patch.
 
 ## Review replies
 

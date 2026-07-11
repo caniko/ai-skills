@@ -13,7 +13,8 @@ the smallest domain skill and profile instead of running the full pass.
 Load [foundation.md](references/foundation.md) before discovery. It owns the
 common source-integrity, toolchain, dirty-tree, verification, blocker, and
 reporting rules. Read [concerns.toml](references/concerns.toml) as the single
-source of truth for concern routing, preflight scores, stages, and gates.
+source of truth for concern routing, preflight signals, thresholds, stages,
+shape gates, and validation modes.
 
 ## Workflow
 
@@ -21,15 +22,18 @@ source of truth for concern routing, preflight scores, stages, and gates.
    async/runtime use, public library surface, features, unsafe code, and
    release scope.
 2. Run the deterministic baseline from `foundation.md`. Stop on a red tree.
-3. Evaluate every registry concern and produce a scored run list. Respect
-   explicit scope, exclusions, project-shape gates, and `--plan-first`.
+3. Evaluate every registry concern and produce a scored run list. Apply `low`
+   sensitivity as threshold ×3, `medium` as the recorded threshold, and `high`
+   as threshold 1. Respect explicit scope, exclusions, project-shape gates,
+   and `--plan-first`.
 4. Load the matching domain skill only for concerns that run:
    `rust-correctness`, `rust-security`, `rust-api-design`, `rust-quality`,
    and `rust-dependencies`.
 5. Run in registry order: correctness, safety/security, API design, quality,
    then dependencies. Verify after each profile.
-6. Re-score after each stage and converge for at most three iterations. Log
-   deferred work; never silently cap the pass.
+6. Re-score after each stage and converge for at most three iterations. Stop
+   when quantitative signals are clear and qualitative profiles report no
+   remaining work. Log deferred work; never silently cap the pass.
 7. Run the final gate from `foundation.md` and report scores, skipped work,
    commits, residual issues, and release follow-ups separately.
 

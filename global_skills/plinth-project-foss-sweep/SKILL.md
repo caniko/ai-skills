@@ -97,7 +97,6 @@ After creating or refreshing `website/plinth-project.toml`, hand off to:
 - `forgejo-site/SKILL.md` — full project site (plinth + mdBook docs + Pages CI)
 - `forgejo-docs/SKILL.md` — docs-only Codeberg Pages site
 - `codeberg-pages-dns/SKILL.md` — custom domain wiring (`<name>.example.com`)
-- `example-portfolio/SKILL.md` — end-to-end: Pkl portfolio → DNS + site + portfolio publish
 
 Do not skip the hand-off. The plinth-project config alone does not deploy the site.
 

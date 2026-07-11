@@ -9,7 +9,7 @@ global_skills/
   <skill-name>/              # canonical global skills
 
 docs/planning/
-  mirror-canonical-store/    # Option B migration plan set
+  skill-retirement-research.md  # historical audit and provenance
 ```
 
 Top-level generated catalog files:
@@ -63,10 +63,7 @@ when to pause or resume it. Skills may provide evidence, domain procedures,
 execution checklists, or plan-audit support; they must not route models or
 replace the harness's planning loop.
 
-The migration plan and research dossiers live in:
-
-- `docs/planning/mirror-canonical-store/`
-- `docs/planning/mirror-canonical-store-research.md`
-- `docs/planning/reconciliation-anomalies-research.md`
-
-These documents describe the Option B move away from mirrored per-project content and toward per-repo canonical `.skills/` stores.
+Historical planning and audit provenance lives in
+[`docs/planning/skill-retirement-research.md`](docs/planning/skill-retirement-research.md).
+It is not the active source of truth for the current skill set; inspect the
+canonical `global_skills/` stores and generated catalog for that.

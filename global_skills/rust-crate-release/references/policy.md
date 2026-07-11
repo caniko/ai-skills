@@ -13,22 +13,12 @@ state. Run `scripts/audit_rust_crate_release.py <repo>` early.
 
 ## Generated infrastructure
 
-Use simit as the canonical generator before hand-writing release flakes or
-workflows:
-
-```sh
-simit init flake
-simit init ci --platform <platform>
-simit release trust status
-simit release trust init
-simit release trust check
-simit init flake --check --diff
-simit init ci --platform <platform> --check --diff
-```
-
-Use `forgejo` for Codeberg/Forgejo and `github` for GitHub. If simit is not on
-`PATH`, use the documented local checkout; if neither exists, report the
-missing tool as a blocker. Do not manually synthesize maintainer trust roots.
+Load [`simit-rust-crate-release-init`](../../simit-rust-crate-release-init/SKILL.md)
+for generated flakes, CI, release workflows, command capability detection,
+and trust-root checks. It owns the current simit contract; do not hand-write
+generated infrastructure or synthesize maintainer trust roots. If simit is
+missing from `PATH` and its documented local checkout is unavailable, report
+that missing tool as a blocker.
 
 ## Changelog and release bar
 

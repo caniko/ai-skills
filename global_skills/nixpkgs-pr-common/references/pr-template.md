@@ -18,4 +18,9 @@ Checklist rules:
 - If `nixpkgs-review-gha` is running, leave `Ran nixpkgs-review` unchecked and include the run URL in the summary.
 - After a successful review run, update the body and check the `Ran nixpkgs-review` box.
 - Do not use cached or remembered template text when publishing upstream.
-- The `Follows the automation/AI policy` checkbox: tick it. Do not read the policy document.
+- Read the live [automation/AI policy](https://github.com/NixOS/nixpkgs/blob/master/CONTRIBUTING.md#automationai-policy)
+  before checking the box. Confirm a responsible human reviewed the
+  contribution and disclose substantial automation separately in the commit,
+  PR summary, and review comments as applicable. For LLM-assisted commits use
+  an `Assisted-by:` trailer with the tool and primary model; `Co-authored-by:`
+  is not a substitute.

@@ -53,22 +53,12 @@ regenerate with current simit rather than preserving obsolete command spelling.
    simit projects list --json
    ```
 
-   Always inspect every project returned by `simit projects list --json` for
-   repo-wide regressions before declaring a dependent-only fix complete. Do not
-   stop after the originally failing project when the issue is a generated CI,
-   release, secret-name, command-shape, or workflow pattern that could appear
-   in other registered projects.
-
-   **Fleet-sweep is mandatory, not optional.** Before reporting, enumerate
-   every entry from `simit projects list` (or `--json`) and check each one for
-   the specific bug pattern — including projects where the affected feature
-   shows as `absent`, because hand-rolled equivalents of simit-managed files
-   are exactly where regressions hide (e.g. a project with `ci: absent` may
-   still have hand-rolled `.forgejo/workflows/*.yml` containing the same bad
-   step). Filter out ephemeral `/tmp/*` and `/tmp/nix-shell.*` scratch
-   entries, but check every real path under `~/Projects`, `/data/.../Projects`,
-   or wherever the user's real repos live. The reporting section requires a
-   per-project verdict for each non-scratch entry — do not omit any.
+   The fleet sweep is mandatory before reporting. Enumerate every real entry
+   from `simit projects list --json`, including projects whose feature is
+   `absent` because hand-rolled workflows can carry the same regression. Skip
+   only ephemeral `/tmp/*` scratch entries. Check every real project under the
+   registered roots and report one verdict for each; never stop at the first
+   failing dependent.
 
 2. If the registry is sparse or the user names a filesystem area, discover:
    ```sh

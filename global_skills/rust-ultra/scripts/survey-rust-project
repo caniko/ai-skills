@@ -28,8 +28,18 @@ fi
 
 printf '\nconcern registry:\n'
 awk -F '"' '
-  /^name = / { name = $2 }
-  /^skill = / { skill = $2 }
-  /^stage = / { stage = $2 }
-  /^profiles = / { print "  " name " -> " skill " [" stage "] " $0; name=""; skill=""; stage="" }
+  function emit() {
+    if (name != "")
+      print "  " name " -> " skill " [" stage "] threshold=" threshold " mode=" mode " gate=" gate " " profiles
+  }
+  /^\[\[concern\]\]/ { emit(); name=""; skill=""; stage=""; threshold=""; mode=""; gate=""; profiles=""; in_profiles=0; next }
+  /^name = / { name = $2; next }
+  /^skill = / { skill = $2; next }
+  /^stage = / { stage = $2; next }
+  /^threshold = / { threshold = $0; sub(/^threshold = /, "", threshold); next }
+  /^overlap_mode = / { mode = $2; next }
+  /^shape_gate = / { gate = $2; next }
+  /^profiles = / { profiles = $0; in_profiles = ($0 !~ /\]/); next }
+  in_profiles { profiles = profiles " " $0; if ($0 ~ /\]/) in_profiles=0; next }
+  END { emit() }
 ' "$registry"

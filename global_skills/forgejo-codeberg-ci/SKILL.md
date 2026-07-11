@@ -27,7 +27,8 @@ fj repo view
 fj repo view OWNER/REPO
 ```
 
-If the current directory is not the target repo, always pass `OWNER/REPO` to `fj repo view` and `-r OWNER/REPO` to `fj actions`.
+If the current directory is not the target repo, always pass `OWNER/REPO` to
+`fj repo view` and the repository option shown by `fj actions --help`.
 
 3. Confirm the local Codeberg context with `git remote -v` (cross-check against the `fj repo view` target above).
 
@@ -44,6 +45,10 @@ git ls-remote --tags origin
 fj actions -r OWNER/REPO tasks
 fj actions -r OWNER/REPO dispatch WORKFLOW_FILE BRANCH_OR_TAG
 ```
+
+Check the installed `fj actions --help` before using subcommands. If it does
+not expose run/job/log detail, use the matching Codeberg Actions pages/API
+endpoints below; do not invent `fj actions jobs` or `fj actions logs` syntax.
 
 6. If `fj` does not expose the needed run/job detail, keep `fj` as the source of repo targeting, then inspect Forgejo Actions state from the matching repository endpoints:
 
@@ -110,10 +115,12 @@ the self-hosted runner before changing project code.
 List the run and job state first:
 
 ```sh
+fj actions --help
 fj actions -r OWNER/REPO tasks
-fj actions -r OWNER/REPO jobs RUN_ID
-fj actions -r OWNER/REPO logs RUN_ID
 ```
+
+Use the run-specific web/API endpoints from step 6 for jobs and logs when the
+installed CLI lacks those operations.
 
 For the runner runner, inspect the matching daemon and image state:
 
