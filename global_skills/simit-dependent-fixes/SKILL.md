@@ -132,7 +132,7 @@ For each dependent:
    are the affected surface.
 
 4. If the repo is on Codeberg/Forgejo and release CI is involved, use the
-   Codeberg/Forgejo CI skill or `berg` before guessing at remote state.
+   Codeberg/Forgejo CI skill or `fj` before guessing at remote state.
 
 ## When To Fix Simit First
 

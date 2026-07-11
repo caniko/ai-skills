@@ -5,10 +5,10 @@ description: Reorganize a Rust project's file and module structure for human and
 
 # Rust: Code Reorganization
 
-This is a large, multi-phase concern. In yee-haw it carries an execution hint of
-multi-agent planning (Opus plan @ max effort, Sonnet execution, up to 4 agents,
-monumental threshold 8) — for a sizeable reorg, plan the moves first, then execute
-file-by-file with verification between each step.
+This is a large, multi-step concern. The active LLM harness owns planning,
+model/provider/effort selection, and dispatch. This skill supplies the
+repository-specific reorganization procedure and verification gates; it does
+not prescribe a model, agent count, or execution harness.
 
 Reorganize the project's file and module structure for human and AI readability:
 

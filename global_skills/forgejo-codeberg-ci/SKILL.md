@@ -101,3 +101,45 @@ When closing a Codeberg CI troubleshooting pass, report:
 - whether the remote tag/commit exists
 - whether the downstream registry reflects the release
 - the next action, if any
+
+## Runner Failure Triage
+
+When a run fails or never starts, distinguish repository workflow failures from
+the self-hosted runner before changing project code.
+
+List the run and job state first:
+
+```sh
+fj actions -r OWNER/REPO tasks
+fj actions -r OWNER/REPO jobs RUN_ID
+fj actions -r OWNER/REPO logs RUN_ID
+```
+
+For the runner runner, inspect the matching daemon and image state:
+
+```sh
+sudo journalctl -u forgejo-runner-nixTrusted.service --since "10 minutes ago" --no-pager
+sudo journalctl -u forgejo-runner-codeberg.service --since "10 minutes ago" --no-pager
+sudo podman ps -a | grep -i forgejo
+sudo podman images | grep -E 'canix-runner|canix-nix-runner'
+```
+
+Failure timing is a heuristic, not proof: failures in the first 10 seconds
+usually indicate container/runtime/network infrastructure; 10–60 seconds
+usually indicates action setup; later failures usually occur in the workflow
+step itself. Confirm the failing step from the run log before classifying it.
+
+Common runner checks:
+
+- JS/composite-action failures: verify `forgejo-runner-act` exists in the
+  runner image and that the container can reach Codeberg.
+- Nix failures: verify `NIX_REMOTE=daemon` and the host Nix daemon socket
+  mount on `nix-runner`.
+- Credential failures: inspect the service's systemd credential paths without
+  printing secret contents.
+- Workspace permission failures: inspect the runner work directory ownership
+  and the container workspace mount.
+
+Load [runner](../runner/SKILL.md) for canonical labels, images,
+mounts, cache behavior, and runner registration facts. Do not infer a fix from
+timing alone.

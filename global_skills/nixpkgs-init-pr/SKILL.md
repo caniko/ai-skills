@@ -19,9 +19,13 @@ Before publishing or commenting upstream, read the common references in `../nixp
    Confirm `upstream` is `NixOS/nixpkgs` and `origin` is the user's fork.
    If the checkout is dirty or on unrelated work, create a separate worktree from latest `upstream/master`.
 
-2. Prepare a narrow branch from the intended upstream base.
-   Default to `upstream/master`; use a release branch only for explicit backports.
-   Stage explicit paths only and keep unrelated local changes untouched.
+ 2. Prepare a narrow branch from the right upstream base.
+    Default to `upstream/master`.  If the change is a mass rebuild, use
+    `upstream/staging` instead.  See `../nixpkgs-pr-common/SKILL.md` for the
+    full branching rules.  The `nixos-*` / `nixpkgs-*` branches are
+    channel-script push targets and must never be used as merge targets.
+    Use a release branch only for explicit backports.
+    Stage explicit paths only and keep unrelated local changes untouched.
 
 3. Implement the package, module, or maintenance change using nixpkgs conventions.
    For new packages, set `strictDeps = true;` and `__structuredAttrs = true;` unless a concrete incompatibility prevents it.

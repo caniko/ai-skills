@@ -7,7 +7,8 @@ description: Common reference skill for auditing existing planning documents aga
 
 Use this reference skill to determine which parts of existing plans are done, still relevant, obsolete, contradictory, or unverifiable.
 
-This skill is intentionally edit-free. It gathers evidence for another skill, such as `retire-docs-planning`, `consolidate-plan-sets`, or a multi-phase plan flavour.
+This skill is intentionally edit-free. It gathers evidence for the active harness
+or for a documentation-retirement task.
 
 ## Workflow
 
@@ -27,7 +28,8 @@ For each plan artifact, record:
 - Explicit dependencies between phases or plan sets.
 - Verification commands, expected log lines, version numbers, feature names, and branch/tag references.
 
-Ignore model-routing callouts except to preserve which provider the plan was written for when a caller needs that context.
+Treat model, provider, effort, and dispatch callouts as execution metadata. Do
+not preserve them as repository facts or make them part of the status result.
 
 ### 3. Verify against source artifacts
 
@@ -65,28 +67,17 @@ Also include:
 - Stale assumptions or contradictions that must not be copied into new docs.
 - Missing artifacts, their likely upstream producer, the command or workflow to regenerate them, and the validation command that proves they are fixed.
 
-### 6. Emit a planner handoff in producer mode only
+### 6. Keep the result harness-neutral
 
-**Producer mode only**: if invoked directly by the user as the entrypoint for a downstream multi-phase planner, append a `## Planner Handoff` section to the progress report conforming to the [`plan-handoff`](../plan-handoff/SKILL.md) schema.
+Return the status table and evidence to the caller. The active LLM harness
+decides whether the remaining work becomes a plan, a queue, or direct execution.
+Do not emit model, provider, effort, or dispatch recommendations.
 
-Required fields:
-
-- Dossier path: this progress report's file.
-- Current-state summary: the table's overall takeaways.
-- Recommended planner flavour: use the canonical downstream-flavour rule
-  from [`plan-and-verify`](../plan-and-verify/SKILL.md) "Default flavour
-  for prep/plan dispatch".
-- Work that should become phases: each unfinished-but-still-relevant item from the table.
-- Known blockers: each `blocked` row.
-- Acceptance evidence to preserve: verification commands the table cites.
-
-**Evidence supplier mode**: if invoked internally by another skill, do not emit a handoff. The calling skill consumes the table directly and writes its own handoff when needed.
-
-## Handoff Rules
+## Consumer Rules
 
 - For `retire-docs-planning`: pass along which planning content is complete enough to retire and which durable knowledge still needs to be folded into stable docs.
-- For `consolidate-plan-sets`: pass along only unfinished, still-relevant work plus any durable constraints needed by the new monolith plan.
-- For multi-phase plan verify mode: do not duplicate the verifier; use this skill for broader plan-set triage across multiple existing plan directories.
+- For an execution harness: pass along only unfinished, still-relevant work plus
+  durable constraints and the exact evidence needed to verify it.
 
 ## Anti-Patterns
 
@@ -97,4 +88,5 @@ Required fields:
 
 ## Reference
 
-- [`plan-handoff`](../plan-handoff/SKILL.md): shared `## Planner Handoff` schema for producer-mode reports.
+- [`retire-docs-planning`](../retire-docs-planning/SKILL.md): consumer for
+  deciding whether planning documentation can be removed.

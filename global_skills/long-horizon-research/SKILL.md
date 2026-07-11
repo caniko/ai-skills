@@ -1,6 +1,6 @@
 ---
 name: long-horizon-research
-description: Produce an evidence-backed research dossier for any non-trivial investigation such as audits, pre-design research, and fact-finding before consequential decisions. Use before any work that benefits from a durable, citation-traceable evidence file. Stays domain-agnostic; wrapper skills such as plan-research load this and add domain-specific obligations on top.
+description: Produce an evidence-backed research dossier for any non-trivial investigation such as audits, pre-design research, and fact-finding before consequential decisions. Use before any work that benefits from a durable, citation-traceable evidence file. Stays domain-agnostic; the active LLM harness decides whether and how the findings feed later execution.
 ---
 
 # Long-Horizon Research
@@ -163,5 +163,6 @@ If blocked before writing the dossier, report the missing artifact details from 
 
 ## See also
 
-- `plan-research` - planning-tuned wrapper, added separately.
+- The active LLM harness - owns planning, model selection, dispatch, and
+  execution after the dossier is reviewed.
 - Domain-grounded research skills - load this base and add their own source and evidence obligations.

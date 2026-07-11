@@ -9,15 +9,17 @@ argument-hint: "[path] [--sensitivity low|medium|high] [--plan-first] [--only <c
 Rust Ultra takes a whole crate or workspace from "works" to "polished" in one driven pass. It operates on two work layers:
 
 1. **Deterministic host fixes** — `cargo fmt`, `cargo clippy --fix`, `cargo fix`, `cargo check`. These are mechanical, run by this orchestrator directly (no LLM judgment), and committed step by step.
-2. **LLM concern skills** — the sibling `rust-*` skills, each owning one housekeeping concern (dead code, unwrap audit, error architecture, trait design, ...). This orchestrator decides which to run, in what order, and how deeply to plan, then invokes each through the available skill mechanism.
+2. **LLM concern skills** — the sibling `rust-*` skills, each owning one housekeeping concern (dead code, unwrap audit, error architecture, trait design, ...). After explicit invocation, this orchestrator applies the declared concern order and invokes each through the available skill mechanism. The active harness owns planning and dispatch decisions.
 
-This skill is **full-auto**: it executes. Pass `--plan-first` to gate on human approval after the survey, before any concern edits.
+This skill executes only after the user or active harness explicitly invokes
+it. Pass `--plan-first` to gate on human approval after the survey and before
+any concern edits.
 
 It complements but does **not** replace the release skills (`rust-crate-quality-gates`, `rust-crate-release-prep`, the crates.io publish skills). For publishing, point the user there.
 
 ## How invocation works
 
-Each concern below is a separate skill named `rust-<concern>` (e.g. `rust-dead-code`, `rust-error-architecture`). These skills may come from the current session's available skill list or from generated global views such as `~/.claude/skills` / `~/.agents/skills`. To run one, invoke it through the available skill mechanism, let it do its own work, and report back. This orchestrator never reimplements a concern; it only decides **which** concerns run, in what **order**, with how much **planning**, and **loops until convergence**.
+Each concern below is a separate skill named `rust-<concern>` (e.g. `rust-dead-code`, `rust-error-architecture`). These skills may come from the current session's available skill list or from generated global views such as `~/.claude/skills` / `~/.agents/skills`. To run one, invoke it through the available skill mechanism, let it do its own work, and report back. This orchestrator never reimplements a concern; it applies the declared concern order and verification gates, then loops until convergence. The active harness owns planning and dispatch decisions.
 
 **Verify before invoking.** Not every `rust-<concern>` skill is guaranteed to be installed. Before invoking a concern, confirm the skill is present (e.g. it appears in the available-skills list). If a concern is selected by the survey but its skill is **not installed**, **skip it and log it as deferred** ("skill not installed") rather than fabricating an invocation. Never invent a skill name.
 
@@ -28,7 +30,7 @@ Default arguments: path = current crate/workspace root, `--sensitivity medium`, 
 Run the following in order. Commit each step with a conventional, atomic message. If a step fails irrecoverably, STOP and report — do not start concern work on a red tree.
 
 1. `cargo fmt` — commit `style: cargo fmt`.
-2. `cargo clippy --fix --allow-dirty --allow-staged --all-targets`, then verify with `cargo clippy --all-targets -- -D warnings`. If warnings remain, hand off to the `fix-clippy-errors` skill and re-verify. Commit `fix: auto-fix clippy lints`.
+2. `cargo clippy --fix --allow-dirty --allow-staged --all-targets`, then verify with `cargo clippy --all-targets -- -D warnings`. If warnings remain, invoke `rust-clippy` and re-verify. Commit `fix: auto-fix clippy lints`.
 3. `cargo fmt` again (the clippy fixes may have churned formatting) — commit if it changed anything.
 4. `cargo check --all-targets` — **must pass** before any concern work. On failure, try `cargo fix --allow-dirty --allow-staged --all-targets` then re-check; if still broken, fix the compile error yourself before proceeding.
 
@@ -48,7 +50,7 @@ If the crate is a Bevy / headless workspace that needs it, add `--no-default-fea
    - `rust-msrv` runs when Rust toolchain/package metadata is present; it is not release-only.
    - `rust-unsafe-soundness` runs **only if `unsafe` exists** (skip at 0 unsafe).
    - `rust-observability` runs only if `tracing` / `log` is present or the user requests it.
-   - If a single crate is **large**, suggest running the `workspace-check` skill first (it decides whether the crate should become a Cargo workspace before deeper reorg).
+   - If a single crate is **large**, suggest running `rust-workspace-check` first (it decides whether the crate should become a Cargo workspace before deeper reorg).
 5. **Honor `--only` / `--skip`.** Then produce a **scored, ordered run-list** (score vs adjusted threshold per concern, marked run/skip). If `--plan-first`, **print the run-list and STOP for approval** before any concern edits.
 
 ## Phase 2 — Staged execution
@@ -57,7 +59,9 @@ Run the relevant concerns in this fixed stage order: **Correctness → Design �
 
 For each concern:
 
-- **Plan if `plan_worthy`.** First produce a brief plan. For the heaviest concerns — `rust-code-reorg`, `rust-type-safety`, `rust-trait-design` — think at **Opus / max-effort** depth. `rust-code-reorg` may split into **up to 4 parallel units** when **≥8 files** are affected (the "monumental" threshold). Then execute.
+- **Use the active harness's plan if one exists.** Do not choose a model,
+  effort tier, provider, agent count, or dispatch strategy here. Then execute
+  the selected concern.
 - **Respect `overlap_mode` when scoping:**
   - `Tiling` ⇒ also look at adjacent modules / compartments.
   - `Connectome` ⇒ consider the dependency graph and cross-module ripple.
@@ -104,7 +108,7 @@ Then **report**:
 | 5 | rust-unsafe-soundness | Correctness | grep `unsafe `×3,`transmute`×5,`from_raw`×4,`MaybeUninit`×3,`::ptr::`×3,`get_unchecked`×3 ≥ **5** (skip if 0 unsafe) | ScopeLocal | yes | Indicative |
 | 6 | rust-concurrency | Correctness | grep `.await`×1,`Mutex`×2,`RwLock`×2,`tokio::spawn`×2,`block_on`×3,`Arc<`×1 ≥ **8** | Connectome | yes | Qualitative |
 | 7 | rust-security | Correctness | grep `unsafe `×3,`transmute`×5,`Command::new`×2,`from_raw`×4,`as *const`×3,`as *mut`×3,`std::ptr::`×3,`libc::`×2 ≥ **6** | ScopeLocal | yes | Indicative |
-| 8 | rust-code-reorg | Design | FileSize: files >500 lines ×3, files <30 lines ×1 ≥ **3** | Connectome | yes (Opus plan @ max, multi-agent ≤4, monumental ≥8 files) | Quantitative |
+| 8 | rust-code-reorg | Design | FileSize: files >500 lines ×3, files <30 lines ×1 ≥ **3** | Connectome | harness-owned | Quantitative |
 | 9 | rust-type-safety | Design | none (qualitative — always run after project-shape gates) | Connectome | yes | Qualitative |
 | 10 | rust-trait-design | Design | grep `dyn `×1,`Box<dyn`×2,`&dyn `×1 ≥ **8** | Tiling | yes | Indicative |
 | 11 | rust-error-architecture | Design | grep `Box<dyn Error`×3,`Box<dyn std::error::Error`×3,`, String>`×2,`Err(format!`×2,`thiserror`×1 ≥ **5** | Connectome | yes | Qualitative |
@@ -126,7 +130,8 @@ Then **report**:
 
 ## Notes
 
-- This orchestrator only **EXECUTES** (full-auto). Pass `--plan-first` to gate on approval after Phase 1.
+- This orchestrator executes only after explicit invocation. Pass
+  `--plan-first` to gate on approval after Phase 1.
 - It **complements**, does not replace, the release skills (`rust-crate-quality-gates`, `rust-crate-release-prep`, the crates.io publish skills) — point the user there for publishing.
 - Keep commits **conventional and atomic**. Never revert another agent's or the user's work.
 - If a selected concern's `rust-<concern>` skill is not installed, **skip and log it** — do not fabricate a Skill invocation.

@@ -1,6 +1,6 @@
 ---
 name: rust-doc-public-api
-description: Document every public item in a Rust crate to docs.rs standards — Examples, Errors, Safety, Panics sections, module docs, intra-doc links, warning-free cargo doc. Use when asked to add rustdoc, document the public API, fill in missing doc comments, or make docs ready for docs.rs. Extracted from the yee-haw housekeeping catalog (ConcernId::DocPublicApi).
+description: Document every public item in a Rust crate to docs.rs and crates.io release standards — Examples, Errors, Safety, Panics sections, module docs, intra-doc links, warning-free cargo doc, and docs.rs cfg validation. Use when asked to add rustdoc, document the public API, fill in missing doc comments, or make release documentation ready. Extracted from the yee-haw housekeeping catalog (ConcernId::DocPublicApi).
 ---
 
 # Rust: Public API Documentation
@@ -20,8 +20,16 @@ Required sections: `# Examples` (compilable) for non-trivial functions; `# Error
 each error variant's trigger; `# Safety` for unsafe fns; `# Panics` if any panic path exists.
 Use intra-doc links (`[`OtherType`]`) over prose references.
 Add `#![warn(missing_docs)]` to crate root if absent.
-Run `cargo doc --no-deps --document-private-items 2>&1` and fix every warning.
-Run `cargo test` to verify doc-tests compile.
+Run `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --all-features` and fix every warning.
+Run `cargo test --doc --all-features` to verify doc-tests compile. When the
+crate uses docs.rs-specific cfgs, also run:
+
+```sh
+RUSTDOCFLAGS="--cfg docsrs -D warnings" cargo doc --no-deps --all-features
+```
+
+Report documentation warnings as release blockers when strict release gates
+are in scope.
 
 ## Relevance heuristic (preflight)
 

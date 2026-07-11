@@ -10,7 +10,7 @@ description: "Chaperone Rust crate releases end to end using simit-managed hooks
 Load these when the work reaches their scope:
 
 - `../rust-crate-release-reference/SKILL.md` for common source-integrity, simit infrastructure, changelog, release-bar, validation, blocker-classification, and publish-boundary rules.
-- `../simit-rust-project-init/SKILL.md` for installing and checking simit-managed flake and CI hooks.
+- `../simit-rust-crate-release-init/SKILL.md` for installing and checking simit-managed flake and CI hooks.
 - `../rust-crate-release-prep/SKILL.md` only when broader release preparation or component skill routing is needed beyond hook execution.
 - `../rust-crate-quality-gates/SKILL.md` for strict validation commands.
 - `../rust-crate-publish-workflow/SKILL.md` when the work reaches final publish sequencing, remote tag push, CI publication orchestration, or post-publish crates.io verification.

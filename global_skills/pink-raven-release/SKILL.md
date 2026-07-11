@@ -85,6 +85,27 @@ Expected docs behavior for unauthenticated users:
 - `/docs/` redirects to `/docs/index.html`.
 - `/docs/index.html` redirects to `/login`.
 
+## Service Routing
+
+`raven.example.com` reaches pink-raven through a two-hop proxy chain:
+
+```
+Internet → Cloudflare (CNAME raven → example.com, proxied)
+  → host-a Caddy :443 (SNI raven.example.com, dial 192.168.178.88:80)
+    → runner local Caddy (raven.example.com HTTP → reverse_proxy localhost:3030)
+      → pink-raven binary (127.0.0.1:3030)
+```
+
+Pink-raven bind on runner: `127.0.0.1:3030`. The gateway proxy on host-a auto-generates routes from the Fleetix service registry (`lib/topology/Services.pkl`, name `"pink-raven"`, `port = 3030`, `targetHost = "runner"`). The local reverse proxy on runner forwards virtual-host-aware requests.
+
+**Dependency note**: raven.example.com depends on host-a's Caddy being healthy. If host-a's Caddy is down (e.g. during a rebuild), raven.example.com returns 502. This is normal — no action needed unless Caddy remains down after the rebuild completes.
+
+**Service restart** (from runner):
+
+```sh
+sudo systemctl restart pink-raven
+```
+
 ## Known Current Blocker Class
 
 `home-manager-can.service` may fail during runner switch if `~/canix/Projects/ai-skills` is dirty. Do not hide this. If Pink Raven services start and endpoint checks pass, report Pink Raven as deployed while also reporting the host switch nonzero exit and the validation command:

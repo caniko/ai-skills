@@ -17,9 +17,13 @@ Before publishing or commenting upstream, read the common references in `../nixp
 
 ## Workflow
 
-1. Confirm repo state and base.
-   Run `git status -sb`, `git remote -v`, `gh auth status`. Confirm `upstream` is `NixOS/nixpkgs` and `origin` is the user's fork.
-   If the checkout is dirty or on unrelated work, branch from a freshly fetched `upstream/master` (a separate worktree when the tree must stay untouched). Stage explicit paths only.
+ 1. Confirm repo state and base.
+    Run `git status -sb`, `git remote -v`, `gh auth status`. Confirm `upstream` is `NixOS/nixpkgs` and `origin` is the user's fork.
+    Default to `upstream/master`.  Mass-rebuild changes go to `upstream/staging`.
+    See `../nixpkgs-pr-common/SKILL.md` for the full branching rules.
+    The `nixos-*` / `nixpkgs-*` branches are channel-script push targets and
+    must never be used as merge targets.
+    If the checkout is dirty or on unrelated work, branch from a freshly fetched `upstream/master` (a separate worktree when the tree must stay untouched). Stage explicit paths only.
 
 2. Pin the new source deliberately.
    Identify the exact rev/tag that contains the desired change — do not assume `HEAD`. For unstable packages, version as `<upstreamVersion>-unstable-YYYY-MM-DD` using the date of the pinned commit.

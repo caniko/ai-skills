@@ -59,7 +59,7 @@ Use flakes only when the workflow intentionally consumes flake outputs, such as 
 ## Workflow
 
 1. Confirm the repository name from the Codeberg remote or project metadata.
-2. Confirm Forgejo Actions is enabled with local tooling. Prefer `berg --owner-repo <owner>/<repo> repo info --output-mode json` when `berg` is installed; otherwise use `fj repo view <owner>/<repo>` plus the Codeberg repository UI/API to confirm the Actions unit.
+2. Confirm Forgejo Actions is enabled with local tooling. Use `fj repo view <owner>/<repo>` plus the Codeberg repository UI/API to confirm the Actions unit.
 3. If Actions is disabled, the repository owner must enable **Settings → Units → Enable Actions** in the Codeberg UI. Local tools may be able to read the setting, but do not assume they can enable it.
 4. Confirm the build command and output directory. For Nix flake sites, default to `nix build .#site` and `result/`.
 5. Select the smallest runner that fits the expected build time. For docs-only jobs with prebuilt tools, consider `codeberg-tiny`. For Nix site builds, start with `codeberg-small` and use `codeberg-medium` or `codeberg-small-lazy` if local evidence suggests more headroom is required.

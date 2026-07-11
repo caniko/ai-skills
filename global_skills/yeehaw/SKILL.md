@@ -1,6 +1,6 @@
 ---
 name: yeehaw
-description: Execute, inspect, or resume yee-haw multi-phase plan directories through the yh MCP phases tools. Use when the user wants to run a phase plan in the current repository, asks for `/yeehaw run`, `/yeehaw show`, or `/yeehaw status`, or after `multi-phase-plan` writes a phase doc set under `docs/src/planning/PLAN-NAME/`.
+description: Execute, inspect, or resume harness-created phase plan directories through the yh MCP phases tools. Use when the user wants to run a phase plan in the current repository, asks for `/yeehaw run`, `/yeehaw show`, or `/yeehaw status`, or after the active harness writes a phase doc set under `docs/src/planning/PLAN-NAME/`.
 argument-hint: "[plan-dir] | run | status | show"
 ---
 
@@ -38,7 +38,7 @@ Do not auto-invoke this from another skill. Suggest `/yeehaw run`; wait for the 
 
 Manual smoke steps:
 
-1. Run `/multi-phase-plan add a small feature X` in a repository that has the yee-haw MCP server configured.
+1. Have the active harness write a small phase plan in a repository that has the yee-haw MCP server configured.
 2. Run `/yeehaw show <plan-dir>` and confirm the phase DAG is listed.
 3. Run `/yeehaw run <plan-dir>` and confirm phase progress appears and the final response includes `status`, `exit_code`, and `lock_file`.
 4. Re-run `/yeehaw status <plan-dir>` and confirm it reflects the lock file written by the run.

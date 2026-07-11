@@ -7,7 +7,7 @@ description: "Add strict simit-managed Forgejo Actions CI for Rust crate release
 
 ## Required References
 
-Load `../simit-rust-project-init/SKILL.md` first. Use `simit init ci --platform forgejo` as the canonical generator/checker for Rust crate release CI on Codeberg/Forgejo. Load `../runner/SKILL.md` for the shared runner runner facts (the **two** labels — `runner` for JS actions / cargo-in-container, `nix-runner` for jobs that write the host nix store — bind-mounted JS action runtime, `https://code.forgejo.org/actions/checkout@v4` URL prefix, Attic config, Codeberg ToU). sccache is **NOT** currently deployed on the runner; the caching path is `Swatinem/rust-cache@v2` (raw-cargo) + the canix Attic substituter (nix), not a runner-provided compiler cache. Then load `../forgejo-runner-ci/SKILL.md` and `../forgejo-ci/SKILL.md` only for project-specific follow-up details that simit does not cover.
+Load `../simit-rust-crate-release-init/SKILL.md` first. Use `simit init ci --platform forgejo` as the canonical generator/checker for Rust crate release CI on Codeberg/Forgejo. Load `../runner/SKILL.md` for the shared runner runner facts (the **two** labels — `runner` for JS actions / cargo-in-container, `nix-runner` for jobs that write the host nix store — bind-mounted JS action runtime, `https://code.forgejo.org/actions/checkout@v4` URL prefix, Attic config, Codeberg ToU). sccache is **NOT** currently deployed on the runner; the caching path is `Swatinem/rust-cache@v2` (raw-cargo) + the canix Attic substituter (nix), not a runner-provided compiler cache. Then load `../forgejo-runner-ci/SKILL.md` and `../forgejo-ci/SKILL.md` only for project-specific follow-up details that simit does not cover.
 
 ## Hard Rules
 

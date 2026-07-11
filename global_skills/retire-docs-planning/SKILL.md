@@ -102,7 +102,3 @@ Before ending the task:
 - State any plan-progress status used to justify retirement or retention, or the clean verify guarantee supplied by a `clean-shipped` caller.
 - State what you verified and what you could not verify.
 - If you had to stop, name the missing or invalid artifact, the upstream producer that must fix it, the exact command or workflow to regenerate it, and the validation command that proves it is fixed.
-
-## References
-
-- Clean verify auto-retire caller: [../multi-phase-plan/SKILL.md](../multi-phase-plan/SKILL.md).

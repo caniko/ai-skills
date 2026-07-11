@@ -29,9 +29,12 @@ Before publishing or commenting upstream, read the common references in `../nixp
    Prefer an upstream patch when it applies cleanly.
    If a package needs distro-specific handling, make the condition structural when possible, such as probing headers or features instead of guessing by version.
 
-3. Prepare a clean nixpkgs branch.
-   Use a separate worktree from latest `upstream/master` when the current checkout is dirty or unrelated.
-   Keep the fix minimal; avoid opportunistic version bumps, refactors, or unrelated metadata changes unless they are required to fix the build.
+ 3. Prepare a clean nixpkgs branch.
+    Use a separate worktree from `upstream/master`.  Mass-rebuild changes go to
+    `upstream/staging`.  See `../nixpkgs-pr-common/SKILL.md` for the full
+    branching rules.  The `nixos-*` / `nixpkgs-*` branches are channel-script
+    push targets and must never be used as merge targets.
+    Keep the fix minimal; avoid opportunistic version bumps, refactors, or unrelated metadata changes unless they are required to fix the build.
 
 4. Validate the fix.
    Rebuild the failing attr or exact host/package path that exposed the failure.

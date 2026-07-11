@@ -9,13 +9,13 @@ Use this skill when writing a PR review-thread reply after handling feedback.
 
 ## Style
 
-- Keep it short: usually one sentence, two only if test evidence matters.
-- Sound like an engineer replying to another engineer, not a status bot.
+Use the configured `human-written-like` skill for shared generic style rules
+when that consumer provides it; this repository does not own that view-only
+skill.
+
+PR-specific additions:
+
 - Acknowledge the point naturally when useful: "Good call", "Yeah", or "Makes sense".
-- State the concrete change in plain language.
-- Mention validation only when it is directly relevant and specific.
-- Do not over-explain the implementation unless the reviewer asked for rationale.
-- Avoid boilerplate such as "Done.", "Implemented as requested", or long summaries.
 
 ## Shape
 

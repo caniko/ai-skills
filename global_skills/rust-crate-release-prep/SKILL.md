@@ -13,11 +13,12 @@ Load `../rust-crate-release-reference/SKILL.md` first and apply its shared sourc
 
 Load only the component skills needed for the current repository state:
 
-- `../simit-rust-project-init/SKILL.md` for canonical `simit init flake` and `simit init ci` release infrastructure.
+- `../simit-rust-crate-release-init/SKILL.md` for canonical `simit init flake` and `simit init ci` release infrastructure.
 - `../rust-crate-release-chaperone/SKILL.md` for installing simit hooks, running release hooks, fixing hook failures, and repeating validation until clean.
 - `../rust-crate-manifest-metadata/SKILL.md` for `Cargo.toml`, package contents, docs.rs metadata, keywords/categories, and dependency policy.
 - `../rust-crate-legal-readme/SKILL.md` for license files and release-facing README content.
-- `../rust-crate-rustdoc/SKILL.md` for public API docs and docs.rs readiness.
+- `../rust-doc-public-api/SKILL.md` for public API docs and docs.rs/crates.io
+  readiness.
 - `../rust-crate-nix-release-tooling/SKILL.md` for crane-based flake/dev-shell/checks.
 - `../rust-crate-quality-gates/SKILL.md` for fmt, clippy, tests, docs, deny/audit, and package checks.
 - `../rust-crate-forgejo-release-ci/SKILL.md` for Codeberg-hosted CI on the runner runner.
