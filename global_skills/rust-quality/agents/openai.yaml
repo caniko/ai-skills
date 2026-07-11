@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Quality"
+  short_description: "Improve Rust code quality, structure, and performance."
+  default_prompt: "Use $rust-quality to improve Rust lint, dead code, module layout, docs, tests, observability, or measured performance."

@@ -1,0 +1,37 @@
+# Registry consumed by nix-ultra. Procedures live in domain references.
+
+[[concern]]
+name = "correctness"
+skill = "nix-correctness"
+stage = "correctness"
+profiles = ["eval-failures", "store-purity"]
+
+[[concern]]
+name = "security"
+skill = "nix-security"
+stage = "security"
+profiles = ["secrets"]
+
+[[concern]]
+name = "module-architecture"
+skill = "nix-module-design"
+stage = "design"
+profiles = ["module-design", "options-typing", "data-boundaries", "home-manager"]
+
+[[concern]]
+name = "flake-architecture"
+skill = "nix-flake-architecture"
+stage = "design"
+profiles = ["flake-outputs", "inputs", "overlays-packages"]
+
+[[concern]]
+name = "code-health"
+skill = "nix-code-health"
+stage = "polish"
+profiles = ["module-layout", "dead-code", "format-style", "shell-scripts"]
+
+[[concern]]
+name = "test-gates"
+skill = "nix-test-gates"
+stage = "gates"
+profiles = ["test-gates"]

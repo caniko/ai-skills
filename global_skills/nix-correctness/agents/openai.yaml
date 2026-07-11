@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nix Correctness"
+  short_description: "Repair Nix evaluation failures and impurity."
+  default_prompt: "Use $nix-correctness to diagnose this Nix evaluation failure or remove the impurity preventing reproducible evaluation."

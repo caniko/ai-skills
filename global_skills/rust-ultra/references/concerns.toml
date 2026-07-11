@@ -1,0 +1,39 @@
+# Registry consumed by rust-ultra. Procedures live in the domain references.
+
+[[concern]]
+name = "correctness"
+skill = "rust-correctness"
+stage = "correctness"
+profiles = ["concurrency", "fail-fast", "panic-paths", "unwraps"]
+
+[[concern]]
+name = "security"
+skill = "rust-security"
+stage = "security"
+profiles = ["security", "unsafe-soundness"]
+
+[[concern]]
+name = "api-design"
+skill = "rust-api-design"
+stage = "design"
+profiles = ["api-guidelines", "errors", "traits", "type-safety"]
+
+[[concern]]
+name = "quality"
+skill = "rust-quality"
+stage = "quality"
+profiles = [
+  "clippy",
+  "dead-code",
+  "module-layout",
+  "observability",
+  "performance",
+  "public-docs",
+  "test-gaps",
+]
+
+[[concern]]
+name = "dependencies"
+skill = "rust-dependencies"
+stage = "dependencies"
+profiles = ["breaking-upgrade", "adopt", "unused", "features", "msrv"]

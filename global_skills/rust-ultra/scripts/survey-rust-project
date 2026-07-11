@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root=${1:-.}
+registry=${2:-"$(dirname "$0")/../references/concerns.toml"}
+
+if [[ ! -d "$root" ]]; then
+  printf 'missing project directory: %s\n' "$root" >&2
+  exit 2
+fi
+
+printf 'project: %s\n' "$(cd "$root" && pwd)"
+printf 'source files:\n'
+while IFS= read -r file; do
+  printf '  %s (%s lines)\n' "$file" "$(wc -l < "$file")"
+done < <(find "$root" -type f \( -name '*.rs' -o -name 'Cargo.toml' -o -name 'Cargo.lock' -o -name 'flake.nix' \) \
+  -not -path '*/target/*' -not -path '*/vendor/*' -print | sort)
+
+printf '\nproject signals:\n'
+for signal in Cargo.toml Cargo.lock flake.nix rust-toolchain.toml .cargo/config.toml; do
+  if [[ -e "$root/$signal" ]]; then printf '  present: %s\n' "$signal"; else printf '  absent: %s\n' "$signal"; fi
+done
+if rg -q '\bunsafe\b' "$root" --glob '*.rs' --glob '!target/**' --glob '!vendor/**' 2>/dev/null; then
+  printf '  unsafe: present\n'
+else
+  printf '  unsafe: absent\n'
+fi
+
+printf '\nconcern registry:\n'
+awk -F '"' '
+  /^name = / { name = $2 }
+  /^skill = / { skill = $2 }
+  /^stage = / { stage = $2 }
+  /^profiles = / { print "  " name " -> " skill " [" stage "] " $0; name=""; skill=""; stage="" }
+' "$registry"

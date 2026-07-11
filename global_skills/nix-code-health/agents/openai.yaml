@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nix Code Health"
+  short_description: "Improve Nix structure, style, and generated scripts."
+  default_prompt: "Use $nix-code-health to improve this Nix repository's module layout, dead code, style, or generated shell while preserving behavior."

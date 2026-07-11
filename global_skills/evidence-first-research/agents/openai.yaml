@@ -1,0 +1,4 @@
+interface:
+  display_name: "Evidence-First Research"
+  short_description: "Investigate complex work with traceable evidence"
+  default_prompt: "Use $evidence-first-research to investigate this consequential question and produce the right evidence-backed output."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nix Security"
+  short_description: "Audit Nix secrets and runtime credential handling."
+  default_prompt: "Use $nix-security to audit secret storage, ownership, modes, credentials, and service startup ordering in this Nix configuration."

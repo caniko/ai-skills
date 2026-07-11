@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rust Crate Release"
+  short_description: "Prepare and chaperone strict crates.io releases."
+  default_prompt: "Use $rust-crate-release to prepare, validate, chaperone, or publish this Rust crate through its evidence-backed release workflow."
