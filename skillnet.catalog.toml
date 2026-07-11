@@ -26,11 +26,6 @@ status = "reference"
 tags = ["rust", "reference"]
 
 [[rules]]
-path_prefix = "global/fix-clippy-errors"
-category = "rust"
-tags = ["rust", "lint"]
-
-[[rules]]
 path_prefix = "global/simit-rust-project-init"
 category = "rust"
 tags = ["rust", "flake"]
@@ -42,13 +37,7 @@ category = "agent-tools"
 tags = ["python", "flake"]
 
 [[rules]]
-path_prefix = "global/mvp2prod"
-category = "rust"
-tags = ["rust", "publishing", "project-bootstrap"]
-related_skills = ["global/rust-crate-release-prep"]
-
-[[rules]]
-path_prefix = "global/workspace-check"
+path_prefix = "global/rust-workspace-check"
 category = "rust"
 tags = ["rust", "workspace", "architecture"]
 
@@ -71,13 +60,6 @@ tags = ["nix", "canix"]
 path_prefix = "global/update-canix"
 category = "nix"
 tags = ["nix", "canix"]
-
-[[rules]]
-path_prefix = "global/host-a-healthcheck"
-category = "nix"
-status = "reference"
-tags = ["nix", "canix", "reference"]
-related_skills = ["canix/host-a-status", "canix/canix-host-status"]
 
 [[rules]]
 path_prefix = "global/forgejo-"
@@ -121,34 +103,9 @@ category = "docs-sites"
 tags = ["forgejo", "site"]
 
 [[rules]]
-name_prefix = "multi-phase-"
-category = "planning"
-tags = ["planning", "multi-phase"]
-
-[[rules]]
-name = "multi-phase-plan"
-category = "planning"
-tags = ["planning", "multi-phase", "large-skill"]
-
-[[rules]]
 path_prefix = "global/long-horizon-research"
 category = "planning"
 tags = ["planning", "research"]
-
-[[rules]]
-name_prefix = "plan-"
-category = "planning"
-tags = ["planning"]
-
-[[rules]]
-name = "plan-and-verify"
-category = "planning"
-tags = ["planning", "large-skill"]
-
-[[rules]]
-path_prefix = "global/consolidate-plan-sets"
-category = "planning"
-tags = ["planning"]
 
 [[rules]]
 path_prefix = "global/retire-docs-planning"
@@ -160,36 +117,6 @@ path_prefix = "global/northstar"
 category = "planning"
 tags = ["planning"]
 
-
-[[rules]]
-path_prefix = "global/imagegen"
-category = "creative-media"
-tags = ["image", "creative", "large-skill"]
-
-[[rules]]
-path_prefix = "global/openai-docs"
-category = "vendor-platforms"
-tags = ["openai", "docs"]
-
-[[rules]]
-path_prefix = "global/berg-codeberg-ci"
-category = "vendor-platforms"
-tags = ["berg", "codeberg"]
-
-[[rules]]
-path_prefix = "global/skill-creator"
-category = "agent-tools"
-tags = ["skills", "large-skill"]
-
-[[rules]]
-path_prefix = "global/skill-installer"
-category = "agent-tools"
-tags = ["skills"]
-
-[[rules]]
-path_prefix = "global/plugin-creator"
-category = "agent-tools"
-tags = ["plugins"]
 
 [[rules]]
 path_prefix = "global/yeehaw"

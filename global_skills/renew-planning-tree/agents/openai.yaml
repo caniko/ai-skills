@@ -1,4 +1,0 @@
-interface:
-  display_name: "Renew Planning Tree"
-  short_description: "Consolidate stale planning docs"
-  default_prompt: "Use $renew-planning-tree to replace stale planning docs with one current plan set."

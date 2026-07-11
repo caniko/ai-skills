@@ -56,6 +56,12 @@ Home Manager installs `skillnet` and materializes the generated symlink views fr
 
 ## Planning
 
+Planning ownership belongs to the active LLM harness. The harness chooses
+whether to plan, which model/provider/effort to use, how to dispatch work, and
+when to pause or resume it. Skills may provide evidence, domain procedures,
+execution checklists, or plan-audit support; they must not route models or
+replace the harness's planning loop.
+
 The migration plan and research dossiers live in:
 
 - `docs/planning/mirror-canonical-store/`
