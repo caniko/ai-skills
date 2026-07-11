@@ -1,4 +1,4 @@
 interface:
   display_name: "Grouped Git Commits"
-  short_description: "Commit dirty worktrees in coherent groups"
-  default_prompt: "Use $grouped-git-commits to inspect this dirty repo and commit all changes in coherent groups."
+  short_description: "Automatically commit every dirty worktree change"
+  default_prompt: "Use $grouped-git-commits to inspect this repo and automatically commit every uncommitted change in coherent groups."
