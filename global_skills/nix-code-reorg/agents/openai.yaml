@@ -1,4 +1,0 @@
-interface:
-  display_name: "Nix Code Reorg"
-  short_description: "Reorganize Nix module trees"
-  default_prompt: "Use this skill to split oversized Nix files, merge tiny modules where useful, and reorganize flake or module trees without behavior changes."

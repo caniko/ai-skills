@@ -1,4 +1,0 @@
-interface:
-  display_name: "Nix Format Style"
-  short_description: "Enforce idiomatic Nix style"
-  default_prompt: "Use this skill to enforce formatter-neutral Nix idioms such as explicit package provenance, narrow with usage, and readable let blocks."

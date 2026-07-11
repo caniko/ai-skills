@@ -1,4 +1,0 @@
-interface:
-  display_name: "Nix Data Boundaries"
-  short_description: "Enforce Nix data boundaries"
-  default_prompt: "Use this skill to enforce single sources of truth for host, service, domain, user, and fleet data in a Nix repository."

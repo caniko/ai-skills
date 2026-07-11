@@ -1,4 +1,0 @@
-interface:
-  display_name: "Nix Input Hygiene"
-  short_description: "Clean flake input hygiene"
-  default_prompt: "Use this skill to audit flake inputs, follows graph, path inputs, lock drift, duplicate nixpkgs pins, and update blast radius."

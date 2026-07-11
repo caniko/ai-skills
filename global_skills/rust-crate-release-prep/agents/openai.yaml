@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Crate Release Prep"
-  short_description: "Strict crates.io release readiness orchestration."
-  default_prompt: "Prepare this Rust crate for a strict crates.io release."

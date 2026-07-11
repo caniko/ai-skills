@@ -1,4 +1,0 @@
-interface:
-  display_name: "Nix Store Purity"
-  short_description: "Audit Nix purity and reproducibility"
-  default_prompt: "Use this skill to audit impurity, unpinned fetches, path literals, store leaks, and eval-time filesystem assumptions in a Nix repository."

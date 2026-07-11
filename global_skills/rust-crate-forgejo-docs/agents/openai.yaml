@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Crate Forgejo Docs"
-  short_description: "Pages docs for crates.io-ready Rust crates."
-  default_prompt: "Use $rust-crate-forgejo-docs to add Codeberg Pages documentation for this Rust crate."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Nix Security Secrets"
-  short_description: "Audit Nix secret handling"
-  default_prompt: "Use this skill to audit agenix, sops, secrets ownership, store exposure, LoadCredential, file modes, and secret-dependent services."

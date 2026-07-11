@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Clippy"
-  short_description: "Resolve Rust Clippy diagnostics end to end."
-  default_prompt: "Use $rust-clippy to resolve Clippy diagnostics in the current Rust workspace, preserving behavior and validating with the repository's authoritative lint command."

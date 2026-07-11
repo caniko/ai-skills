@@ -1,4 +1,0 @@
-interface:
-  display_name: "Nix Eval Failures"
-  short_description: "Diagnose Nix evaluation failures"
-  default_prompt: "Use this skill to diagnose and repair Nix evaluation failures, option conflicts, missing attributes, bad imports, and assertions."

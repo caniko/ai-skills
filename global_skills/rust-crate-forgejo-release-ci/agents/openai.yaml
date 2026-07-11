@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Crate Forgejo Release CI"
-  short_description: "Forgejo release gates on the runner runner."
-  default_prompt: "Use $rust-crate-forgejo-release-ci to add Forgejo Actions release CI for this Rust crate."

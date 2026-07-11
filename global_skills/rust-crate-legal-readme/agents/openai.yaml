@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Crate Legal Readme"
-  short_description: "License files and crates.io README readiness."
-  default_prompt: "Prepare this crate's license files and README for crates.io."

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Breaking Upgrade"
-  short_description: "Upgrade Rust dependencies across breaking releases"
-  default_prompt: "Use $rust-breaking-upgrade to upgrade this Rust project across breaking dependency releases and adopt relevant new features."

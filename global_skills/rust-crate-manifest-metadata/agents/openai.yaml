@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Crate Manifest Metadata"
-  short_description: "Cargo.toml metadata and package contents checks."
-  default_prompt: "Audit and fix this crate's Cargo.toml metadata for crates.io."

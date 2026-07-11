@@ -1,4 +1,0 @@
-interface:
-  display_name: "Rust Crate Quality Gates"
-  short_description: "Strict fmt, clippy, test, docs, audit, and dry-run checks."
-  default_prompt: "Run and fix strict release quality gates for this Rust crate."
