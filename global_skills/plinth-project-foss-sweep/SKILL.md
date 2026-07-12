@@ -17,7 +17,7 @@ Apply `plinth-project` consistently across owned FOSS repositories while keeping
 - Stop on missing foundational metadata. Report the missing artifact, why it is required, the upstream command/workflow to create it, and the validation command.
 - Preserve existing `website/plinth-project.toml`; only fill missing generated-safe fields after reading the repo.
 - Treat any existing non-Plinth website setup as a migration blocker unless the repo already has a valid `website/plinth-project.toml`. Do not silently adapt or replace another site generator.
-- If a required landing-page feature cannot be represented by `plinth-project`, stop and report the missing feature, why it is required, the upstream producer `~/canix/Projects/repos/owned/codeberg.org/caniko/plinth`, the workflow to add or fix it there, and the `plinth-project check/build` validation command.
+- If a required landing-page feature cannot be represented by `plinth-project`, stop and report the missing feature, why it is required, the upstream producer `~/canix/canix/projects/repos/owned/codeberg.org/caniko/plinth`, the workflow to add or fix it there, and the `plinth-project check/build` validation command.
 
 ## Discovery Workflow
 
@@ -29,13 +29,13 @@ Apply `plinth-project` consistently across owned FOSS repositories while keeping
 
    If `simit` is unavailable, use the local checkout without modifying target projects:
    ```sh
-   cargo run --manifest-path ~/canix/Projects/repos/owned/codeberg.org/caniko/simit/Cargo.toml -- projects list --json
+   cargo run --manifest-path ~/canix/canix/projects/repos/owned/codeberg.org/caniko/simit/Cargo.toml -- projects list --json
    ```
 
 2. Discover recent owned FOSS candidates:
    ```sh
-   ~/canix/Projects/repos/owned/codeberg.org/caniko/ai-skills/global_skills/plinth-project-foss-sweep/scripts/discover-recent-owned-foss.sh \
-     --root ~/canix/Projects \
+   ~/canix/canix/projects/repos/owned/codeberg.org/caniko/ai-skills/global_skills/plinth-project-foss-sweep/scripts/discover-recent-owned-foss.sh \
+     --root ~/canix/canix/projects \
      --since 5-months \
      --dry-run
    ```
@@ -52,8 +52,8 @@ Apply `plinth-project` consistently across owned FOSS repositories while keeping
 Use the sweep script for broad runs:
 
 ```sh
-~/canix/Projects/repos/owned/codeberg.org/caniko/ai-skills/global_skills/plinth-project-foss-sweep/scripts/plinth-project-sweep.sh \
-  --root ~/canix/Projects \
+~/canix/canix/projects/repos/owned/codeberg.org/caniko/ai-skills/global_skills/plinth-project-foss-sweep/scripts/plinth-project-sweep.sh \
+  --root ~/canix/canix/projects \
   --since 5-months \
   --dry-run
 ```
@@ -75,7 +75,7 @@ Use `--apply` on the script only after reviewing dry-run output. `--dry-run` is 
 
 ## Reorganization Workflow
 
-- Generate a proposed move map into `~/canix/Projects/repos/owned/<repo>` for targets that are not already co-located.
+- Generate a proposed move map into `~/canix/canix/projects/repos/owned/<repo>` for targets that are not already co-located.
 - Do not execute moves in this skill until the user explicitly asks for implementation.
 - Before any future move, require: clean or understood git status, no duplicate destination, remote URL recorded, simit generic registry support available, and a reversible move plan.
 

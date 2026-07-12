@@ -3,7 +3,7 @@ set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DISCOVER="$SKILL_DIR/scripts/discover-recent-owned-foss.sh"
-ROOT="~/canix/Projects"
+ROOT="~/canix/canix/projects"
 SINCE="5-months"
 LIMIT=0
 APPLY=0
@@ -18,7 +18,7 @@ Usage: plinth-project-sweep.sh [OPTIONS]
 Dry-run or apply plinth-project configs across discovered owned FOSS targets.
 
 Options:
-  --root PATH       Projects root to scan (default: ~/canix/Projects)
+  --root PATH       Projects root to scan (default: ~/canix/canix/projects)
   --since VALUE    Recent activity window (default: 5-months)
   --owners CSV     Owned forge namespaces (default: caniko,memorycircuits)
   --limit N        Process at most N target projects
@@ -104,10 +104,10 @@ path_list_contains() {
 plinth_project_cmd() {
   if command -v plinth-project >/dev/null 2>&1; then
     printf 'plinth-project'
-  elif command -v cargo >/dev/null 2>&1 && [[ -f ~/canix/Projects/repos/owned/codeberg.org/caniko/plinth/Cargo.toml ]]; then
-    printf 'cargo run --manifest-path ~/canix/Projects/repos/owned/codeberg.org/caniko/plinth/Cargo.toml --package plinth-project --'
-  elif command -v nix >/dev/null 2>&1 && [[ -f ~/canix/Projects/repos/owned/codeberg.org/caniko/plinth/flake.nix ]]; then
-    printf 'nix run ~/canix/Projects/repos/owned/codeberg.org/caniko/plinth#plinth-project --'
+  elif command -v cargo >/dev/null 2>&1 && [[ -f ~/canix/canix/projects/repos/owned/codeberg.org/caniko/plinth/Cargo.toml ]]; then
+    printf 'cargo run --manifest-path ~/canix/canix/projects/repos/owned/codeberg.org/caniko/plinth/Cargo.toml --package plinth-project --'
+  elif command -v nix >/dev/null 2>&1 && [[ -f ~/canix/canix/projects/repos/owned/codeberg.org/caniko/plinth/flake.nix ]]; then
+    printf 'nix run ~/canix/canix/projects/repos/owned/codeberg.org/caniko/plinth#plinth-project --'
   else
     printf ''
   fi

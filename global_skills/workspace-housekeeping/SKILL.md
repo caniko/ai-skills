@@ -17,7 +17,7 @@ checkout is old or removable from its name or mtime alone.
 
    ```sh
    /home/can/.codex/skills/organize-project-workspace/scripts/inventory_workspace.sh \
-     ~/canix/Projects /tmp/projects-housekeeping-live --sizes
+     ~/canix/canix/projects /tmp/projects-housekeeping-live --sizes
    ```
 
 3. Inspect `git-repositories.tsv`, `worktrees.tsv`,

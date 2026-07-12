@@ -11,8 +11,8 @@ First use `canix-hosted-release-reference`, then apply these Pink Raven defaults
 
 ## Fixed Defaults
 
-- Source repo: `~/canix/Projects/repos/owned/gitlab.com/caniko/pink-raven`
-- canix repo: `~/canix/Projects/repos/owned/gitlab.com/caniko/canix`
+- Source repo: `~/canix/canix/projects/repos/owned/gitlab.com/caniko/pink-raven`
+- canix repo: `~/canix/canix`
 - canix input: `pink-raven`
 - Production host: `runner`
 - Main service: `pink-raven.service`
@@ -27,7 +27,7 @@ First use `canix-hosted-release-reference`, then apply these Pink Raven defaults
 Before updating canix, run release-relevant Pink Raven checks:
 
 ```sh
-cd ~/canix/Projects/repos/owned/gitlab.com/caniko/pink-raven
+cd ~/canix/canix/projects/repos/owned/gitlab.com/caniko/pink-raven
 nix build .#docs --no-link
 nix build .#raven --no-link
 ```
@@ -52,7 +52,7 @@ git tag --points-at HEAD
 From canix:
 
 ```sh
-cd ~/canix/Projects/repos/owned/gitlab.com/caniko/canix
+cd ~/canix/canix
 nix flake update pink-raven
 git diff -- flake.lock
 nix eval --raw .#nixosConfigurations.runner.config.system.build.toplevel.drvPath
@@ -108,9 +108,9 @@ sudo systemctl restart pink-raven
 
 ## Known Current Blocker Class
 
-`home-manager-can.service` may fail during runner switch if `~/canix/Projects/repos/owned/codeberg.org/caniko/ai-skills` is dirty. Do not hide this. If Pink Raven services start and endpoint checks pass, report Pink Raven as deployed while also reporting the host switch nonzero exit and the validation command:
+`home-manager-can.service` may fail during runner switch if `~/canix/canix/projects/repos/owned/codeberg.org/caniko/ai-skills` is dirty. Do not hide this. If Pink Raven services start and endpoint checks pass, report Pink Raven as deployed while also reporting the host switch nonzero exit and the validation command:
 
 ```sh
-git -C ~/canix/Projects/repos/owned/codeberg.org/caniko/ai-skills status --short --branch
+git -C ~/canix/canix/projects/repos/owned/codeberg.org/caniko/ai-skills status --short --branch
 systemctl is-active home-manager-can.service
 ```

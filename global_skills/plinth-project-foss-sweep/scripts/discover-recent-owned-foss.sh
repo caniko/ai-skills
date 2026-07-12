@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="~/canix/Projects"
+ROOT="~/canix/canix/projects"
 SINCE="5 months ago"
 OWNERS="caniko,memorycircuits"
 DRY_RUN=1
@@ -14,7 +14,7 @@ Usage: discover-recent-owned-foss.sh [OPTIONS]
 Inventory recent owned FOSS candidates as TSV.
 
 Options:
-  --root PATH         Projects root to scan (default: ~/canix/Projects)
+  --root PATH         Projects root to scan (default: ~/canix/canix/projects)
   --since VALUE      Git --since value; "5-months" becomes "5 months ago"
   --owners CSV       Owned forge namespaces (default: caniko,memorycircuits)
   --max-depth N      find(1) max depth for .git dirs (default: 5)
@@ -187,7 +187,7 @@ while IFS= read -r gitdir; do
   remote="$(remote_fetch_url "$repo")"
   owner="$(owner_from_remote "$remote")"
   license="$(license_file "$repo")"
-  proposed="~/canix/Projects/repos/owned/$(basename "$repo")"
+  proposed="~/canix/canix/projects/repos/owned/$(basename "$repo")"
 
   if [[ -z "$remote" ]]; then
     printf 'needs-user-review\t%s\t%s\t-\t%s\tmissing-remote\t%s\n' "$rel" "${last%%T*}" "${license:-no-license}" "$proposed"

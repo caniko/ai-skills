@@ -30,7 +30,7 @@ If a simit checkout is available and the task is about unreleased simit changes,
 use it explicitly without changing the downstream project:
 
 ```sh
-cargo run --manifest-path ~/canix/Projects/repos/owned/codeberg.org/caniko/simit/Cargo.toml -- projects list --json
+cargo run --manifest-path ~/canix/canix/projects/repos/owned/codeberg.org/caniko/simit/Cargo.toml -- projects list --json
 ```
 
 Current command shape is grouped:
