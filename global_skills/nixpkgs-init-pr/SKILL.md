@@ -3,6 +3,8 @@ name: nixpkgs-init-pr
 description: "Create, update, repair, and review general pull requests against `NixOS/nixpkgs`: prepare clean branches or worktrees, run targeted validation, push to a fork, open or update draft PRs, fill the live nixpkgs PR template, and review them using the configured `caniko/nixpkgs-review-gha` fork. Use for normal nixpkgs PR creation, package additions, package updates, module changes, PR shepherding, and nixpkgs-review-gha reruns. For build-log-driven package failures, use `nixpkgs-build-failure-pr` instead."
 ---
 
+**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
+
 # nixpkgs-init-pr
 
 ## Shared references
@@ -65,3 +67,15 @@ Before publishing or commenting upstream, read the common references in `../nixp
 - Stale review after a new push: ignore or cancel the stale run and dispatch a fresh run for the current PR head.
 - Failed review: inspect logs, fix the branch, push the update, and rerun the workflow.
 - Missing generated source or updater output: stop and report the missing artifact, upstream producer, regeneration command, and validation command.
+
+## Solution Placement
+
+When this skill recommends or implements a durable solution, evaluate owners in this order and stop at the first suitable layer:
+
+1. Generic upstream.
+2. Fleetix.
+3. A new standalone flake, only when the scope is cohesive and no existing owner fits.
+4. canix-toolbelt.
+5. canix.
+
+Keep consumer-specific data and policy with the consumer even when mechanics move upstream. Before choosing a lower layer, record why each higher-priority owner does not fit.

@@ -1,4 +1,4 @@
 interface:
   display_name: "Workspace Housekeeping"
-  short_description: "Safely audit and clean a mixed Git project workspace"
-  default_prompt: "Audit the Projects workspace, classify stale and generated material, and apply only approved cleanup with Git and registry validation."
+  short_description: "Safely audit canix's owned project workspace"
+  default_prompt: "Audit canix's projects/ workspace, classify stale and generated material, and apply only approved cleanup with Workspace.pkl and Git validation."

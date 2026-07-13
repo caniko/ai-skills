@@ -3,6 +3,8 @@ name: forgejo-docs
 description: Create or update a docs-only mdBook site for a Codeberg-hosted project, integrate it with a Nix flake, and publish it to Codeberg Pages through Forgejo Actions hosted by Codeberg. Use when the user asks for Codeberg documentation, mdBook docs, docs-only Pages publishing, or to remove a separate landing website while keeping documentation deployed.
 ---
 
+**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
+
 # forgejo-docs
 
 ## What this does
@@ -37,3 +39,15 @@ If documentation content would need to be invented from missing source material,
 3. Use [../forgejo-pages/SKILL.md](../forgejo-pages/SKILL.md) for Pages deployment wiring.
 4. Verify the local docs build per mdbook-docs before adding CI.
 5. For custom domain wiring (`<name>.example.com`), use `codeberg-pages-dns` after the initial Pages deploy.
+
+## Solution Placement
+
+When this skill recommends or implements a durable solution, evaluate owners in this order and stop at the first suitable layer:
+
+1. Generic upstream.
+2. Fleetix.
+3. A new standalone flake, only when the scope is cohesive and no existing owner fits.
+4. canix-toolbelt.
+5. canix.
+
+Keep consumer-specific data and policy with the consumer even when mechanics move upstream. Before choosing a lower layer, record why each higher-priority owner does not fit.

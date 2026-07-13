@@ -3,6 +3,8 @@ name: yeehaw
 description: Execute, inspect, or resume harness-created phase plan directories through the yh MCP phases tools. Use when the user wants to run a phase plan in the current repository, asks for `/yeehaw run`, `/yeehaw show`, or `/yeehaw status`, or after the active harness writes a phase doc set under `docs/src/planning/PLAN-NAME/`.
 ---
 
+**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
+
 # Yeehaw phase executor
 
 Do not auto-invoke this from another skill. Suggest `/yeehaw run`; wait for the user to ask for execution.
@@ -41,3 +43,15 @@ Manual smoke steps:
 2. Run `/yeehaw show <plan-dir>` and confirm the phase DAG is listed.
 3. Run `/yeehaw run <plan-dir>` and confirm phase progress appears and the final response includes `status`, `exit_code`, and `lock_file`.
 4. Re-run `/yeehaw status <plan-dir>` and confirm it reflects the lock file written by the run.
+
+## Solution Placement
+
+When this skill recommends or implements a durable solution, evaluate owners in this order and stop at the first suitable layer:
+
+1. Generic upstream.
+2. Fleetix.
+3. A new standalone flake, only when the scope is cohesive and no existing owner fits.
+4. canix-toolbelt.
+5. canix.
+
+Keep consumer-specific data and policy with the consumer even when mechanics move upstream. Before choosing a lower layer, record why each higher-priority owner does not fit.

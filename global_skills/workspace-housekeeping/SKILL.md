@@ -1,30 +1,60 @@
 ---
 name: workspace-housekeeping
-description: Audit, classify, and safely clean mixed project workspaces containing Git repositories, forks, upstream clones, linked worktrees, personal material, archives, quarantine trees, and generated state. Use when Codex is asked to tidy a Projects directory, remove old or disposable files, reconcile a workspace registry, prune stale worktree metadata, or establish a repeatable long-term maintenance workflow.
+description: Audit, classify, and safely clean canix's owned project workspace containing Git repositories, forks, linked worktrees, personal material, archives, quarantine trees, and generated state. Use when Codex is asked to tidy the canix `projects/` tree, remove old or disposable files, reconcile `projects/Workspace.pkl`, prune stale worktree metadata, or establish a repeatable maintenance workflow.
 ---
+
+**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
 
 # Workspace Housekeeping
 
-Use this skill for filesystem and Git-topology cleanup. Treat source, state,
+Load [canix-structure-reference](../canix-structure-reference/SKILL.md) first;
+it owns the canonical roots, registry, and source-of-truth boundaries.
+
+Use this skill for the canix-owned project workspace. Treat source, state,
 archives, and recovery material as different classes; never decide that a
 checkout is old or removable from its name or mtime alone.
+
+Read `projects/README.md` and applicable canix `AGENTS.md` before acting.
 
 ## Audit first
 
 1. Establish the exact workspace root, applicable `AGENTS.md` instructions,
-   current Git status, remotes, dirty worktrees, and user-authorized scope.
-2. Run the read-only inventory script outside the workspace checkout:
+   current canix and project Git status, remotes, dirty worktrees, and
+   user-authorized scope.
+2. Validate the canix-owned registry and physical paths:
+
+   ```sh
+   cd ~/canix/canix
+   canix workspace check
+   canix workspace check --skip-physical-paths
+   ```
+
+   Use `canix --json workspace show <project>` to resolve an individual
+   checkout. If the installed binary does not expose `workspace`, build/use
+   the current admin CLI from `cli/`; do not revive the deleted
+   `projects/tools/workspace*` scripts.
+
+3. Use the canix cleanup command for candidate discovery; it is dry-run by
+   default:
+
+   ```sh
+   cd ~/canix/canix
+   canix workspace cleanup
+   ```
+
+   The generic inventory script is a fallback for evidence that the CLI does
+   not expose, and must run outside the workspace checkout:
 
    ```sh
    /home/can/.codex/skills/organize-project-workspace/scripts/inventory_workspace.sh \
      ~/canix/canix/projects /tmp/projects-housekeeping-live --sizes
    ```
 
-3. Inspect `git-repositories.tsv`, `worktrees.tsv`,
+4. Inspect `git-repositories.tsv`, `worktrees.tsv`,
    `generated-markers.tsv`, duplicate origins, path references, and
    `git-worktree-lists.txt`. Use `git worktree prune --dry-run --verbose`
    before any metadata prune.
-4. Preserve dirty source and untracked personal data. Treat `archives/`,
+5. Preserve dirty source and untracked personal data. Treat `archives/`,
    `local/` quarantine, access-revoked employer material, `.codex-worktrees/`,
    and tool-managed `.claude/worktrees/` as protected unless the user
    explicitly expands scope.
@@ -50,16 +80,18 @@ user as permission blockers and do not invoke elevated deletion implicitly.
 
 ## Apply the approved cleanup
 
-Keep the cleanup command dry-run by default and review its printed paths:
+Keep the canix cleanup command dry-run by default and review its printed paths:
 
 ```sh
-./tools/workspace cleanup
+cd ~/canix/canix
+canix workspace cleanup
 ```
 
 Apply only after explicit user authorization and after recording dirty state:
 
 ```sh
-./tools/workspace cleanup --apply
+cd ~/canix/canix
+canix workspace cleanup --apply
 ```
 
 Use `--exclude-prefix` to honor ordered project groups or temporarily defer a
@@ -71,16 +103,21 @@ already preserved by a verified bundle or archive.
 ## Keep the registry truthful
 
 The workspace manifest is the source of organizational truth and the lock file
-is an observed snapshot. After path normalization or cleanup, validate that
-manifest and lock paths exist, then refresh the lock snapshot:
+is an observed snapshot. After an approved cleanup or path change, validate
+that manifest and lock paths exist, then refresh the lock snapshot only when
+the observed revisions intentionally changed:
 
 ```sh
-./tools/workspace check
-./tools/workspace lock
-pkl eval -f json Workspace.pkl >/dev/null
-jq empty Workspace.lock.json
-nix flake check . --no-update-lock-file
+cd ~/canix/canix
+canix workspace check
+canix workspace lock
+nix flake check --no-update-lock-file
 ```
+
+Do not use the removed `./tools/workspace` commands or treat the generated
+`lib/generated/workspace.nix` sidecar as an editable source. If a project path
+or lifecycle needs changing, update `projects/Workspace.pkl`, then validate
+the sidecar/evaluation through the canix flake's documented generation checks.
 
 Keep historical migration documents intact, but update operational path
 references when the canonical layout changes. Record deletion candidates,
@@ -95,3 +132,15 @@ and push only repositories with an authorized configured remote. Keep private
 tax data and access-revoked employer trees out of commits. If a user requests
 an ordering such as ai-skills, skillnet, and canix last, defer those paths and
 validate them as the final group.
+
+## Solution Placement
+
+When this skill recommends or implements a durable solution, evaluate owners in this order and stop at the first suitable layer:
+
+1. Generic upstream.
+2. Fleetix.
+3. A new standalone flake, only when the scope is cohesive and no existing owner fits.
+4. canix-toolbelt.
+5. canix.
+
+Keep consumer-specific data and policy with the consumer even when mechanics move upstream. Before choosing a lower layer, record why each higher-priority owner does not fit.

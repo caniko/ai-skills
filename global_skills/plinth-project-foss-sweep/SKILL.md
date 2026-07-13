@@ -1,19 +1,33 @@
 ---
 name: plinth-project-foss-sweep
-description: Inventory owned FOSS repositories worked on recently and apply or refresh Plinth project-site configs with `plinth-project`. Use when Codex is asked to sweep recent FOSS projects, create or update `website/plinth-project.toml`, validate/build project websites, organize owned project locations, or use simit's project registry as the canonical location source for Plinth project sites.
+description: Inventory owned FOSS repositories worked on recently and apply or refresh Plinth project-site configs with `plinth-project`. Use when Codex is asked to sweep recent FOSS projects, create or update `website/plinth-project.toml`, validate/build project websites, organize owned project locations, or use canix's `projects/Workspace.pkl` registry as the canonical location source for Plinth project sites.
 ---
+
+**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
 
 # Plinth Project FOSS Sweep
 
+Load [canix-structure-reference](../canix-structure-reference/SKILL.md) first;
+it owns project paths and lifecycle. This skill owns only FOSS candidate
+classification and Plinth-site changes.
+
 ## Purpose
 
-Apply `plinth-project` consistently across owned FOSS repositories while keeping repository locations auditable through simit. Default to dry-run discovery and explicit blockers; do not fabricate missing metadata.
+Apply `plinth-project` consistently across owned FOSS repositories while
+keeping repository locations auditable through canix's workspace registry.
+Default to dry-run discovery and explicit blockers; do not fabricate missing
+metadata.
 
 ## Core Rules
 
-- Treat simit as the desired source of truth for project locations, but do not move repos or rewrite registry paths until simit supports generic FOSS entries and the user explicitly approves the move plan.
+- Treat the canix workspace registry as authoritative for project identity,
+  lifecycle, and checkout paths. Simit remains authoritative only for
+  simit-managed generator features; do not move repos or rewrite the canix
+  manifest without explicit approval.
 - Target owned FOSS only by default: recent git activity, user-owned remote namespace, public forge remote, and a license file.
-- Exclude `upstream/`, `worktrees/`, `assesments/`, scratch/temp repos, vendored nested repos, and obvious third-party forks unless the user explicitly names them.
+- Exclude `repos/forks/`, `worktrees/`, `personal/`, `archives/`, `local/`,
+  `incubator/`, scratch/temp repos, vendored nested repos, and obvious
+  third-party forks unless the user explicitly names them.
 - Stop on missing foundational metadata. Report the missing artifact, why it is required, the upstream command/workflow to create it, and the validation command.
 - Preserve existing `website/plinth-project.toml`; only fill missing generated-safe fields after reading the repo.
 - Treat any existing non-Plinth website setup as a migration blocker unless the repo already has a valid `website/plinth-project.toml`. Do not silently adapt or replace another site generator.
@@ -21,8 +35,11 @@ Apply `plinth-project` consistently across owned FOSS repositories while keeping
 
 ## Discovery Workflow
 
-1. Inspect simit's current registry:
+1. Validate canix's current workspace registry and inspect simit's feature
+   registry:
    ```sh
+   cd ~/canix/canix
+   canix workspace check
    simit projects scan
    simit projects list --json
    ```
@@ -43,9 +60,10 @@ Apply `plinth-project` consistently across owned FOSS repositories while keeping
 3. Classify every candidate:
    - `target`: owned namespace, recent activity, non-excluded path, public forge remote, license file.
    - `needs-user-review`: owned/recent but no license, ambiguous remote, nested third-party repo, or unclear FOSS status.
-   - `skip`: excluded path, stale, non-owned remote, worktree/upstream/assessment/scratch.
+   - `skip`: excluded storage class, stale, non-owned remote, fork/worktree/
+     personal/assessment/scratch.
 
-4. Read [references/simit-generic-project-registry.md](references/simit-generic-project-registry.md) when the user asks to reorganize paths or register non-Rust/non-simit-managed projects.
+4. Read [references/simit-generic-project-registry.md](references/simit-generic-project-registry.md) when the user asks to reorganize paths or register non-Rust/non-simit-managed projects. Despite its historical filename, that reference describes the canix workspace registry contract.
 
 ## Apply Workflow
 
@@ -75,19 +93,26 @@ Use `--apply` on the script only after reviewing dry-run output. `--dry-run` is 
 
 ## Reorganization Workflow
 
-- Generate a proposed move map into `~/canix/canix/projects/repos/owned/<repo>` for targets that are not already co-located.
-- Do not execute moves in this skill until the user explicitly asks for implementation.
-- Before any future move, require: clean or understood git status, no duplicate destination, remote URL recorded, simit generic registry support available, and a reversible move plan.
+- Compare candidates with `projects/Workspace.pkl`; do not treat a basename-only
+  proposed path as authoritative. The canonical owned-repository shape is
+  `repos/owned/<forge>/<owner>/<repo>`.
+- Do not execute moves in this skill until the user explicitly asks for
+  implementation. Canix tracks project gitlinks and the workspace manifest, so
+  a move must update both through the supported canix workspace workflow.
+- Before any future move, require: clean or understood git status, no duplicate
+  destination, remote URL recorded, a manifest update plan, and a reversible
+  move plan. Validate with `canix workspace check` and `nix flake check
+  --no-update-lock-file` from canix.
 
 ## Reporting
 
 Report:
 
-- simit command/version or local checkout used
+- canix workspace validation and simit command/version or local checkout used
 - discovery root, since cutoff, and owned namespace filter
 - per-project verdict: `updated`, `already-current`, `blocked`, `skipped`, or `needs-user-review`
 - exact blocker details and validation commands
-- proposed simit registry updates and move map
+- proposed Workspace.pkl updates and move map
 - validation commands run and their results
 
 ## Hand-off to Publishing
@@ -104,4 +129,17 @@ Do not skip the hand-off. The plinth-project config alone does not deploy the si
 
 - `scripts/discover-recent-owned-foss.sh`: dry-run inventory and classifier.
 - `scripts/plinth-project-sweep.sh`: dry-run/apply loop for `website/plinth-project.toml`, `plinth-project check`, and `plinth-project build`.
-- `references/simit-generic-project-registry.md`: required simit extension plan before generic project moves.
+- `references/simit-generic-project-registry.md`: canix workspace registry and
+  move-safety contract (the filename is retained for compatibility).
+
+## Solution Placement
+
+When this skill recommends or implements a durable solution, evaluate owners in this order and stop at the first suitable layer:
+
+1. Generic upstream.
+2. Fleetix.
+3. A new standalone flake, only when the scope is cohesive and no existing owner fits.
+4. canix-toolbelt.
+5. canix.
+
+Keep consumer-specific data and policy with the consumer even when mechanics move upstream. Before choosing a lower layer, record why each higher-priority owner does not fit.

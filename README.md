@@ -45,6 +45,26 @@ skillnet project sync --name <project>
 
 `skillnet project sync` regenerates that project's in-repo working copy and consumer views from `.skills`.
 
+### Cross-repository prerequisite
+
+Every canonical `SKILL.md`, global or project-local, must place this paragraph
+immediately after its YAML frontmatter:
+
+```markdown
+**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
+```
+
+`graphify` itself is the only exemption because self-invocation would recurse;
+its usage and multi-path reference must continue to define the merged
+cross-repository graph workflow directly. After adding or changing a skill, run:
+
+```sh
+bash scripts/check-graphify-policy.sh
+skillnet catalog lint
+```
+
+Then regenerate the relevant views.
+
 ## Fresh Host Bootstrap
 
 Clone this repository and every project repository listed in the centralized Skillnet config, then run:

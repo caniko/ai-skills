@@ -1,21 +1,30 @@
 ---
 name: simit-dependent-fixes
-description: Use simit's per-user project registry to find and repair downstream projects affected by simit changes, release regressions, generated CI/flake drift, or new simit command layouts. Use when asked to fix simit dependents, propagate a simit release migration, diagnose downstream breakage from simit-generated files, or decide whether simit itself needs a generator/regression fix so downstream projects do not break again.
+description: Use canix's Workspace.pkl plus simit's feature registry to find and repair downstream projects affected by simit changes, release regressions, generated CI/flake drift, or new simit command layouts. Use when asked to fix simit dependents, propagate a simit release migration, diagnose downstream breakage from simit-generated files, or decide whether simit itself needs a generator/regression fix so downstream projects do not break again.
 metadata:
   short-description: Fix simit downstream projects via the registry
 ---
 
+**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
+
 # Simit Dependent Fixes
+
+Load [canix-structure-reference](../canix-structure-reference/SKILL.md) when
+working from canix; it owns project scope and checkout paths. This skill owns
+the Simit-dependent repair loop.
 
 ## Purpose
 
 This skill is a domain-grounded research specialist (simit ecosystem); see the Reference section for its place in the research family.
 
 Use `simit projects` as the inventory for downstream Rust projects that have
-simit-managed files or simit feature usage. Fix affected dependents directly,
-but first decide whether the root cause belongs in simit itself. If generated
-output is wrong, brittle, noisy, or missing migration coverage, fix simit and
-add a regression before touching many downstream repositories.
+simit-managed files or simit feature usage. When operating from canix, the
+project universe and checkout paths come from the canix-owned workspace
+registry; simit is not the location authority. Fix affected
+dependents directly, but first decide whether the root
+cause belongs in simit itself. If generated output is wrong, brittle, noisy,
+or missing migration coverage, fix simit and add a regression before touching
+many downstream repositories.
 
 ## Command Resolution
 
@@ -47,24 +56,33 @@ regenerate with current simit rather than preserving obsolete command spelling.
 
 ## Registry Workflow
 
-1. Refresh or inspect the registry:
+1. Validate canix's workspace registry, then refresh or inspect simit's feature
+   registry:
    ```sh
+   cd ~/canix/canix
+   canix workspace check
    simit projects scan
    simit projects list --json
    ```
 
-   The fleet sweep is mandatory before reporting. Enumerate every real entry
-   from `simit projects list --json`, including projects whose feature is
-   `absent` because hand-rolled workflows can carry the same regression. Skip
-   only ephemeral `/tmp/*` scratch entries. Check every real project under the
-   registered roots and report one verdict for each; never stop at the first
-   failing dependent.
+   The fleet sweep is mandatory before reporting. Enumerate every applicable
+   canix project path from `projects/Workspace.pkl`, then correlate it with
+   `simit projects list --json`, including projects whose feature is `absent`
+   because hand-rolled workflows can carry the same regression. Skip only
+   ephemeral `/tmp/*` scratch entries and manifest entries that are archived,
+   personal, or explicitly non-Rust unless the user names them. Check every
+   applicable project under the registered roots and report one verdict for
+   each; never stop at the first failing dependent.
 
-2. If the registry is sparse or the user names a filesystem area, discover:
+2. If the Simit feature registry is sparse or the user names a filesystem area,
+   discover within the canix-owned workspace:
    ```sh
-   simit projects discover <ROOT>
-   simit projects discover <ROOT> --json
+   simit projects discover ~/canix/canix/projects/repos/owned
+   simit projects discover ~/canix/canix/projects/repos/owned --json
    ```
+
+   Do not add a second location registry in Simit; update
+   `projects/Workspace.pkl` when project ownership or paths change.
 
    Use `--include-empty` only when intentionally registering bare Rust projects
    for future simit adoption. Default discovery should skip non-simit projects.
@@ -155,10 +173,12 @@ regenerate downstream projects with the fixed command.
 Close with:
 
 - simit version or checkout used
-- registry query/discovery scope (paste or summarize the `simit projects list`
-  output that drove the sweep)
-- **per-project verdict for every non-scratch entry from
-  `simit projects list`** — `affected`, `clean`, or `skipped (<reason>)`.
+- canix workspace scope and registry query/discovery scope (summarize the
+  `Workspace.pkl` entries and `simit projects list` output that drove the
+  sweep)
+- **per-project verdict for every applicable non-scratch canix workspace entry**
+  — `affected`, `clean`, or `skipped (<reason>)`; include its Simit feature
+  status when present.
   An omission is a bug; if a project was not checked, say so explicitly with
   the reason. Ephemeral `/tmp/*` paths may be collapsed into a single line.
 - projects changed and validation per project
@@ -169,3 +189,15 @@ Close with:
 
 - Generic research base: [evidence-first-research](../evidence-first-research/SKILL.md) — this skill is a simit-grounded specialization of the generic evidence-first research pattern. Use the base directly for non-simit research.
 - Sibling research router: [research-routing](../research-routing/SKILL.md) — picks the right research specialist when the request is ambiguous between simit and other domains.
+
+## Solution Placement
+
+When this skill recommends or implements a durable solution, evaluate owners in this order and stop at the first suitable layer:
+
+1. Generic upstream.
+2. Fleetix.
+3. A new standalone flake, only when the scope is cohesive and no existing owner fits.
+4. canix-toolbelt.
+5. canix.
+
+Keep consumer-specific data and policy with the consumer even when mechanics move upstream. Before choosing a lower layer, record why each higher-priority owner does not fit.

@@ -3,6 +3,8 @@ name: rust-crate-release
 description: Prepare, validate, chaperone, and publish Rust crates through a strict crates.io workflow. Use for release readiness, Cargo metadata, changelog, docs, Nix or Forgejo release infrastructure, hook failures, versioning, tags, publication, and post-publish verification.
 ---
 
+**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
+
 # Rust Crate Release
 
 Load [policy.md](references/policy.md) first. Load only the mode references
@@ -37,3 +39,15 @@ for generated or hosted integrations.
 For canix-backed release credentials, load
 [simit-canix-release-secrets.md](references/simit-canix-release-secrets.md)
 before changing secret mappings.
+
+## Solution Placement
+
+When this skill recommends or implements a durable solution, evaluate owners in this order and stop at the first suitable layer:
+
+1. Generic upstream.
+2. Fleetix.
+3. A new standalone flake, only when the scope is cohesive and no existing owner fits.
+4. canix-toolbelt.
+5. canix.
+
+Keep consumer-specific data and policy with the consumer even when mechanics move upstream. Before choosing a lower layer, record why each higher-priority owner does not fit.

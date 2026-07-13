@@ -5,7 +5,7 @@ ROOT="~/canix/canix/projects"
 SINCE="5 months ago"
 OWNERS="caniko,memorycircuits"
 DRY_RUN=1
-MAX_DEPTH=5
+MAX_DEPTH=12
 
 usage() {
   cat <<'EOF'
@@ -17,7 +17,7 @@ Options:
   --root PATH         Projects root to scan (default: ~/canix/canix/projects)
   --since VALUE      Git --since value; "5-months" becomes "5 months ago"
   --owners CSV       Owned forge namespaces (default: caniko,memorycircuits)
-  --max-depth N      find(1) max depth for .git dirs (default: 5)
+  --max-depth N      find(1) max depth for .git entries (default: 12)
   --dry-run          No-op flag for workflow consistency; this script never mutates
   -h, --help         Show this help
 
@@ -96,6 +96,28 @@ owner_from_remote() {
   printf '%s' "${path%%/*}"
 }
 
+remote_path_from_remote() {
+  local path="$1"
+  local host=""
+  case "$path" in
+    git@github.com:*|ssh://git@github.com/*|https://github.com/*) host="github.com" ;;
+    git@gitlab.com:*|ssh://git@gitlab.com/*|https://gitlab.com/*) host="gitlab.com" ;;
+    git@codeberg.org:*|ssh://git@codeberg.org/*|https://codeberg.org/*) host="codeberg.org" ;;
+  esac
+  path="${path#git@github.com:}"
+  path="${path#git@gitlab.com:}"
+  path="${path#git@codeberg.org:}"
+  path="${path#ssh://git@github.com/}"
+  path="${path#ssh://git@gitlab.com/}"
+  path="${path#ssh://git@codeberg.org/}"
+  path="${path#https://github.com/}"
+  path="${path#https://gitlab.com/}"
+  path="${path#https://codeberg.org/}"
+  path="${path%.git}"
+  [[ -n "$host" && -n "$path" ]] || return 0
+  printf '%s/%s' "$host" "$path"
+}
+
 is_owned_remote() {
   local owner="$1"
   local candidate
@@ -123,10 +145,9 @@ license_file() {
 excluded_reason() {
   local rel="$1"
   case "$rel" in
-    upstream/*) echo "excluded-upstream"; return 0 ;;
+    repos/forks/*|upstream/*) echo "excluded-fork-or-upstream"; return 0 ;;
     worktrees/*) echo "excluded-worktree"; return 0 ;;
-    assesments/*|assessments/*) echo "excluded-assessment"; return 0 ;;
-    nix/nixpkgs|nix/nixpkgs/*|nix/home-manager|nix/home-manager/*|nix/nixos-hardware|nix/nixos-hardware/*) echo "excluded-known-upstream-fork"; return 0 ;;
+    personal/*|archives/*|local/*|incubator/*) echo "excluded-non-foss-storage-class"; return 0 ;;
     */target/*|*/node_modules/*|*/vendor/*) echo "excluded-vendored"; return 0 ;;
     *.tmp|tmp/*|*/tmp/*) echo "excluded-scratch"; return 0 ;;
     *) return 1 ;;
@@ -138,7 +159,7 @@ is_nested_git_repo() {
   local parent
   parent="$(dirname "$repo")"
   while [[ "$parent" != "$ROOT" && "$parent" != "/" ]]; do
-    if [[ -d "$parent/.git" ]]; then
+    if [[ -e "$parent/.git" ]]; then
       return 0
     fi
     parent="$(dirname "$parent")"
@@ -159,7 +180,10 @@ is_obvious_third_party_fork() {
 
 printf 'verdict\trelative_path\tlast_commit_date\tremote\tlicense\treason\tproposed_move\n'
 
-find "$ROOT" -maxdepth "$MAX_DEPTH" -type d -name .git -print | sort |
+# Canix tracks most workspace repositories as submodules, whose .git marker is
+# a file rather than a directory. GitLab subgroup paths also make the current
+# canonical layout deeper than the old five-level scan.
+find "$ROOT" -maxdepth "$MAX_DEPTH" \( -type d -o -type f \) -name .git -print | sort |
 while IFS= read -r gitdir; do
   repo="${gitdir%/.git}"
   rel="${repo#"$ROOT"/}"
@@ -187,7 +211,8 @@ while IFS= read -r gitdir; do
   remote="$(remote_fetch_url "$repo")"
   owner="$(owner_from_remote "$remote")"
   license="$(license_file "$repo")"
-  proposed="~/canix/canix/projects/repos/owned/$(basename "$repo")"
+  remote_path="$(remote_path_from_remote "$remote")"
+  proposed="${ROOT}/repos/owned/${remote_path}"
 
   if [[ -z "$remote" ]]; then
     printf 'needs-user-review\t%s\t%s\t-\t%s\tmissing-remote\t%s\n' "$rel" "${last%%T*}" "${license:-no-license}" "$proposed"

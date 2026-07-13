@@ -3,6 +3,8 @@ name: forgejo-codeberg-ci
 description: "Troubleshoot Codeberg/Forgejo CI using `fj` first, with git/curl fallback. Use when investigating Forgejo Actions workflow runs on Codeberg, publish failures, stuck jobs, tag-triggered releases, missing crates.io publishes, or repository-side CI state on codeberg.org."
 ---
 
+**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
+
 # Forgejo Codeberg CI
 
 Use this skill for Codeberg-hosted CI troubleshooting.
@@ -150,3 +152,15 @@ Common runner checks:
 Load [runner](../runner/SKILL.md) for canonical labels, images,
 mounts, cache behavior, and runner registration facts. Do not infer a fix from
 timing alone.
+
+## Solution Placement
+
+When this skill recommends or implements a durable solution, evaluate owners in this order and stop at the first suitable layer:
+
+1. Generic upstream.
+2. Fleetix.
+3. A new standalone flake, only when the scope is cohesive and no existing owner fits.
+4. canix-toolbelt.
+5. canix.
+
+Keep consumer-specific data and policy with the consumer even when mechanics move upstream. Before choosing a lower layer, record why each higher-priority owner does not fit.

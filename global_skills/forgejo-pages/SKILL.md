@@ -3,6 +3,8 @@ name: forgejo-pages
 description: Add Forgejo Actions hosted by Codeberg for Codeberg Pages deployment. Use when a user asks to add Forgejo Pages CI, Codeberg Pages publishing, Pages deployment, or static-site publishing for a Codeberg-hosted repository.
 ---
 
+**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
+
 # forgejo-pages
 
 ## What this does
@@ -118,3 +120,15 @@ server selector:
 
 - Workflows belong in `.forgejo/workflows/`; Forgejo may also look in `.github/workflows/`, but prefer the native path.
 - The `site` input must match the final public Pages URL. For a repository named `pages`, the repository path segment may be omitted if publishing to `https://<user>.codeberg.page/`.
+
+## Solution Placement
+
+When this skill recommends or implements a durable solution, evaluate owners in this order and stop at the first suitable layer:
+
+1. Generic upstream.
+2. Fleetix.
+3. A new standalone flake, only when the scope is cohesive and no existing owner fits.
+4. canix-toolbelt.
+5. canix.
+
+Keep consumer-specific data and policy with the consumer even when mechanics move upstream. Before choosing a lower layer, record why each higher-priority owner does not fit.

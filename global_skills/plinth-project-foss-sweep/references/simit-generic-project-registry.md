@@ -1,73 +1,71 @@
-# Simit Generic Project Registry Extension
+# Canix Workspace Registry Contract
 
-## Why This Is Needed
+## Ownership
 
-Current simit project discovery is Rust-workspace and simit-feature oriented. The FOSS sweep needs simit to track arbitrary owned repositories, including non-Rust projects and repos that do not yet use simit-managed flake/CI/release features.
+Load [canix-structure-reference](../../canix-structure-reference/SKILL.md) for
+the canonical roots, registry, snapshot, sidecar, and validation commands.
+This reference adds the Plinth/Simit-specific ownership rule below.
 
-Until this extension exists, use simit as the desired canonical registry but do not move repos or rewrite registry paths. Emit a move map and require explicit user approval.
+Simit remains useful for its own feature inventory (`flake`, `ci`, hooks,
+release trust, and packaging), but it does not own canix project locations.
+Do not add a second generic project-location registry to simit.
 
-## Required Registry Shape
+## Required Canix Registry Shape
 
-Add generic project entries alongside existing simit-managed Rust entries:
+Keep entries in `projects/Workspace.pkl` with:
 
-- canonical path
-- project name
-- remote URL
-- forge host
-- forge owner
-- forge repository
-- ownership classification
-- license status and license file
-- last git activity date
-- project kind, such as `rust`, `nix`, `python`, `javascript`, `go`, `docs`, or `mixed`
-- `plinth_project` status: `missing`, `configured`, `built`, `blocked`, or `unknown`
-- optional proposed canonical path
+- project key and canonical workspace-relative path
+- lifecycle and materialization policy
+- project kind and access classification
+- default branch when it is not `main`
 
-Do not overload simit feature statuses for generic FOSS metadata. Keep feature statuses for simit-managed surfaces such as flake, CI, hooks, and packaging.
+Keep FOSS metadata such as license, remote, recent activity, and
+`plinth_project` status in the sweep output or a project-specific report; do
+not overload the canix manifest or simit feature statuses with ephemeral scan
+results.
 
 ## Required Commands
 
-The extension should support:
-
 ```sh
-simit projects discover-git ~/canix/canix/projects --owned caniko,memorycircuits --since "5 months ago" --dry-run --json
-simit projects list --json --kind generic
-simit projects scan --prune --kind generic
-simit projects move-plan --root ~/canix/canix/projects/repos/owned --json
+cd ~/canix/canix
+canix workspace check
+canix --json workspace show <project>
+simit projects scan
+simit projects list --json
 ```
 
-If command names differ during implementation, preserve these semantics:
+For a manifest change, preserve these semantics:
 
-- discovery must be dry-run capable
-- JSON output must be stable for scripts/agents
-- scan must detect missing paths and stale remotes
-- move-plan must not move files
-- apply-move, if ever added, must require explicit command invocation
+- the Pkl source is edited, not the generated Nix sidecar
+- physical paths and lifecycle values are checked before applying
+- observed lock refresh is explicit via `canix workspace lock`
+- any move requires explicit command invocation and a reversible plan
 
 ## Move Safety Requirements
 
 Before moving a repo:
 
-- `git status --short` is clean or all local changes are understood
+- parent canix and the affected project `git status --short` are clean or all
+  local changes are understood
 - destination path does not exist
 - remote URL is recorded in the registry
 - current path and destination path are both valid UTF-8
 - nested repos are not accidentally moved as part of a parent repo
-- registry update and filesystem move are reported as a reversible plan
-
-Use `~/canix/canix/projects/repos/owned/<repo>` as the default proposed destination for owned FOSS projects unless the user provides a different canonical tree.
+- the Workspace.pkl update and filesystem move are reported as one reversible
+  plan
 
 ## Validation
 
-After adding generic registry support to simit:
+After changing the canix workspace registry:
 
 ```sh
-simit projects discover-git ~/canix/canix/projects --owned caniko,memorycircuits --since "5 months ago" --dry-run --json
-simit projects scan --kind generic
-simit projects list --kind generic --json
+cd ~/canix/canix
+canix workspace check
+canix workspace lock
+nix flake check --no-update-lock-file
 ```
 
-Then rerun:
+Then rerun the read-only Plinth sweep:
 
 ```sh
 ~/canix/canix/projects/repos/owned/codeberg.org/caniko/ai-skills/global_skills/plinth-project-foss-sweep/scripts/discover-recent-owned-foss.sh --dry-run

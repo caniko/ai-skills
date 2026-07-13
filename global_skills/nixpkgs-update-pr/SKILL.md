@@ -3,6 +3,8 @@ name: nixpkgs-update-pr
 description: "Create and shepherd nixpkgs pull requests that UPDATE an existing package to a newer version: bump version/rev/source hash, refresh language lock or vendor hashes (cargoHash, vendorHash, npmDepsHash), absorb upstream restructures (moved sourceRoot, new build system, Cargo/Go/npm workspace and lockfile changes), validate the rebuild and binaries, push to a fork, open a draft PR with the live template, and run caniko/nixpkgs-review-gha. Use for version bumps, pname old to new changes, unstable-date bumps, `cargoHash`/`vendorHash` out-of-date refreshes, and updates that break because upstream reorganized. For brand-new packages or general PRs use `nixpkgs-init-pr`; for build failures on the current version use `nixpkgs-build-failure-pr`."
 ---
 
+**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
+
 # nixpkgs-update-pr
 
 Specializes `nixpkgs-init-pr` for the common case of moving an existing package to a newer upstream version. Same branch / publish / review discipline; this skill adds the version-bump mechanics and the restructure-and-lockfile pitfalls that updates routinely hit.
@@ -88,3 +90,15 @@ For Go (`vendorHash`) and Node (`npmDepsHash`) updates the analogous trap is sim
 - Vendor cannot resolve a sibling git dependency: trim the workspace and commit a git-free lock (above); do not vendor unrelated members.
 - Updater (`nix-update`) cannot run or produces an unrelated diff: stop and report per the missing-data contract in `decorum.md`; keep only the intended package-update changes.
 - Failed review run: inspect logs, fix the branch, push, and rerun for the current PR head.
+
+## Solution Placement
+
+When this skill recommends or implements a durable solution, evaluate owners in this order and stop at the first suitable layer:
+
+1. Generic upstream.
+2. Fleetix.
+3. A new standalone flake, only when the scope is cohesive and no existing owner fits.
+4. canix-toolbelt.
+5. canix.
+
+Keep consumer-specific data and policy with the consumer even when mechanics move upstream. Before choosing a lower layer, record why each higher-priority owner does not fit.
