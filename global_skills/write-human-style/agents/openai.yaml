@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write in a Human Voice"
+  short_description: "Write concise, natural, human-sounding prose"
+  default_prompt: "Use $write-human-style to rewrite this text in a concise, natural voice."
