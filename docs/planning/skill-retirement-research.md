@@ -2,9 +2,16 @@
 
 ## Goal And Trigger
 
-Identify global skills that are outdated, stale, duplicated, or plausibly low-use, then suggest safe removal or consolidation strategies. This audit is read-only with respect to the skills themselves. It evaluates the current working tree, including an existing uncommitted consolidation, against Git `HEAD` (`0577fa86`, 2026-06-22).
+Identify global skills that are outdated, stale, duplicated, or plausibly low-use, then suggest safe removal or consolidation strategies. The original audit was read-only with respect to skill bodies; it evaluated the working tree, including an existing uncommitted consolidation, against Git `HEAD` (`0577fa86`, 2026-06-22).
 
-## Current Reality
+## Current Verification (2026-07-14)
+
+- The canonical tree contains 59 global `SKILL.md` files; Skillnet catalogs 155 global and project skills.
+- `skillnet catalog lint` passes for all 155 catalogued skills.
+- `skillnet doctor` reports no issues, and all configured project views report clean.
+- These results supersede the historical counts below. The remainder of this dossier records the evidence and recommendations from the original audit snapshot.
+
+## Historical Snapshot At Original Audit
 
 - The working tree contains 54 global `SKILL.md` files; `HEAD` contains 105.
 - The repository is too young for calendar age to prove staleness. Every tracked current skill was introduced between 2026-05-20 and 2026-06-16.
@@ -15,7 +22,7 @@ Identify global skills that are outdated, stale, duplicated, or plausibly low-us
   consolidations, and the `evidence-first-research` replacement for the former
   generic research/orientation pair.
 
-## Evidence Inventory
+## Historical Evidence Inventory
 
 | Evidence | What it establishes |
 |---|---|
@@ -142,7 +149,7 @@ Keep reference skills such as `runner`, `repo-pages`, and `nixpkgs-pr-common`. R
 3. Remove `berg-codeberg-ci` and the five Codex system shadows after the consumer matrix check.
 4. Fold/delete `plinth-visual-audit`, then consolidate the medium-confidence pairs one pair per commit.
 5. Regenerate catalogs and run `skillnet catalog lint` after every structural batch.
-6. Keep SynDB generated views synchronized with the canonical Skillnet workflow and treat `skillnet doctor` errors as release blockers.
+6. Keep SynDB generated views synchronized with the canonical Skillnet workflow; they are currently clean, and future `skillnet doctor` errors remain release blockers.
 7. Add structured activation telemetry and revisit low-use retirement after a 90-day observation window.
 
 The Rust-stack consolidation is a separate follow-up migration: it reduces the

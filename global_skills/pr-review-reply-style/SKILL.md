@@ -3,7 +3,7 @@ name: pr-review-reply-style
 description: Draft concise, human-written pull request review replies after addressing reviewer feedback. Use when replying to inline PR comments, requested changes, or review threads, especially after implementing a code change.
 ---
 
-**Cross-repository work:** As soon as work is known to span more than one Git repository, invoke `$graphify` before further discovery, planning, or edits. Query a relevant existing graph first; build or update a merged graph if none exists, it is stale, or it does not cover every repository in scope. Reuse a current graph already produced for the same repository set.
+**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
 
 # PR Review Reply Style
 
@@ -11,12 +11,20 @@ Use this skill when writing a PR review-thread reply after handling feedback.
 
 ## Style
 
-Use any configured shared human-written style guidance when the consumer
-provides it; this repository does not own a separate style skill.
+Load and apply [`$write-human-style`](../write-human-style/SKILL.md) before
+drafting. It owns the general voice, clarity, concision, and anti-boilerplate
+rules. This skill adds only review-thread behavior.
 
 PR-specific additions:
 
-- Acknowledge the point naturally when useful: "Good call", "Yeah", or "Makes sense".
+- Reply to the reviewer's specific point rather than summarizing the whole PR.
+- Acknowledge the point naturally when useful: "Good call", "Yeah", or "Makes
+  sense". Do not force the same opener into every thread.
+- State the concrete change in the past tense, then mention focused validation
+  when it adds confidence.
+- If no code change was needed, give the reason and the evidence without
+  sounding defensive.
+- Do not add reflexive thanks, a formal sign-off, or a generic "resolved" note.
 
 ## Shape
 
@@ -40,12 +48,4 @@ Makes sense; I checked this path and left it as-is because ...
 
 ## Solution Placement
 
-When this skill recommends or implements a durable solution, evaluate owners in this order and stop at the first suitable layer:
-
-1. Generic upstream.
-2. Fleetix.
-3. A new standalone flake, only when the scope is cohesive and no existing owner fits.
-4. canix-toolbelt.
-5. canix.
-
-Keep consumer-specific data and policy with the consumer even when mechanics move upstream. Before choosing a lower layer, record why each higher-priority owner does not fit.
+For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
