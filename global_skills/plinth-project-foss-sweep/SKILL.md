@@ -1,6 +1,6 @@
 ---
 name: plinth-project-foss-sweep
-description: Inventory owned FOSS repositories worked on recently and apply or refresh Plinth project-site configs with `plinth-project`. Use when Codex is asked to sweep recent FOSS projects, create or update `website/plinth-project.toml`, validate/build project websites, organize owned project locations, or use canix's `projects/Workspace.pkl` registry as the canonical location source for Plinth project sites.
+description: Sweep recent FOSS repositories and refresh Plinth project-site configs. Use for `website/plinth-project.toml`, site validation/builds, or Workspace.pkl inventory.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

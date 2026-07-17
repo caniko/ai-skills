@@ -1,0 +1,6 @@
+interface:
+  display_name: "Repository Pages Reference"
+  short_description: "Shared contract for repository Pages publishing."
+  default_prompt: "Use $repo-pages when a Pages skill directs you to its shared publishing contract."
+policy:
+  allow_implicit_invocation: false

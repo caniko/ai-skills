@@ -1,6 +1,6 @@
 ---
 name: rust-crate-release
-description: Prepare, validate, chaperone, and publish Rust crates through a strict crates.io workflow. Use for release readiness, Cargo metadata, changelog, docs, Nix or Forgejo release infrastructure, hook failures, versioning, tags, publication, and post-publish verification.
+description: Prepare, validate, and publish Rust crates through the strict crates.io workflow. Use for release readiness, Cargo/docs metadata, Nix/Forgejo wiring, tags, and verification.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

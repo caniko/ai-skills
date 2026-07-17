@@ -1,0 +1,6 @@
+interface:
+  display_name: "Forgejo Codeberg CI"
+  short_description: "Troubleshoot Codeberg Forgejo Actions."
+  default_prompt: "Use $forgejo-codeberg-ci when forgejo-ci routes Codeberg workflow diagnosis."
+policy:
+  allow_implicit_invocation: false

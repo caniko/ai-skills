@@ -2,3 +2,5 @@ interface:
   display_name: "Nix Flake Architecture"
   short_description: "Clean Nix flake architecture"
   default_prompt: "Use this skill to clean flake outputs, per-system structure, input following, lock policy, formatter, checks, and devShell shape."
+policy:
+  allow_implicit_invocation: false

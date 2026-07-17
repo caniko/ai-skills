@@ -1,6 +1,6 @@
 ---
 name: pr-review-reply-style
-description: Draft concise, human-written pull request review replies after addressing reviewer feedback. Use when replying to inline PR comments, requested changes, or review threads, especially after implementing a code change.
+description: Draft concise, human-written PR review replies after addressing feedback, requested changes, or inline review threads.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

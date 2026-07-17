@@ -1,6 +1,6 @@
 ---
 name: mdbook-docs
-description: Create or update a docs-only mdBook site, integrate it with a Nix flake as `docs` and `site` outputs, and leave deployment wiring to a host-specific CI skill such as Forgejo Pages or GitLab Pages. Use when the user asks for mdBook docs, a docs-only site, Nix-flake docs packaging, or wants documentation prepared before CI/Pages wiring.
+description: Create or update a docs-only mdBook site, expose Nix `docs`/`site` outputs, and leave deployment to Pages CI. Use for docs packaging or pre-CI preparation.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

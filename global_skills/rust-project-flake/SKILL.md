@@ -1,6 +1,6 @@
 ---
 name: rust-project-flake
-description: Create or uplift Rust project Nix flakes using crane, with simit as the first path for Rust crate release flakes. Use when Codex needs to add, generate, repair, or modernize flake.nix, devShells, checks, packages, cross-compilation, Cargo source filtering, or Nix build infrastructure for a Rust crate or workspace. Always use crane for Rust builds; prefer rs-harbor helpers when available or acceptable.
+description: Create or modernize Rust Nix flakes with crane and simit. Use for flake outputs, devShells, checks, packages, cross builds, Cargo filtering, or build infrastructure.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

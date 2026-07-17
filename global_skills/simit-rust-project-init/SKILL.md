@@ -1,6 +1,6 @@
 ---
 name: simit-rust-project-init
-description: Route Rust/Cargo simit initialization requests to the right child skill. Use when Codex is asked to apply, refresh, or validate simit Rust flake or CI wiring but the request may be either ordinary project CI setup or strict crates.io release infrastructure.
+description: Route Rust/Cargo simit initialization to ordinary CI or strict crates.io release setup. Use when the requested flake/CI wiring could be either path.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

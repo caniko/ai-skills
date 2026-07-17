@@ -2,3 +2,5 @@ interface:
   display_name: "Rust Dependencies"
   short_description: "Audit Rust dependencies, features, MSRV, and upgrades."
   default_prompt: "Use $rust-dependencies to audit or modernize this Rust project's dependency tree, feature flags, MSRV, or breaking upgrades."
+policy:
+  allow_implicit_invocation: false

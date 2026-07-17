@@ -1,6 +1,6 @@
 ---
 name: rust-ultra
-description: Master orchestrator for improving an entire Rust crate or workspace. Use when asked to audit, harden, clean up, or deeply improve a Rust codebase, or to run a complete Rust improvement pass.
+description: Orchestrate a complete Rust crate/workspace improvement pass. Use for deep audits, hardening, cleanup, or whole-codebase quality work.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

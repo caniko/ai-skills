@@ -1,0 +1,6 @@
+interface:
+  display_name: "Plinth Project Visual Review"
+  short_description: "Review project Plinth sites visually."
+  default_prompt: "Use $plinth-project-visual-review when plinth-visual-review routes a project site review."
+policy:
+  allow_implicit_invocation: false

@@ -1,6 +1,6 @@
 ---
 name: plan-progress-review
-description: Common reference skill for auditing existing planning documents against current repository state. Use when Codex needs to check progress of existing plan sets, phase docs, roadmap checklists, migration plans, or planning directories before retiring, consolidating, verifying, or rewriting them. Produces a factual status report only; it does not create a new plan or edit docs by itself.
+description: Audit plans against repository state before retiring, consolidating, verifying, or rewriting phase docs, roadmaps, and migration checklists; report status only.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

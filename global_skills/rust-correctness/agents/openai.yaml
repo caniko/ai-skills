@@ -2,3 +2,5 @@ interface:
   display_name: "Rust Correctness"
   short_description: "Harden Rust async and panic-prone code paths."
   default_prompt: "Use $rust-correctness to audit this Rust code for async hazards, missing validation, panic paths, or unwrap and expect failures."
+policy:
+  allow_implicit_invocation: false

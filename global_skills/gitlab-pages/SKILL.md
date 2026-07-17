@@ -1,6 +1,6 @@
 ---
 name: gitlab-pages
-description: Add GitLab CI wiring for GitLab Pages deployment. Use when a user asks to publish a static site with GitLab Pages, add `.gitlab-ci.yml` Pages deployment, or wire a docs/site build to GitLab Pages on GitLab.com or a self-managed GitLab instance.
+description: Add GitLab CI wiring for Pages deployment, including `.gitlab-ci.yml` and docs/site builds on GitLab.com or self-managed GitLab.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

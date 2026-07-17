@@ -1,6 +1,6 @@
 ---
 name: retire-docs-planning
-description: Retire obsolete planning or roadmap documentation by mapping durable guidance into stable docs, removing planning-only pages from navigation, and deleting no-longer-useful planning files. Use when a repository has `docs/.../planning`, phase docs, roadmap chapters, migration checklists, or similar execution notes that should stop being published once the underlying work has shipped.
+description: Retire obsolete planning or roadmap docs by moving durable guidance into stable docs, removing planning pages from navigation, and deleting shipped execution notes.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

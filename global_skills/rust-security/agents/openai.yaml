@@ -2,3 +2,5 @@ interface:
   display_name: "Rust Security"
   short_description: "Audit Rust dependencies, secrets, and unsafe soundness."
   default_prompt: "Use $rust-security to audit this Rust project for dependency vulnerabilities and code-level security or unsafe-soundness issues."
+policy:
+  allow_implicit_invocation: false

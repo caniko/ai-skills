@@ -1,6 +1,6 @@
 ---
 name: opencode-permissions
-description: Add, triage, or diagnose opencode Bash permission rules in canix. Use for “Permission required” prompts, pasted command-pattern lists, ignored allow/ask/deny rules, glob matching questions, or rendered permission verification.
+description: Add or diagnose opencode Bash permission rules in canix. Use for permission prompts, command-pattern lists, ignored rules, glob matching, or rendered verification.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
