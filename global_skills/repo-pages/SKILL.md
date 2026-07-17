@@ -62,7 +62,7 @@ A host-specific Pages skill should layer on top of this skill and define:
 
 - The exact workflow/CI file path the host uses (e.g. `.forgejo/workflows/pages.yaml`, `.gitlab-ci.yml`).
 - The runner or image to use, with any host-imposed limits.
-- The action or publish mechanism (e.g. `https://codeberg.org/git-pages/action@v2`, GitLab's `pages:` keyword).
+- The action or publish mechanism (e.g. `https://codeberg.org/git-pages/action@2b24bbb7ff943d3c8fe1df91326adec66daea6dd # v2.2.0`, GitLab's `pages:` keyword).
 - The final URL convention (user pages, project pages, group pages, custom domains).
 - The token or auth mechanism (e.g. `${{ forge.token }}`).
 - Host-specific eligibility rules (public + free/libre license for Codeberg Pages; Pages enabled by admins for self-managed GitLab; etc.).
