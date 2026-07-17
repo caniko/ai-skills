@@ -9,7 +9,7 @@ description: Add Forgejo Actions hosted by Codeberg for Codeberg Pages deploymen
 
 ## What this does
 
-Adds a Forgejo Actions workflow that builds a static site and publishes it to Codeberg Pages using `https://codeberg.org/git-pages/action@v2`.
+Adds a Forgejo Actions workflow that builds a static site and publishes it to Codeberg Pages using `https://codeberg.org/git-pages/action@2b24bbb7ff943d3c8fe1df91326adec66daea6dd # v2.2.0`.
 
 Use the term **Forgejo Actions hosted by Codeberg**. Avoid "Codeberg Actions"; Codeberg's hosted CI service is Forgejo Actions.
 
@@ -37,7 +37,7 @@ In addition to the generic preconditions in `repo-pages`:
 - Trigger: pushes to `main`
 - Checkout action: `actions/checkout@v4`
 - Nix build command: `nix build .#site`
-- Deploy action: `https://codeberg.org/git-pages/action@v2`
+- Deploy action: `https://codeberg.org/git-pages/action@2b24bbb7ff943d3c8fe1df91326adec66daea6dd # v2.2.0`
 - Deploy source: `result/`
 - Site URL: `https://${{ forge.repository_owner }}.codeberg.page/<repo>/`
 - Custom site URL: `https://<custom-domain>/` with `server: codeberg.page`
@@ -91,13 +91,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Nix
-        uses: https://github.com/cachix/install-nix-action@v31
+        uses: https://github.com/cachix/install-nix-action@630ae543ea3a38a9a4166f03376c02c50f408342 # v31
 
       - name: Build site
         run: nix build .#site
 
       - name: Publish to Codeberg Pages
-        uses: https://codeberg.org/git-pages/action@v2
+        uses: https://codeberg.org/git-pages/action@2b24bbb7ff943d3c8fe1df91326adec66daea6dd # v2.2.0
         with:
           site: "https://${{ forge.repository_owner }}.codeberg.page/<repo>/"
           token: ${{ forge.token }}
@@ -108,7 +108,7 @@ For a custom domain, keep the same action and source but add the git-pages
 server selector:
 
 ```yaml
-        uses: https://codeberg.org/git-pages/action@v2
+        uses: https://codeberg.org/git-pages/action@2b24bbb7ff943d3c8fe1df91326adec66daea6dd # v2.2.0
         with:
           site: https://<custom-domain>/
           server: codeberg.page
