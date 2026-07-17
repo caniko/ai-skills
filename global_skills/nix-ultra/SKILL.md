@@ -1,6 +1,6 @@
 ---
 name: nix-ultra
-description: Master orchestrator for improving an entire Nix repository, including flakes, NixOS, Home Manager, packages, secrets, and checks. Use when asked to deeply audit, clean up, harden, or make a Nix repository idiomatic.
+description: Orchestrate a complete Nix improvement pass across flakes, NixOS, Home Manager, packages, secrets, and checks. Use for deep audits, hardening, or cleanup.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

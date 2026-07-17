@@ -1,6 +1,6 @@
 ---
 name: nixpkgs-init-pr
-description: "Create, update, repair, and review general pull requests against `NixOS/nixpkgs`: prepare clean branches or worktrees, run targeted validation, push to a fork, open or update draft PRs, fill the live nixpkgs PR template, and review them using the configured `caniko/nixpkgs-review-gha` fork. Use for normal nixpkgs PR creation, package additions, package updates, module changes, PR shepherding, and nixpkgs-review-gha reruns. For build-log-driven package failures, use `nixpkgs-build-failure-pr` instead."
+description: "Create and review general nixpkgs PRs: prepare branches, validate, fill the template, and use nixpkgs-review-gha. Route build-log failures to nixpkgs-build-failure-pr."
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

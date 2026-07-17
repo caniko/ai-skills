@@ -2,3 +2,5 @@ interface:
   display_name: "Forgejo Docs"
   short_description: "mdBook docs for Codeberg Pages."
   default_prompt: "Use $forgejo-docs to create a docs-only mdBook site for this Codeberg-hosted project and wire it to Nix and Codeberg Pages."
+policy:
+  allow_implicit_invocation: false

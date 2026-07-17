@@ -1,6 +1,6 @@
 ---
 name: simit-dependent-fixes
-description: Use canix's Workspace.pkl plus simit's feature registry to find and repair downstream projects affected by simit changes, release regressions, generated CI/flake drift, or new simit command layouts. Use when asked to fix simit dependents, propagate a simit release migration, diagnose downstream breakage from simit-generated files, or decide whether simit itself needs a generator/regression fix so downstream projects do not break again.
+description: Use Workspace.pkl and simit's feature registry to repair downstream projects affected by simit changes, release regressions, generated CI/flake drift, or command layouts.
 metadata:
   short-description: Fix simit downstream projects via the registry
 ---

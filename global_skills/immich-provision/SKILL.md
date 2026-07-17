@@ -1,6 +1,6 @@
 ---
 name: immich-provision
-description: Use when working on the immich-provision project, declarative Immich user provisioning, Immich/Kanidm OIDC migrations, or NixOS modules that manage Immich identity. Enforces the patched-only short-lived provisioning-token model, Kanidm-derived users, declarative OAuth config, and conservative handling of existing photo-library accounts.
+description: Use for immich-provision, declarative Immich users, OIDC migrations, or identity modules; enforce short-lived tokens, Kanidm users, declarative OAuth, and safe accounts.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

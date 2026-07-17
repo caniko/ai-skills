@@ -1,0 +1,6 @@
+interface:
+  display_name: "Forgejo Pages"
+  short_description: "Configure Forgejo Pages publishing."
+  default_prompt: "Use $forgejo-pages when forgejo-site routes Pages deployment wiring."
+policy:
+  allow_implicit_invocation: false

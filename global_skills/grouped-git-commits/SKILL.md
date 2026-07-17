@@ -1,6 +1,6 @@
 ---
 name: grouped-git-commits
-description: Automatically commit every current Git worktree change in coherent, reviewable groups. Use when the user asks to commit, commit again, commit everything, split a dirty tree, preserve staged and unstaged work, or prepare local changes without pushing. Each invocation commits all work present at invocation time.
+description: Commit current Git changes in coherent groups. Use for commit requests, dirty-tree splitting, staging preservation, or local commits without pushing.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

@@ -1,6 +1,6 @@
 ---
 name: evidence-first-research
-description: Produce evidence-backed research for consequential investigations, audits, pre-design work, and difficult implementation decisions, selecting a compact findings note, concise orientation brief, or durable citation-traceable dossier after discovery. Use when work needs current facts before action, existing plans or assumptions may be stale, or the user asks to investigate, research first, orient a complex situation, or prepare a research handoff.
+description: Produce evidence-backed research for investigations, audits, design decisions, or stale assumptions. Use when current facts or a citable handoff are required.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

@@ -3,6 +3,8 @@ name: fix-loop-common
 description: Shared non-invokable contract for evidence-first repair loops. Load this reference from a domain-specific fix-loop skill that supplies the exact failing gate, focused checks, success evidence, ownership rules, and hard blockers.
 ---
 
+**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+
 # Fix Loop Common
 
 This is a shared reference, not a standalone user workflow. A domain-specific

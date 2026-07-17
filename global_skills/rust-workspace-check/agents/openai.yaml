@@ -1,0 +1,6 @@
+interface:
+  display_name: "Rust Workspace Check"
+  short_description: "Check whether a Rust crate needs a workspace."
+  default_prompt: "Use $rust-workspace-check when rust-ultra routes a workspace-shape decision."
+policy:
+  allow_implicit_invocation: false

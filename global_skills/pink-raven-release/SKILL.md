@@ -1,6 +1,6 @@
 ---
 name: pink-raven-release
-description: Release or verify Pink Raven production on runner through canix. Use when the user asks to deploy, release, bump, roll out, or verify Pink Raven/raven.example.com via canix, runner, or the pink-raven flake input.
+description: Release or verify Pink Raven production on runner through canix. Use for deploys, releases, version bumps, rollouts, or checks of raven.example.com.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.

@@ -2,3 +2,5 @@ interface:
   display_name: "Nix Module Design"
   short_description: "Improve Nix module structure"
   default_prompt: "Use this skill to improve NixOS and Home Manager module boundaries, composition, option ownership, and mkIf or mkMerge structure."
+policy:
+  allow_implicit_invocation: false
