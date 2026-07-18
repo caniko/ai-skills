@@ -1,61 +1,169 @@
-# Registry consumed by nix-ultra. Procedures live in domain references.
+schema_version = 1
 
-[[concern]]
-name = "correctness"
+# Qualitative profiles always screen during a whole-repository run. Detectors
+# prioritize candidate-heavy profiles; they never suppress their review.
+
+[[profile]]
+id = "correctness.eval-failures"
 skill = "nix-correctness"
 stage = "correctness"
-profiles = ["eval-failures", "store-purity"]
+procedure = "../../nix-correctness/references/eval-failures.md"
+evaluation = "qualitative"
+screen = "always"
 threshold = 6
-signals = ["throw:2", "assert:2", "mkForce:2", "types.raw:2", "builtins.getFlake:4", "fetchGit:4", "/home/:3", "/data/:3"]
-overlap_mode = "connectome"
-eval = "qualitative"
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "throw", weight = 2, globs = ["**/*.nix"] }, { kind = "literal", pattern = "assert", weight = 2, globs = ["**/*.nix"] }, { kind = "literal", pattern = "mkForce", weight = 2, globs = ["**/*.nix"] }]
 
-[[concern]]
-name = "security"
+[[profile]]
+id = "correctness.store-purity"
+skill = "nix-correctness"
+stage = "correctness"
+procedure = "../../nix-correctness/references/store-purity.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 6
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "builtins.getFlake", weight = 4, globs = ["**/*.nix"] }, { kind = "literal", pattern = "fetchGit", weight = 4, globs = ["**/*.nix"] }, { kind = "literal", pattern = "/home/", weight = 3, globs = ["**/*.nix"] }, { kind = "literal", pattern = "/data/", weight = 3, globs = ["**/*.nix"] }]
+
+[[profile]]
+id = "security.secrets"
 skill = "nix-security"
 stage = "security"
-profiles = ["secrets"]
+procedure = "../../nix-security/references/secrets.md"
+evaluation = "qualitative"
+screen = "always"
 threshold = 8
-signals = ["age.secrets:3", "sops.secrets:3", "LoadCredential:3", "environmentFile:2", 'mode = "0444":2', "password:1", "secret:1"]
-overlap_mode = "connectome"
-eval = "qualitative"
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "age.secrets", weight = 3, globs = ["**/*.nix"] }, { kind = "literal", pattern = "sops.secrets", weight = 3, globs = ["**/*.nix"] }, { kind = "literal", pattern = "LoadCredential", weight = 3, globs = ["**/*.nix"] }, { kind = "literal", pattern = "environmentFile", weight = 2, globs = ["**/*.nix"] }]
 
-[[concern]]
-name = "module-architecture"
+[[profile]]
+id = "module-design.module-design"
 skill = "nix-module-design"
-stage = "design"
-profiles = ["module-design", "options-typing", "data-boundaries", "home-manager"]
+stage = "module-design"
+procedure = "../../nix-module-design/references/module-design.md"
+evaluation = "qualitative"
+screen = "always"
 threshold = 8
-signals = ["mkMerge:2", "mkIf:1", "mkForce:3", "imports =:1", "options.:2", "mkOption:2", "types.raw:4", "freeformType:3", "osConfig:2", "homeConfigurations:2"]
-overlap_mode = "connectome"
-eval = "qualitative"
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "mkMerge", weight = 2, globs = ["**/*.nix"] }, { kind = "literal", pattern = "mkIf", weight = 1, globs = ["**/*.nix"] }, { kind = "literal", pattern = "imports =", weight = 1, globs = ["**/*.nix"] }]
 
-[[concern]]
-name = "flake-architecture"
+[[profile]]
+id = "module-design.options-typing"
+skill = "nix-module-design"
+stage = "module-design"
+procedure = "../../nix-module-design/references/options-typing.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 8
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "mkOption", weight = 2, globs = ["**/*.nix"] }, { kind = "literal", pattern = "types.raw", weight = 4, globs = ["**/*.nix"] }, { kind = "literal", pattern = "freeformType", weight = 3, globs = ["**/*.nix"] }]
+
+[[profile]]
+id = "module-design.data-boundaries"
+skill = "nix-module-design"
+stage = "module-design"
+procedure = "../../nix-module-design/references/data-boundaries.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 8
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "import ", weight = 1, globs = ["**/*.nix"] }, { kind = "literal", pattern = "lib.", weight = 1, globs = ["**/*.nix"] }]
+
+[[profile]]
+id = "module-design.home-manager"
+skill = "nix-module-design"
+stage = "module-design"
+procedure = "../../nix-module-design/references/home-manager.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 4
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "homeConfigurations", weight = 2, globs = ["**/*.nix"] }, { kind = "literal", pattern = "osConfig", weight = 2, globs = ["**/*.nix"] }]
+
+[[profile]]
+id = "flake-architecture.outputs"
 skill = "nix-flake-architecture"
-stage = "design"
-profiles = ["flake-outputs", "inputs", "overlays-packages"]
+stage = "flake-architecture"
+procedure = "../../nix-flake-architecture/references/flake-outputs.md"
+evaluation = "qualitative"
+screen = "always"
 threshold = 8
-signals = ["perSystem:2", "flakeModules:2", "follows:1", "legacyPackages:2", "checks:1", "formatter:1", "overlays:3", "overrideAttrs:3", "callPackage:2", "mkDerivation:2"]
-overlap_mode = "connectome"
-eval = "qualitative"
+gate = { kind = "any-file", globs = ["flake.nix"] }
+detectors = [{ kind = "literal", pattern = "perSystem", weight = 2, globs = ["flake.nix"] }, { kind = "literal", pattern = "flakeModules", weight = 2, globs = ["flake.nix"] }, { kind = "literal", pattern = "legacyPackages", weight = 2, globs = ["flake.nix"] }]
 
-[[concern]]
-name = "code-health"
+[[profile]]
+id = "flake-architecture.inputs"
+skill = "nix-flake-architecture"
+stage = "flake-architecture"
+procedure = "../../nix-flake-architecture/references/inputs.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 4
+gate = { kind = "any-file", globs = ["flake.nix"] }
+detectors = [{ kind = "literal", pattern = "follows", weight = 1, globs = ["flake.nix"] }, { kind = "literal", pattern = "inputs.", weight = 1, globs = ["flake.nix"] }]
+
+[[profile]]
+id = "flake-architecture.overlays-packages"
+skill = "nix-flake-architecture"
+stage = "flake-architecture"
+procedure = "../../nix-flake-architecture/references/overlays-packages.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 8
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "overlays", weight = 3, globs = ["**/*.nix"] }, { kind = "literal", pattern = "overrideAttrs", weight = 3, globs = ["**/*.nix"] }, { kind = "literal", pattern = "callPackage", weight = 2, globs = ["**/*.nix"] }]
+
+[[profile]]
+id = "code-health.module-layout"
 skill = "nix-code-health"
-stage = "polish"
-profiles = ["module-layout", "dead-code", "format-style", "shell-scripts"]
+stage = "code-health"
+procedure = "../../nix-code-health/references/module-layout.md"
+evaluation = "qualitative"
+screen = "always"
 threshold = 3
-signals = ["file-size>500:3", "file-size<30:1", "TODO: remove:3", "deprecated:2", "with pkgs;:4", "writeShellApplication:3"]
-overlap_mode = "connectome"
-eval = "quantitative"
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "file-lines-gt", lines = 500, weight = 3, globs = ["**/*.nix"] }, { kind = "file-lines-lt", lines = 30, weight = 1, globs = ["**/*.nix"] }]
 
-[[concern]]
-name = "test-gates"
+[[profile]]
+id = "code-health.dead-code"
+skill = "nix-code-health"
+stage = "code-health"
+procedure = "../../nix-code-health/references/dead-code.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 3
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "TODO: remove", weight = 3, globs = ["**/*.nix"] }, { kind = "literal", pattern = "deprecated", weight = 2, globs = ["**/*.nix"] }]
+
+[[profile]]
+id = "code-health.format-style"
+skill = "nix-code-health"
+stage = "code-health"
+procedure = "../../nix-code-health/references/format-style.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 4
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "with pkgs;", weight = 4, globs = ["**/*.nix"] }]
+
+[[profile]]
+id = "code-health.shell-scripts"
+skill = "nix-code-health"
+stage = "code-health"
+procedure = "../../nix-code-health/references/shell-scripts.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 3
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "writeShellApplication", weight = 3, globs = ["**/*.nix"] }, { kind = "literal", pattern = "writeShellScript", weight = 2, globs = ["**/*.nix"] }]
+
+[[profile]]
+id = "gates.test-gates"
 skill = "nix-test-gates"
 stage = "gates"
-profiles = ["test-gates"]
+procedure = "../../nix-test-gates/references/test-gates.md"
+evaluation = "qualitative"
+screen = "always"
 threshold = 6
-signals = ["checks.:2", "formatter:2", "pre-commit:1", "runCommand:2", "assertRule:3", "nixosConfigurations:2"]
-overlap_mode = "scope-local"
-eval = "qualitative"
+gate = { kind = "any-file", globs = ["**/*.nix"] }
+detectors = [{ kind = "literal", pattern = "checks.", weight = 2, globs = ["**/*.nix"] }, { kind = "literal", pattern = "formatter", weight = 2, globs = ["**/*.nix"] }, { kind = "literal", pattern = "runCommand", weight = 2, globs = ["**/*.nix"] }]

@@ -1,4 +1,4 @@
 interface:
   display_name: "Nix Ultra"
   short_description: "Run a complete staged Nix repository improvement pass."
-  default_prompt: "Use $nix-ultra to audit and improve this entire Nix repository, preserving outputs and validating every affected evaluation surface."
+  default_prompt: "Use $nix-ultra to audit and improve this entire Nix repository with a complete profile ledger, preserving outputs and validating every affected evaluation surface."

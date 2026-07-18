@@ -1,0 +1,6 @@
+interface:
+  display_name: "Ultra System Reference"
+  short_description: "Shared completion contract for ultra orchestrators."
+  default_prompt: "Use $ultra-system-reference when an ultra orchestrator directs you to its shared profile and completion contract."
+policy:
+  allow_implicit_invocation: false
