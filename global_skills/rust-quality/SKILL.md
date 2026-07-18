@@ -1,6 +1,6 @@
 ---
 name: rust-quality
-description: Improve Rust lint, dead-code hygiene, module organization, public documentation, tests, runtime observability, and measured performance. Use for focused Clippy, cleanup, docs, tests, logging, allocation, or hot-path work, or when rust-ultra routes quality concerns here.
+description: Improve Rust linting, dead code, module layout, behavioral reuse, docs, tests, observability, and measured performance. Use for focused work or rust-ultra profiles.
 ---
 
 **Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
@@ -13,6 +13,7 @@ relevant profile:
 - [clippy.md](references/clippy.md)
 - [dead-code.md](references/dead-code.md)
 - [module-layout.md](references/module-layout.md)
+- [duplication.md](references/duplication.md)
 - [observability.md](references/observability.md)
 - [performance.md](references/performance.md)
 - [public-docs.md](references/public-docs.md)
@@ -23,6 +24,10 @@ release-only packaging, deny, audit, and publication gates; this skill owns
 the reusable code-quality baseline. Do not micro-optimize cold code or add
 logging to sensitive or noisy paths. Keep structural and hot-path changes
 independently verifiable.
+
+When invoked by `rust-ultra`, return one evidence row for every requested
+profile. File layout, behavioral reuse, and type cohesion are distinct reviews;
+do not treat a successful file split as proof that responsibilities are sound.
 
 ## Solution Placement
 

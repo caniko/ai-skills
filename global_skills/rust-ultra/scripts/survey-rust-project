@@ -1,45 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+script_dir=$(cd "$(dirname "$0")" && pwd)
 root=${1:-.}
-registry=${2:-"$(dirname "$0")/../references/concerns.toml"}
+registry=${2:-"$script_dir/../references/concerns.toml"}
+sensitivity=${3:-medium}
+common="$script_dir/../../ultra-system-reference/scripts/ultra-system"
 
-if [[ ! -d "$root" ]]; then
-  printf 'missing project directory: %s\n' "$root" >&2
-  exit 2
-fi
-
-printf 'project: %s\n' "$(cd "$root" && pwd)"
-printf 'source files:\n'
-while IFS= read -r file; do
-  printf '  %s (%s lines)\n' "$file" "$(wc -l < "$file")"
-done < <(find "$root" -type f \( -name '*.rs' -o -name 'Cargo.toml' -o -name 'Cargo.lock' -o -name 'flake.nix' \) \
-  -not -path '*/target/*' -not -path '*/vendor/*' -print | sort)
-
-printf '\nproject signals:\n'
-for signal in Cargo.toml Cargo.lock flake.nix rust-toolchain.toml .cargo/config.toml; do
-  if [[ -e "$root/$signal" ]]; then printf '  present: %s\n' "$signal"; else printf '  absent: %s\n' "$signal"; fi
-done
-if rg -q '\bunsafe\b' "$root" --glob '*.rs' --glob '!target/**' --glob '!vendor/**' 2>/dev/null; then
-  printf '  unsafe: present\n'
-else
-  printf '  unsafe: absent\n'
-fi
-
-printf '\nconcern registry:\n'
-awk -F '"' '
-  function emit() {
-    if (name != "")
-      print "  " name " -> " skill " [" stage "] threshold=" threshold " mode=" mode " gate=" gate " " profiles
-  }
-  /^\[\[concern\]\]/ { emit(); name=""; skill=""; stage=""; threshold=""; mode=""; gate=""; profiles=""; in_profiles=0; next }
-  /^name = / { name = $2; next }
-  /^skill = / { skill = $2; next }
-  /^stage = / { stage = $2; next }
-  /^threshold = / { threshold = $0; sub(/^threshold = /, "", threshold); next }
-  /^overlap_mode = / { mode = $2; next }
-  /^shape_gate = / { gate = $2; next }
-  /^profiles = / { profiles = $0; in_profiles = ($0 !~ /\]/); next }
-  in_profiles { profiles = profiles " " $0; if ($0 ~ /\]/) in_profiles=0; next }
-  END { emit() }
-' "$registry"
+exec "$common" survey \
+  --root "$root" \
+  --registry "$registry" \
+  --sensitivity "$sensitivity" \
+  --format text

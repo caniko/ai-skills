@@ -7,6 +7,12 @@ description: Commit current Git changes in coherent groups. Use for commit reque
 
 # Grouped Git Commits
 
+This skill is the canonical reference for everything about commits. Other
+skills may add repository orchestration, child/parent ordering, or publication
+rules, but they must defer all commit discovery, grouping, format selection,
+message construction, validation, changelog, and guardrail decisions to this
+skill.
+
 Treat each invocation as an independent pass over every staged, unstaged,
 untracked, and deleted path. The request authorizes committing all current
 work; do not leave files aside as unrelated. If clean, report that no commit
@@ -14,8 +20,10 @@ was needed and do not create an empty commit.
 
 ## Commit-format gate
 
-Commit-message format is a repository-local decision. Before composing any
-subject, inspect the complete changeset and the repository's authority:
+Conventional Commits are the default. A repository-local documented, enforced,
+or clearly dominant different subject format overrides that default. Before
+composing any subject, inspect the complete changeset and the repository's
+authority:
 
 ```sh
 git status --short
@@ -32,13 +40,14 @@ invent a third format.
 
 Classify the repository's format before staging:
 
-1. If Conventional Commits are documented, enforced, or clearly dominant,
-   use the Conventional format.
-2. If the repository documents a different subject format and its recent
-   history follows it, use that format while retaining an imperative,
-   behavior-focused subject.
-3. If the history is mixed and no local rule is authoritative, use
-   Conventional Commits. Record that fallback in the handoff when it matters.
+1. If the repository documents or enforces a different subject format, use
+   that format while retaining an imperative, behavior-focused subject.
+2. If no written or enforced rule exists but recent history clearly follows a
+   different subject format, use that format.
+3. Otherwise, use Conventional Commits. This includes mixed history and a
+   repository whose documented, enforced, or clearly dominant format is
+   Conventional Commits; record a mixed-history fallback in the handoff when
+   it matters.
 
 The Conventional format is:
 

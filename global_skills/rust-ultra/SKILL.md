@@ -12,32 +12,45 @@ the smallest domain skill and profile instead of running the full pass.
 
 ## Shared contract
 
-Load [foundation.md](references/foundation.md) before discovery. It owns the
-common source-integrity, toolchain, dirty-tree, verification, blocker, and
-reporting rules. Read [concerns.toml](references/concerns.toml) as the single
-source of truth for concern routing, preflight signals, thresholds, stages,
-shape gates, and validation modes.
+Load [ultra-system-reference](../ultra-system-reference/SKILL.md), then
+[foundation.md](references/foundation.md), before discovery. The shared ultra
+reference owns profile routing, run artifacts, delegation receipts,
+convergence, and terminal states. The Rust foundation owns source integrity,
+toolchains, dirty-tree handling, technical gates, and blocker reporting.
+
+Treat [concerns.toml](references/concerns.toml) as a profile-granular registry.
+Validate it with the shared launcher before surveying the target. Qualitative
+profiles always receive a review; their scores prioritize work but never skip
+it.
 
 ## Workflow
 
-1. Detect the crate/workspace shape, available wrappers, Nix/simit tooling,
+1. Validate the registry. Detect the crate/workspace shape, available wrappers, Nix/simit tooling,
    async/runtime use, public library surface, features, unsafe code, and
    release scope.
 2. Run the deterministic baseline from `foundation.md`. Stop on a red tree.
-3. Evaluate every registry concern and produce a scored run list. Apply `low`
-   sensitivity as threshold ×3, `medium` as the recorded threshold, and `high`
-   as threshold 1. Respect explicit scope, exclusions, project-shape gates,
-   and `--plan-first`.
-4. Load the matching domain skill only for concerns that run:
+3. Produce `.ultra-out/survey.initial.json` with the shared survey and
+   initialize `.ultra-out/profile-ledger.json`. Apply `low` sensitivity as
+   threshold ×3, `medium` as recorded, and `high` as threshold 1. Respect
+   explicit scope and approved exclusions. With `--plan-first`, stop only
+   after presenting the complete profile ledger and ordered run list.
+4. Load the matching domain skill for every applicable profile:
    `rust-correctness`, `rust-security`, `rust-api-design`, `rust-quality`,
    and `rust-dependencies`.
-5. Run in registry order: correctness, safety/security, API design, quality,
-   then dependencies. Verify after each profile.
-6. Re-score after each stage and converge for at most three iterations. Stop
-   when quantitative signals are clear and qualitative profiles report no
-   remaining work. Log deferred work; never silently cap the pass.
-7. Run the final gate from `foundation.md` and report scores, skipped work,
-   commits, residual issues, and release follow-ups separately.
+5. Run correctness, security, architecture/API design, quality, then
+   dependencies. Require one receipt per profile. In particular, produce the
+   trait topology, duplicate-behavior clusters, and type-cohesion dispositions
+   required by the structural profile procedures; file splitting is not a
+   substitute for type decomposition.
+6. Verify changed behavior after each profile and run the relevant full stage
+   gate before moving on. A no-change profile still needs analytical evidence.
+7. Re-survey after each changed stage and converge for at most three
+   iterations. Use `incomplete-convergence-cap` when open work remains at the
+   cap.
+8. Validate the final ledger with `ultra-system-reference`, then run the final
+   gate from `foundation.md`. Report the precise terminal state, profile
+   coverage, validation, approved exclusions, blockers, residual issues, and
+   release follow-ups separately.
 
 ## Boundaries
 

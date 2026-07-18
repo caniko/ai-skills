@@ -1,6 +1,6 @@
 interface:
   display_name: "Rust API Design"
-  short_description: "Improve Rust public interfaces and type design."
-  default_prompt: "Use $rust-api-design to audit this Rust API and improve its errors, traits, conversions, or type-level safety without accidental breaking changes."
+  short_description: "Improve Rust APIs, trait topology, and type cohesion."
+  default_prompt: "Use $rust-api-design to audit this Rust API and internal architecture, including errors, traits, conversions, type safety, and type cohesion, without accidental breaking changes."
 policy:
   allow_implicit_invocation: false

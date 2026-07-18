@@ -1,62 +1,263 @@
-# Registry consumed by rust-ultra. Procedures live in the domain references.
+schema_version = 1
 
-[[concern]]
-name = "correctness"
+# Qualitative profiles always screen during a whole-codebase run. Detectors
+# prioritize candidate-heavy profiles; they never suppress their review.
+
+[[profile]]
+id = "correctness.concurrency"
 skill = "rust-correctness"
 stage = "correctness"
-profiles = ["concurrency", "fail-fast", "panic-paths", "unwraps"]
+procedure = "../../rust-correctness/references/concurrency.md"
+evaluation = "qualitative"
+screen = "always"
 threshold = 8
-signals = [".await:1", "Mutex:2", "RwLock:2", "tokio::spawn:2", "block_on:3", "unwrap():1", "panic!(:3", "unreachable!(:2"]
-overlap_mode = "connectome"
-eval = "qualitative"
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = ".await", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = "Mutex", weight = 2, globs = ["**/*.rs"] }, { kind = "literal", pattern = "tokio::spawn", weight = 2, globs = ["**/*.rs"] }]
 
-[[concern]]
-name = "security"
+[[profile]]
+id = "correctness.fail-fast"
+skill = "rust-correctness"
+stage = "correctness"
+procedure = "../../rust-correctness/references/fail-fast.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 8
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = "panic!(", weight = 3, globs = ["**/*.rs"] }, { kind = "literal", pattern = "unreachable!(", weight = 2, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "correctness.panic-paths"
+skill = "rust-correctness"
+stage = "correctness"
+procedure = "../../rust-correctness/references/panic-paths.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 6
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = "assert!(", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = "[", weight = 1, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "correctness.unwraps"
+skill = "rust-correctness"
+stage = "correctness"
+procedure = "../../rust-correctness/references/unwraps.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 10
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = ".unwrap()", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = ".expect(", weight = 1, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "security.application"
 skill = "rust-security"
 stage = "security"
-profiles = ["security", "unsafe-soundness"]
+procedure = "../../rust-security/references/security.md"
+evaluation = "qualitative"
+screen = "always"
 threshold = 6
-signals = ["unsafe :3", "transmute:5", "Command::new:2", "from_raw:4", "std::ptr:: :3", "libc:: :2"]
-shape_gate = "unsafe-or-command"
-overlap_mode = "scope-local"
-eval = "indicative"
+gate = { kind = "any-file", globs = ["Cargo.toml", "**/Cargo.toml"] }
+detectors = [{ kind = "literal", pattern = "Command::new", weight = 2, globs = ["**/*.rs"] }, { kind = "literal", pattern = "password", weight = 1, globs = ["**/*.rs", "**/*.toml"] }]
 
-[[concern]]
-name = "api-design"
+[[profile]]
+id = "security.unsafe-soundness"
+skill = "rust-security"
+stage = "security"
+procedure = "../../rust-security/references/unsafe-soundness.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 5
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = "unsafe ", weight = 3, globs = ["**/*.rs"] }, { kind = "literal", pattern = "transmute", weight = 5, globs = ["**/*.rs"] }, { kind = "literal", pattern = "from_raw", weight = 4, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "design.api-guidelines"
 skill = "rust-api-design"
 stage = "design"
-profiles = ["api-guidelines", "errors", "traits", "type-safety"]
-threshold = 5
-signals = ["dyn :1", "Box<dyn:2", "Box<dyn Error:3", ", String>:2", "Err(format!:2", "thiserror:1"]
-shape_gate = "library-or-public-api"
-overlap_mode = "connectome"
-eval = "qualitative"
+procedure = "../../rust-api-design/references/api-guidelines.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 6
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = "pub fn ", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = "pub struct ", weight = 1, globs = ["**/*.rs"] }]
 
-[[concern]]
-name = "quality"
+[[profile]]
+id = "design.errors"
+skill = "rust-api-design"
+stage = "design"
+procedure = "../../rust-api-design/references/errors.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 5
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = "Box<dyn Error", weight = 3, globs = ["**/*.rs"] }, { kind = "literal", pattern = "Err(format!", weight = 2, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "design.trait-architecture"
+skill = "rust-api-design"
+stage = "design"
+procedure = "../../rust-api-design/references/traits.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 5
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = "trait ", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = "impl<", weight = 2, globs = ["**/*.rs"] }, { kind = "literal", pattern = "dyn ", weight = 1, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "design.type-safety"
+skill = "rust-api-design"
+stage = "design"
+procedure = "../../rust-api-design/references/type-safety.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 5
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = ": String", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = ": bool", weight = 1, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "design.type-cohesion"
+skill = "rust-api-design"
+stage = "design"
+procedure = "../../rust-api-design/references/type-cohesion.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 3
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = "struct ", weight = 1, globs = ["**/*.rs"] }, { kind = "file-lines-gt", lines = 500, weight = 3, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "quality.clippy"
 skill = "rust-quality"
 stage = "quality"
-profiles = [
-  "clippy",
-  "dead-code",
-  "module-layout",
-  "observability",
-  "performance",
-  "public-docs",
-  "test-gaps",
-]
-threshold = 5
-signals = ["#[allow(dead_code)]:3", "TODO: remove:2", "pub fn :1", "pub struct :1", "println!:2", "tracing:: :1", ".clone():1", ".collect():1"]
-overlap_mode = "scope-local"
-eval = "qualitative"
+procedure = "../../rust-quality/references/clippy.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 1
+gate = { kind = "any-file", globs = ["Cargo.toml", "**/Cargo.toml"] }
 
-[[concern]]
-name = "dependencies"
+[[profile]]
+id = "quality.dead-code"
+skill = "rust-quality"
+stage = "quality"
+procedure = "../../rust-quality/references/dead-code.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 4
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = "#[allow(dead_code)]", weight = 3, globs = ["**/*.rs"] }, { kind = "literal", pattern = "#[deprecated", weight = 2, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "quality.module-layout"
+skill = "rust-quality"
+stage = "quality"
+procedure = "../../rust-quality/references/module-layout.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 3
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "file-lines-gt", lines = 500, weight = 3, globs = ["**/*.rs"] }, { kind = "file-lines-lt", lines = 30, weight = 1, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "quality.behavior-reuse"
+skill = "rust-quality"
+stage = "quality"
+procedure = "../../rust-quality/references/duplication.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 1
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+
+[[profile]]
+id = "quality.observability"
+skill = "rust-quality"
+stage = "quality"
+procedure = "../../rust-quality/references/observability.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 5
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = "println!(", weight = 2, globs = ["**/*.rs"] }, { kind = "literal", pattern = "tracing::", weight = 1, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "quality.performance"
+skill = "rust-quality"
+stage = "quality"
+procedure = "../../rust-quality/references/performance.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 12
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = ".clone()", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = ".collect()", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = ".to_vec()", weight = 2, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "quality.public-docs"
+skill = "rust-quality"
+stage = "quality"
+procedure = "../../rust-quality/references/public-docs.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 10
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = "pub fn ", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = "pub trait ", weight = 2, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "quality.test-gaps"
+skill = "rust-quality"
+stage = "quality"
+procedure = "../../rust-quality/references/test-gaps.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 5
+gate = { kind = "any-file", globs = ["**/*.rs"] }
+detectors = [{ kind = "literal", pattern = "pub fn ", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = "#[test]", weight = 1, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "dependencies.breaking-upgrade"
 skill = "rust-dependencies"
 stage = "dependencies"
-profiles = ["breaking-upgrade", "adopt", "unused", "features", "msrv"]
+procedure = "../../rust-dependencies/references/breaking-upgrade.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 1
+gate = { kind = "any-file", globs = ["Cargo.toml", "**/Cargo.toml"] }
+
+[[profile]]
+id = "dependencies.adopt"
+skill = "rust-dependencies"
+stage = "dependencies"
+procedure = "../../rust-dependencies/references/adopt.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 1
+gate = { kind = "any-file", globs = ["Cargo.toml", "**/Cargo.toml"] }
+
+[[profile]]
+id = "dependencies.unused"
+skill = "rust-dependencies"
+stage = "dependencies"
+procedure = "../../rust-dependencies/references/unused.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 1
+gate = { kind = "any-file", globs = ["Cargo.toml", "**/Cargo.toml"] }
+
+[[profile]]
+id = "dependencies.features"
+skill = "rust-dependencies"
+stage = "dependencies"
+procedure = "../../rust-dependencies/references/features.md"
+evaluation = "qualitative"
+screen = "always"
 threshold = 3
-signals = ["[features]:3", "cfg(feature:1", "optional = true:2", "workspace.dependencies:1", "rust-version:1"]
-shape_gate = "cargo-metadata"
-overlap_mode = "tool-driven"
-eval = "qualitative"
+gate = { kind = "any-file", globs = ["Cargo.toml", "**/Cargo.toml"] }
+detectors = [{ kind = "literal", pattern = "[features]", weight = 3, globs = ["Cargo.toml", "**/Cargo.toml"] }, { kind = "literal", pattern = "cfg(feature", weight = 1, globs = ["**/*.rs"] }]
+
+[[profile]]
+id = "dependencies.msrv"
+skill = "rust-dependencies"
+stage = "dependencies"
+procedure = "../../rust-dependencies/references/msrv.md"
+evaluation = "qualitative"
+screen = "always"
+threshold = 1
+gate = { kind = "any-file", globs = ["Cargo.toml", "**/Cargo.toml"] }
+detectors = [{ kind = "literal", pattern = "rust-version", weight = 1, globs = ["Cargo.toml", "**/Cargo.toml"] }]
