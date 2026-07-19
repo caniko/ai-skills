@@ -3,16 +3,24 @@ name: plinth-personal-visual-review
 description: Review canix personal Plinth/static sites through Plinth's Pkl-backed target registry, covering both Can and Dejana.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Plinth Personal Visual Review
+
+Load [canix-structure-reference](.skillnet/deps/canix-structure-reference/SKILL.md) for
+canix paths and generated-sidecar ownership.
 
 Use this for personal sites declared under `~/canix/canix`.
 
 ## Workflow
 
 1. Work from the canix repository.
-2. If personal-site data changed, regenerate the sidecar from `lib/PlinthPersonalSites.pkl` with the repo's Pkl sidecar workflow. Do not hand-copy generic defaults into Nix.
+2. If personal-site data changed, regenerate the sidecar from
+   `lib/plinth/PersonalSites.pkl`:
+   ```bash
+   nix run .#pkl-to-nix -- lib/plinth/PersonalSites.pkl lib/generated/plinth-personal-sites.nix
+   ```
+   Do not hand-copy generic defaults into Nix.
 3. Validate Pkl and sidecar drift:
    ```bash
    nix build --no-link .#checks.x86_64-linux.pkl-validate
@@ -30,4 +38,4 @@ Use the existing visual-rubric guidance and Plinth's `plinth-site-beauty` preset
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

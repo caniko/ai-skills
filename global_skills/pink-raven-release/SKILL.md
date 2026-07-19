@@ -3,13 +3,13 @@ name: pink-raven-release
 description: Release or verify Pink Raven production on runner through canix. Use for deploys, releases, version bumps, rollouts, or checks of raven.example.com.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Pink Raven Release
 
 ## Use With Reference
 
-First use [canix-structure-reference](../canix-structure-reference/SKILL.md),
+First use [canix-structure-reference](.skillnet/deps/canix-structure-reference/SKILL.md),
 then `canix-hosted-release-reference`, then apply these Pink Raven defaults.
 
 ## Fixed Defaults
@@ -121,4 +121,4 @@ systemctl is-active home-manager-can.service
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

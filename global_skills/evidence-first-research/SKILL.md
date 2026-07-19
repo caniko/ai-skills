@@ -3,7 +3,7 @@ name: evidence-first-research
 description: Produce evidence-backed research for investigations, audits, design decisions, or stale assumptions. Use when current facts or a citable handoff are required.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Evidence-First Research
 
@@ -76,8 +76,8 @@ speculating.
 ## See also
 
 - Domain-grounded research skills add their own required sources, commands, and validation gates.
-- [`research-routing`](../research-routing/SKILL.md) provides recommendation-only routing when the correct specialist is unclear.
+- [`research-routing`](.skillnet/deps/research-routing/SKILL.md) provides recommendation-only routing when the correct specialist is unclear.
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

@@ -3,7 +3,7 @@ name: forgejo-codeberg-ci
 description: "Troubleshoot Codeberg/Forgejo CI using `fj` first, with git/curl fallback. Use when investigating Forgejo Actions workflow runs on Codeberg, publish failures, stuck jobs, tag-triggered releases, missing crates.io publishes, or repository-side CI state on codeberg.org."
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Forgejo Codeberg CI
 
@@ -149,10 +149,10 @@ Common runner checks:
 - Workspace permission failures: inspect the runner work directory ownership
   and the container workspace mount.
 
-Load [runner](../runner/SKILL.md) for canonical labels, images,
+Load [runner](.skillnet/deps/runner/SKILL.md) for canonical labels, images,
 mounts, cache behavior, and runner registration facts. Do not infer a fix from
 timing alone.
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

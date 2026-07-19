@@ -3,7 +3,7 @@ name: rust-project-flake
 description: Create or modernize Rust Nix flakes with crane and simit. Use for flake outputs, devShells, checks, packages, cross builds, Cargo filtering, or build infrastructure.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Rust Project Flake
 
@@ -38,7 +38,7 @@ For exact starter flakes and module snippets, read [patterns.md](references/patt
 
 3. Implement narrowly:
    - Add or update `flake.nix`.
-   - Add small `nix/*.nix` files only when they reduce clutter or match existing project style. When modularizing or optimizing a large flake, use the shared routine at `../simit-project-init-common/references/flake-modularization.md`.
+   - Add small `nix/*.nix` files only when they reduce clutter or match existing project style. When modularizing or optimizing a large flake, use the shared routine at `.skillnet/deps/simit-project-init-common/references/flake-modularization.md`.
    - Keep package, check, and dev shell names predictable: `packages.default`, `checks.{default,clippy,fmt,nextest?}`, `devShells.default`.
    - For workspaces, build from the workspace root and add extra named packages only when the user needs multiple binaries.
 
@@ -84,4 +84,4 @@ flake-utils.follows = "rs-harbor/flake-utils";
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

@@ -3,7 +3,7 @@ name: rust-workspace-check
 description: Check whether a single-crate Rust project should be converted to a Cargo workspace. Applies file-count and LOC thresholds before performing analysis.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # rust-workspace-check — Cargo Workspace Readiness Assessment
 
@@ -64,8 +64,8 @@ project files; print the read-only report.
 ## References
 
 - Generic research base: [evidence-first-research](../evidence-first-research/SKILL.md) — rust-workspace-check is a narrowly scoped research specialist. For broader Rust-project investigation, use the base.
-- Sibling research router: [research-routing](../research-routing/SKILL.md).
+- Sibling research router: [research-routing](.skillnet/deps/research-routing/SKILL.md).
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

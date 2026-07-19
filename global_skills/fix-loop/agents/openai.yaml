@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fix Loop"
+  short_description: "Evidence-first retries until an exact gate is green."
+  default_prompt: "Use $fix-loop to diagnose and repair a failing command until its exact acceptance gate and post-checks are green."

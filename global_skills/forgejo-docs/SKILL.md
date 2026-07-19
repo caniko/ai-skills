@@ -3,7 +3,7 @@ name: forgejo-docs
 description: Create or update a docs-only mdBook site for a Codeberg-hosted project, integrate it with a Nix flake, and publish it to Codeberg Pages through Forgejo Actions hosted by Codeberg. Use when the user asks for Codeberg documentation, mdBook docs, docs-only Pages publishing, or to remove a separate landing website while keeping documentation deployed.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # forgejo-docs
 
@@ -42,4 +42,4 @@ If documentation content would need to be invented from missing source material,
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

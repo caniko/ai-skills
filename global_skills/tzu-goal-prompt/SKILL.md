@@ -3,7 +3,7 @@ name: tzu-goal-prompt
 description: Create a grounded goal prompt from tzu metadata and optional harness output. Use to seed another planning or implementation run without fabricating missing project context.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Tzu Goal Prompt
 
@@ -84,4 +84,4 @@ If an external harness output file is missing or empty, stop with the same block
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

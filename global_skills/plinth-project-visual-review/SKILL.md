@@ -3,7 +3,7 @@ name: plinth-project-visual-review
 description: Review Plinth project sites that use website/plinth-project.toml with plinth-project check/build/dev/audit and visual-rubric reports.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Plinth Project Visual Review
 
@@ -37,4 +37,4 @@ Use the existing visual-rubric guidance and the `plinth-site-beauty` preset. Do 
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

@@ -3,18 +3,18 @@ name: nixpkgs-build-failure-pr
 description: "Create narrowly scoped nixpkgs pull requests that fix package build failures from logs or CI failures. Use when a user provides a failing nix build log, ofborg failure, Hydra failure, local derivation failure, kernel/API breakage, compiler error, dependency build failure, or asks to fix a nixpkgs build failure PR. Requires reproducing or inspecting the failing log, identifying the upstream cause, validating the fixed build, using the live nixpkgs PR template, and reviewing with caniko/nixpkgs-review-gha."
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # nixpkgs-build-failure-pr
 
 Lineage: this skill specializes the generic evidence-backed research dossier pattern for nixpkgs build failures while preserving its domain-specific diagnose, fix, and validation workflow.
 
 - Generic research base: [evidence-first-research](../evidence-first-research/SKILL.md) — this skill is a nixpkgs-build-grounded specialization of the generic evidence-first research pattern.
-- Sibling research router: [research-routing](../research-routing/SKILL.md).
+- Sibling research router: [research-routing](.skillnet/deps/research-routing/SKILL.md).
 
 ## Shared references
 
-Before publishing or commenting upstream, read the common references in `../nixpkgs-pr-common/references/`:
+Before publishing or commenting upstream, read the common references in `.skillnet/deps/nixpkgs-pr-common/references/`:
 
 - `decorum.md` for narrow scope, duplicate checks, and missing-data handling.
 - `pr-template.md` before creating or updating a PR body.
@@ -33,7 +33,7 @@ Before publishing or commenting upstream, read the common references in `../nixp
 
  3. Prepare a clean nixpkgs branch.
     Use a separate worktree from `upstream/master`.  Mass-rebuild changes go to
-    `upstream/staging`.  See `../nixpkgs-pr-common/SKILL.md` for the full
+    `upstream/staging`.  See `.skillnet/deps/nixpkgs-pr-common/SKILL.md` for the full
     branching rules.  The `nixos-*` / `nixpkgs-*` branches are channel-script
     push targets and must never be used as merge targets.
     Keep the fix minimal; avoid opportunistic version bumps, refactors, or unrelated metadata changes unless they are required to fix the build.
@@ -66,4 +66,4 @@ Before publishing or commenting upstream, read the common references in `../nixp
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

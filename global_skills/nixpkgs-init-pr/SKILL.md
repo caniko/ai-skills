@@ -3,13 +3,13 @@ name: nixpkgs-init-pr
 description: "Create and review general nixpkgs PRs: prepare branches, validate, fill the template, and use nixpkgs-review-gha. Route build-log failures to nixpkgs-build-failure-pr."
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # nixpkgs-init-pr
 
 ## Shared references
 
-Before publishing or commenting upstream, read the common references in `../nixpkgs-pr-common/references/`:
+Before publishing or commenting upstream, read the common references in `.skillnet/deps/nixpkgs-pr-common/references/`:
 
 - `decorum.md` for contribution standards, narrow scope, and duplicate checks.
 - `pr-template.md` before creating or updating a PR body.
@@ -23,7 +23,7 @@ Before publishing or commenting upstream, read the common references in `../nixp
 
  2. Prepare a narrow branch from the right upstream base.
     Default to `upstream/master`.  If the change is a mass rebuild, use
-    `upstream/staging` instead.  See `../nixpkgs-pr-common/SKILL.md` for the
+    `upstream/staging` instead.  See `.skillnet/deps/nixpkgs-pr-common/SKILL.md` for the
     full branching rules.  The `nixos-*` / `nixpkgs-*` branches are
     channel-script push targets and must never be used as merge targets.
     Use a release branch only for explicit backports.
@@ -38,7 +38,7 @@ Before publishing or commenting upstream, read the common references in `../nixp
    nix-shell maintainers/scripts/update.nix --argstr package <attr>
    ```
 
-   If the updater cannot run, stop and report per the missing-data contract in `../nixpkgs-pr-common/references/decorum.md`.
+   If the updater cannot run, stop and report per the missing-data contract in `.skillnet/deps/nixpkgs-pr-common/references/decorum.md`.
 
 4. Validate before publishing.
    Run the targeted `nix build .#<attr>` or module/test check, plus smoke tests for relevant executables.
@@ -70,4 +70,4 @@ Before publishing or commenting upstream, read the common references in `../nixp
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

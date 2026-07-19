@@ -3,7 +3,7 @@ name: forgejo-pages
 description: Add Forgejo Actions hosted by Codeberg for Codeberg Pages deployment. Use when a user asks to add Forgejo Pages CI, Codeberg Pages publishing, Pages deployment, or static-site publishing for a Codeberg-hosted repository.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # forgejo-pages
 
@@ -17,7 +17,7 @@ This skill is for Codeberg's shared hosted runners. If the repository should run
 
 ## Shared Pages model
 
-This skill layers Codeberg/Forgejo specifics on top of the generic repository-Pages model defined in [repo-pages](../repo-pages/SKILL.md). Read that skill for the build → publish flow, branch gating rationale, build-output / publish-directory matching, and the base-URL / subpath pitfall that causes most post-deploy 404s. Everything below is the Codeberg/Forgejo-specific layer.
+This skill layers Codeberg/Forgejo specifics on top of the generic repository-Pages model defined in [repo-pages](.skillnet/deps/repo-pages/SKILL.md). Read that skill for the build → publish flow, branch gating rationale, build-output / publish-directory matching, and the base-URL / subpath pitfall that causes most post-deploy 404s. Everything below is the Codeberg/Forgejo-specific layer.
 
 ## Codeberg-specific preconditions
 
@@ -123,4 +123,4 @@ server selector:
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

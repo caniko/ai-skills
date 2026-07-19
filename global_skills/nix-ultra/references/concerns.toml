@@ -1,4 +1,5 @@
-schema_version = 1
+schema_version = 3
+default_mode = "compatibility"
 
 # Qualitative profiles always screen during a whole-repository run. Detectors
 # prioritize candidate-heavy profiles; they never suppress their review.

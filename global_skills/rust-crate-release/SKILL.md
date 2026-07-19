@@ -3,7 +3,7 @@ name: rust-crate-release
 description: Prepare, validate, and publish Rust crates through the strict crates.io workflow. Use for release readiness, Cargo/docs metadata, Nix/Forgejo wiring, tags, and verification.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Rust Crate Release
 
@@ -42,4 +42,4 @@ before changing secret mappings.
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

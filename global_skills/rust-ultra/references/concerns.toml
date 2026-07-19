@@ -1,4 +1,5 @@
-schema_version = 1
+schema_version = 3
+default_mode = "modernize"
 
 # Qualitative profiles always screen during a whole-codebase run. Detectors
 # prioritize candidate-heavy profiles; they never suppress their review.
@@ -79,6 +80,7 @@ screen = "always"
 threshold = 6
 gate = { kind = "any-file", globs = ["**/*.rs"] }
 detectors = [{ kind = "literal", pattern = "pub fn ", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = "pub struct ", weight = 1, globs = ["**/*.rs"] }]
+obligations = ["public-api-inventory", "breaking-improvement-review", "in-repo-migration"]
 
 [[profile]]
 id = "design.errors"
@@ -101,6 +103,7 @@ screen = "always"
 threshold = 5
 gate = { kind = "any-file", globs = ["**/*.rs"] }
 detectors = [{ kind = "literal", pattern = "trait ", weight = 1, globs = ["**/*.rs"] }, { kind = "literal", pattern = "impl<", weight = 2, globs = ["**/*.rs"] }, { kind = "literal", pattern = "dyn ", weight = 1, globs = ["**/*.rs"] }]
+obligations = ["trait-topology", "concrete-boundary-candidates", "boundary-dispositions"]
 
 [[profile]]
 id = "design.type-safety"
@@ -123,6 +126,7 @@ screen = "always"
 threshold = 3
 gate = { kind = "any-file", globs = ["**/*.rs"] }
 detectors = [{ kind = "literal", pattern = "struct ", weight = 1, globs = ["**/*.rs"] }, { kind = "file-lines-gt", lines = 500, weight = 3, globs = ["**/*.rs"] }]
+obligations = ["type-size-inventory", "responsibility-map", "threshold-candidate-actions"]
 
 [[profile]]
 id = "quality.clippy"
@@ -155,6 +159,7 @@ screen = "always"
 threshold = 3
 gate = { kind = "any-file", globs = ["**/*.rs"] }
 detectors = [{ kind = "file-lines-gt", lines = 500, weight = 3, globs = ["**/*.rs"] }, { kind = "file-lines-lt", lines = 30, weight = 1, globs = ["**/*.rs"] }]
+obligations = ["module-size-inventory", "oversized-file-actions", "post-split-boundary-review"]
 
 [[profile]]
 id = "quality.behavior-reuse"
@@ -165,6 +170,7 @@ evaluation = "qualitative"
 screen = "always"
 threshold = 1
 gate = { kind = "any-file", globs = ["**/*.rs"] }
+obligations = ["duplicate-cluster-inventory", "semantic-duplication-review", "cluster-dispositions"]
 
 [[profile]]
 id = "quality.observability"
@@ -219,6 +225,7 @@ evaluation = "qualitative"
 screen = "always"
 threshold = 1
 gate = { kind = "any-file", globs = ["Cargo.toml", "**/Cargo.toml"] }
+obligations = ["breaking-upgrade-opportunities", "migration-cost-benefit"]
 
 [[profile]]
 id = "dependencies.adopt"

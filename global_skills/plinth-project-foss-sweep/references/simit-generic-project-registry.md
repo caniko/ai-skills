@@ -29,7 +29,7 @@ results.
 ```sh
 cd ~/canix/canix
 canix workspace check
-canix --json workspace show <project>
+canix --output json workspace show <project>
 simit projects scan
 simit projects list --json
 ```

@@ -3,7 +3,7 @@ name: mdbook-docs
 description: Create or update a docs-only mdBook site, expose Nix `docs`/`site` outputs, and leave deployment to Pages CI. Use for docs packaging or pre-CI preparation.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # mdbook-docs
 
@@ -85,7 +85,7 @@ site = docs;
 
 Expose `docs` and `site` in `packages`. Add `pkgs.mdbook` to the dev shell.
 
-If the flake is already large or this update makes `flake.nix` hard to review, modularize using the shared routine at [../simit-project-init-common/references/flake-modularization.md](../simit-project-init-common/references/flake-modularization.md). Keep `docs` and `site` output names stable.
+If the flake is already large or this update makes `flake.nix` hard to review, modularize using the shared routine at [.skillnet/deps/simit-project-init-common/references/flake-modularization.md](.skillnet/deps/simit-project-init-common/references/flake-modularization.md). Keep `docs` and `site` output names stable.
 
 ### 3. Update ignored artifacts
 
@@ -134,4 +134,4 @@ rm -rf docs/book
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

@@ -3,7 +3,7 @@ name: nix-ultra
 description: Orchestrate a complete Nix improvement pass across flakes, NixOS, Home Manager, packages, secrets, and checks. Use for deep audits, hardening, or cleanup.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Nix Ultra
 
@@ -12,7 +12,7 @@ smallest domain skill and profile.
 
 ## Shared contract
 
-Load [ultra-system-reference](../ultra-system-reference/SKILL.md), then
+Load [ultra-system-reference](.skillnet/deps/ultra-system-reference/SKILL.md), then
 [foundation.md](references/foundation.md), before discovery. The shared ultra
 reference owns profile routing, run artifacts, delegation receipts,
 convergence, and terminal states. The Nix foundation owns source integrity,
@@ -25,31 +25,52 @@ it.
 
 ## Workflow
 
-1. Validate the registry. Detect flake/non-flake shape, NixOS hosts, Home Manager configs, overlays,
-   packages, secrets, checks, formatter, CI, and deployment surfaces.
+### Phase 1: frontier planning
+
+1. Use a frontier-class planner at high effort or greater. Validate the
+   registry and detect flake/non-flake shape, NixOS hosts, Home Manager,
+   overlays, packages, secrets, checks, formatter, CI, and deployment surfaces.
 2. Run the read-only baseline from `foundation.md`. Stop when a foundational
    artifact is missing or evaluation is already red without a source-backed
    repair path.
-3. Produce `.ultra-out/survey.initial.json` with the shared survey and
-   initialize `.ultra-out/profile-ledger.json`. Apply `low` sensitivity as
-   threshold ×3, `medium` as recorded, and `high` as threshold 1. Honor
-   approved exclusions and shape gates. With `--plan-first`, stop only after
-   presenting the complete profile ledger and ordered run list.
-4. Load the matching domain skill for every applicable profile:
-   `nix-correctness`, `nix-security`,
-   `nix-module-design`, `nix-flake-architecture`, `nix-code-health`, and
-   `nix-test-gates`.
-5. Run correctness, security, module architecture, flake architecture, code
-   health, then gates. Require one receipt per profile. Validate changed
-   evaluation surfaces after every profile; a no-change profile still needs
-   analytical evidence.
-6. Re-survey after each changed stage and converge for at most three
-   iterations. Use `incomplete-convergence-cap` when open work remains at the
-   cap.
-7. Validate the final ledger with `ultra-system-reference`, then run the final
-   gate from `foundation.md`. Report the precise terminal state, profile
-   coverage, validation, approved exclusions, blockers, residual risks, and
-   deployment follow-ups.
+3. Produce `.ultra-out/survey.initial.json`, initialize the profile ledger,
+   load every matching domain skill, and perform enough read-only analysis to
+   design work for every profile.
+4. Write complete work packages for correctness, security, module
+   architecture, flake architecture, code health, and gates. Include output
+   compatibility, module/API migrations, evaluation surfaces, deployment risk,
+   and validation. Write and validate `.ultra-out/plan.json`; freeze its hash
+   before source edits. Stop here only for an audit or plan-only request.
+
+### Phase 2: efficient-model build
+
+5. Give the frozen work packages to efficient-model builders. Run correctness,
+   security, module architecture, flake architecture, code health, then gates.
+   Require one exact profile disposition in the owning stage receipt; stage
+   receipts must collectively cover every profile once. Migrate every
+   in-repository consumer.
+6. Validate changed evaluation surfaces after every profile; a no-change
+   profile still needs analytical evidence. Run one full gate per changed
+   stage, re-survey, and converge for at most three iterations. Material work
+   outside the frozen plan returns `replan-required` to the frontier planner.
+7. Write and validate `.ultra-out/build.json` against the integrated source.
+   Run the final gate from `foundation.md`, then write source-bound score
+   history, stage receipts, `final-validation.json`, and the evidence manifest
+   before frontier review.
+
+### Phase 3: same-frontier review
+
+8. Return the plan, build, diff, ledger, receipts, migrations, and gates to the
+   exact frontier model identity that planned the run, in an independent review
+   context at equal or lower effort. Review all profile coverage, architecture,
+   output preservation or authorized breakage, secrets handling, migration
+   completeness, and deployment risk.
+9. Send in-plan corrections back to the efficient builder; replan material
+   scope changes. Repeat until the frontier reviewer approves or records an
+   honest non-success verdict.
+10. Validate `review.json`, then validate the final ledger with all lifecycle
+    artifacts. Report the precise terminal state, profile coverage, validation,
+    approved exclusions, blockers, residual risks, and deployment follow-ups.
 
 ## Boundaries
 
@@ -59,4 +80,4 @@ host-specific deployment workflows.
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

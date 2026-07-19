@@ -1,4 +1,4 @@
 interface:
   display_name: "Rust Ultra"
-  short_description: "Run a complete, staged Rust codebase improvement pass."
-  default_prompt: "Use $rust-ultra to audit and improve this entire Rust crate or workspace with a complete profile ledger, preserving behavior and reporting every gate and residual."
+  short_description: "Plan, build, and review aggressive Rust modernization."
+  default_prompt: "Use $rust-ultra to frontier-plan, efficient-model build, and same-frontier review an aggressive Rust modernization with necessary breaking changes and complete in-repo migration."

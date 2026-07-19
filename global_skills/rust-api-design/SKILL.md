@@ -3,7 +3,7 @@ name: rust-api-design
 description: Improve Rust API and internal architecture through conversions, typed errors, trait topology, type safety, and type cohesion. Use for focused design work or rust-ultra profiles.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Rust API Design
 
@@ -16,9 +16,11 @@ relevant profiles:
 - [type-safety.md](references/type-safety.md)
 - [type-cohesion.md](references/type-cohesion.md)
 
-Inventory the exported surface before changing it. Mark changes that would
-break downstream callers; do not silently apply them. Keep error wording in
-the error profile's message section and allocation-only changes in
+Inventory the exported surface before changing it. In focused or compatibility
+mode, mark changes that would break downstream callers. In Rust-ultra
+modernize mode, apply materially stronger breaking designs and migrate all
+in-repository callers, tests, examples, fixtures, schemas, and docs. Keep error
+wording in the error profile's message section and allocation-only changes in
 `rust-quality`'s performance profile.
 
 When invoked by `rust-ultra`, return one evidence row for every requested
@@ -27,4 +29,4 @@ public library API exists.
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

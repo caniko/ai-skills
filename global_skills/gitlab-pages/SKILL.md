@@ -3,7 +3,7 @@ name: gitlab-pages
 description: Add GitLab CI wiring for Pages deployment, including `.gitlab-ci.yml` and docs/site builds on GitLab.com or self-managed GitLab.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # gitlab-pages
 
@@ -13,7 +13,7 @@ Adds GitLab CI wiring that builds a static site and publishes it through GitLab 
 
 This skill is for Pages deployment only. It assumes the site build already exists locally, typically as `nix build .#site` for Nix flake projects.
 
-For the generic build → publish model, branch-gating rationale, and the base-URL / subpath pitfall shared with other Pages hosts, see [repo-pages](../repo-pages/SKILL.md). Everything below is the GitLab-specific layer.
+For the generic build → publish model, branch-gating rationale, and the base-URL / subpath pitfall shared with other Pages hosts, see [repo-pages](.skillnet/deps/repo-pages/SKILL.md). Everything below is the GitLab-specific layer.
 
 ## Preconditions
 
@@ -78,4 +78,4 @@ publish-pages:
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.
