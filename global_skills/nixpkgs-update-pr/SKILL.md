@@ -3,7 +3,7 @@ name: nixpkgs-update-pr
 description: "Create and shepherd nixpkgs pull requests that UPDATE an existing package to a newer version: bump version/rev/source hash, refresh language lock or vendor hashes (cargoHash, vendorHash, npmDepsHash), absorb upstream restructures (moved sourceRoot, new build system, Cargo/Go/npm workspace and lockfile changes), validate the rebuild and binaries, push to a fork, open a draft PR with the live template, and run caniko/nixpkgs-review-gha. Use for version bumps, pname old to new changes, unstable-date bumps, `cargoHash`/`vendorHash` out-of-date refreshes, and updates that break because upstream reorganized. For brand-new packages or general PRs use `nixpkgs-init-pr`; for build failures on the current version use `nixpkgs-build-failure-pr`."
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # nixpkgs-update-pr
 
@@ -11,7 +11,7 @@ Specializes `nixpkgs-init-pr` for the common case of moving an existing package 
 
 ## Shared references
 
-Before publishing or commenting upstream, read the common references in `../nixpkgs-pr-common/references/`:
+Before publishing or commenting upstream, read the common references in `.skillnet/deps/nixpkgs-pr-common/references/`:
 
 - `decorum.md` for narrow scope, duplicate checks, and missing-data handling.
 - `pr-template.md` before creating or updating a PR body.
@@ -22,7 +22,7 @@ Before publishing or commenting upstream, read the common references in `../nixp
  1. Confirm repo state and base.
     Run `git status -sb`, `git remote -v`, `gh auth status`. Confirm `upstream` is `NixOS/nixpkgs` and `origin` is the user's fork.
     Default to `upstream/master`.  Mass-rebuild changes go to `upstream/staging`.
-    See `../nixpkgs-pr-common/SKILL.md` for the full branching rules.
+    See `.skillnet/deps/nixpkgs-pr-common/SKILL.md` for the full branching rules.
     The `nixos-*` / `nixpkgs-*` branches are channel-script push targets and
     must never be used as merge targets.
     If the checkout is dirty or on unrelated work, branch from a freshly fetched `upstream/master` (a separate worktree when the tree must stay untouched). Stage explicit paths only.
@@ -93,4 +93,4 @@ For Go (`vendorHash`) and Node (`npmDepsHash`) updates the analogous trap is sim
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

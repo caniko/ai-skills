@@ -15,7 +15,16 @@ an unobservable completion predicate.
 | Evidence was not tied to source state | A later edit could invalidate an earlier review silently | Registry hash and streaming source fingerprint validation |
 | Parallel workers nested heavyweight commands | Agent fan-out multiplied Cargo, Nix, linker, and analyzer memory use | Bounded read-only agents, one heavy command, capped child-tool jobs |
 | Iteration caps implied success | Automation stopping was confused with convergence | `incomplete-convergence-cap` is explicit and non-successful |
+| Compatibility was treated as the default objective | Large modules and public design debt could be acknowledged and retained without improvement | Record an explicit run mode; Rust whole-codebase work defaults to modernize and migrates in-repo consumers |
+| One evidence sentence covered several analyses | A profile could claim clean without producing its topology, inventory, and candidate dispositions | Named profile obligations with exact-cardinality validation |
+| Implementation began during discovery | Early local fixes displaced whole-system architecture analysis and narrowed the eventual scope | Read-only frontier planning must produce a source-bound, validated plan before edits |
+| The planner also implemented its own design | The same context optimized for task completion and stopped challenging missing or weak work | Efficient-model builders use a different model, invocation, and context to execute frozen work packages |
+| A cheaper model decided architecture and scope | Cost optimization was applied to the highest-leverage reasoning phase | Planning requires a frontier-class model at high effort or greater |
+| Final review used a different or weaker perspective | Review became another summary pass with no continuity of architectural intent | The exact frontier provider/model that planned the run reviews in a distinct runtime invocation and context |
+| Build discoveries silently changed scope | Receipts no longer described the plan that supposedly authorized the work | Hash-bound artifacts and explicit `replan-required` invalidate downstream work when scope changes materially |
+| Completion skipped lifecycle artifacts | A complete ledger could still describe one unreviewed, monolithic pass | Successful ledger validation requires a plan, efficient build, and approved same-frontier review |
 
-Subagents help only after the work has profile identity, disjoint ownership,
-bounded execution, and machine-checkable receipts. The orchestrator remains
-responsible for the coverage ledger and final source-bound validation.
+Subagents help only after the work has phase ownership, profile identity,
+disjoint work packages, bounded execution, and machine-checkable receipts. The
+orchestrator remains responsible for model-role separation, the coverage
+ledger, and final source-bound validation.

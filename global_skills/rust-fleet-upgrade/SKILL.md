@@ -1,7 +1,9 @@
 ---
 name: rust-fleet-upgrade
-description: Audit and safely align Rust toolchains and dependencies across caniko projects. Use for fleet-wide Rust version upgrades, shared dependency refreshes, Cargo.lock drift, MSRV reviews, or planning a coordinated Rust migration.
+description: Audit and align Rust toolchains, dependencies, locks, and MSRV across caniko projects. Use for fleet-wide upgrades or coordinated dependency refreshes.
 ---
+
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Rust fleet upgrade
 
@@ -49,3 +51,7 @@ Use the registry and the canix CLI as the compact source of truth. Do not scan e
 - Prefer JSON plus `--changes-only`, project filters, and cached crates.io metadata. Summarize only shared dependencies, divergent requirements, blockers, and validation results.
 - For a prerelease major, record the evidence and label the decision `adopt`, `defer`, or `reject`: adopt active, well-supported releases that pass the project checks; defer releases with unresolved migration or ecosystem gaps; reject releases that are abandoned, incompatible, or unsafe. A beta/RC is not an automatic blocker.
 - Do not push, publish, or rewrite generated sidecars without explicit authorization. Record toolchain, dependency, and validation changes in the project’s normal files.
+
+## Solution Placement
+
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

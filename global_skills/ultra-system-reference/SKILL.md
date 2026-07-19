@@ -1,9 +1,9 @@
 ---
 name: ultra-system-reference
-description: Shared non-invokable contract for ultra orchestrators covering profile routing, evidence ledgers, bounded delegation, convergence, and honest completion states.
+description: Shared non-invokable contract for ultra orchestrators covering frontier planning, efficient-model builds, frontier review, profile routing, evidence, convergence, and honest completion states.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Ultra System Reference
 
@@ -13,11 +13,25 @@ profile registry, profile procedures, stage order, and final technical gates.
 When changing this system, preserve the invariants in
 [failure-analysis.md](references/failure-analysis.md).
 
+## Mandatory lifecycle
+
+Read and follow [lifecycle.md](references/lifecycle.md). Every run starts with
+a read-only frontier-model planning phase, continues with an efficient-model
+build phase only after the frozen plan validates, and ends with review by the
+same frontier model identity. A successful terminal state is invalid without
+an approved review bound to the final source. Plan/audit-only requests stop
+after the validated planning phase; ordinary ultra requests continue without
+an extra approval round trip.
+
 ## Registry contract
 
 Keep routing profile-granular. Every `[[profile]]` entry must declare a stable
 ID, owning skill, stage, procedure path, evaluation mode, screening mode,
-shape gate, threshold, and any deterministic detectors.
+shape gate, threshold, and any deterministic detectors. The registry also
+declares `default_mode = "modernize" | "compatibility"`; the survey records
+the effective mode so delegates cannot silently reinterpret change authority.
+Overriding the registry default requires an approver and reason in both survey
+and ledger evidence.
 
 - Use `qualitative` when human or agent judgment is required. Set
   `screen = "always"`; scores may prioritize review but never suppress it.
@@ -29,6 +43,9 @@ shape gate, threshold, and any deterministic detectors.
   `not-applicable` decision.
 - Reject empty registries, duplicate IDs, missing procedures, unknown modes,
   malformed detectors, and unknown gates.
+- Declare named obligations for profiles whose completion requires several
+  distinct artifacts. Each obligation receives its own status and evidence in
+  the ledger; profile success is impossible while one remains open.
 
 Validate before touching the target:
 
@@ -44,12 +61,20 @@ generated-artifact directory. Do not commit it unless the project explicitly
 owns these reports.
 
 - `survey.initial.json`: root, source revision, registry hash, exclusions,
-  scores, gates, decisions, and matched evidence.
+  effective run mode, scores, gates, decisions, and matched evidence.
+- `plan.json`: frontier-owned, pre-build plan covering every registry profile
+  exactly once and bound to the initial source fingerprint.
 - `profile-ledger.json`: exactly one row per registered profile.
 - `score-history.json`: initial and post-stage surveys tied to source state.
 - `receipts/<stage>.json`: profiles covered, findings, changes, checks, and
-  unresolved work for each stage or delegate.
-- `final-validation.json`: final ledger validation and technical gate results.
+  unresolved work for that registry stage.
+- `build.json`: efficient-model work-package receipt bound to `plan.json` and
+  the final source fingerprint.
+- `review.json`: independent same-frontier-model verdict bound to the plan,
+  build, final ledger, and source.
+- `evidence-manifest.json`: hashes for the initial survey, final ledger, score
+  history, every stage receipt, and final technical validation.
+- `final-validation.json`: fresh final technical gate results for review.
 
 Initialize the ledger from the deterministic survey. A green build or test
 suite validates edits; it never substitutes for a profile receipt.
@@ -79,7 +104,7 @@ unbounded one-agent-per-profile fan-out.
 
 Each row must contain:
 
-`id | status | scope | evidence | findings | disposition | validation | residuals`
+`id | status | scope | evidence | findings | disposition | validation | residuals | obligations`
 
 The ledger also records the registry hash and a source-state fingerprint. An
 approved exclusion is a structured record with profile ID, approver, reason,
@@ -98,17 +123,27 @@ Every finding must end as fixed, disproven, accepted by the user or maintainer,
 deferred, or blocked. Do not silently discard candidates because a lexical
 score fell after moving or renaming code.
 
+Every named obligation must be `satisfied`, evidenced `not-applicable`,
+`deferred`, `blocked`, or temporarily `unreviewed`. A successful profile may
+contain only satisfied or evidenced-not-applicable obligations. In modernize
+mode, compatibility cost is an input to migration design, not by itself a
+reason to mark an improvement candidate clean.
+
 ## Delegation contract
 
 Subagents improve breadth but do not weaken the completion predicate. When
 delegation is available, give each delegate disjoint profile IDs, target scope,
 source revision, exclusions, procedure paths, and required receipt fields.
-Require the receipt to identify every requested profile exactly once.
+Require each delegate contribution to identify every requested profile exactly
+once, then merge contributions into the unique owning-stage receipt.
 
 Keep the immediate blocker local. Delegate independent profiles in parallel,
-then use an independent closer for large runs to compare the registry, ledger,
-receipts, and final source revision. If subagents are unavailable, execute the
-same contracts serially.
+using efficient-model workers during the build phase. The frontier planner
+must not also act as the builder. Return the integrated result to the same
+frontier model in a distinct invocation and independent review context. Record
+provider, model, effort, and runtime-supplied invocation/context IDs for every
+phase; never synthesize missing provenance. If subagents are unavailable,
+switch model roles serially; do not collapse ownership into one unreviewed pass.
 
 ## Convergence and terminal states
 
@@ -135,9 +170,16 @@ Validate the final ledger:
 ultra-system-reference/scripts/ultra-system ledger validate \
   --registry <ultra-skill>/references/concerns.toml \
   --ledger .ultra-out/profile-ledger.json \
+  --plan .ultra-out/plan.json \
+  --build .ultra-out/build.json \
+  --review .ultra-out/review.json \
   --root <target>
 ```
 
 If the launcher cannot find Python 3.11 or newer, use the repository's
 authoritative environment or `nix shell nixpkgs#python3`. Report the missing
 interpreter and exact recovery command rather than replacing the validator.
+
+## Solution Placement
+
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

@@ -3,7 +3,7 @@ name: write-human-style
 description: Write or revise concise, natural prose without canned assistant phrasing. Use for PRs, issues, release notes, status updates, docs, email, and other technical writing.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Write in a Human Voice
 
@@ -102,3 +102,7 @@ Write:
 ```text
 I traced the failure to the extra precheck and removed it.
 ```
+
+## Solution Placement
+
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

@@ -3,7 +3,7 @@ name: nix-flake-architecture
 description: Modernize Nix flake outputs, input follows, overlays, packages, formatters, checks, dev shells, and NixOS or Home Manager builders. Use when flake output wiring is crowded, inputs drift, overlays are cache-hostile, or package architecture is unclear.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Nix Flake Architecture
 
@@ -20,4 +20,4 @@ package sets without checking downstream consumers.
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

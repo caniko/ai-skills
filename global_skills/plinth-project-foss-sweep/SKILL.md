@@ -3,11 +3,11 @@ name: plinth-project-foss-sweep
 description: Sweep recent FOSS repositories and refresh Plinth project-site configs. Use for `website/plinth-project.toml`, site validation/builds, or Workspace.pkl inventory.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Plinth Project FOSS Sweep
 
-Load [canix-structure-reference](../canix-structure-reference/SKILL.md) first;
+Load [canix-structure-reference](.skillnet/deps/canix-structure-reference/SKILL.md) first;
 it owns project paths and lifecycle. This skill owns only FOSS candidate
 classification and Plinth-site changes.
 
@@ -134,4 +134,4 @@ Do not skip the hand-off. The plinth-project config alone does not deploy the si
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

@@ -5,11 +5,11 @@ metadata:
   short-description: Fix simit downstream projects via the registry
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Simit Dependent Fixes
 
-Load [canix-structure-reference](../canix-structure-reference/SKILL.md) when
+Load [canix-structure-reference](.skillnet/deps/canix-structure-reference/SKILL.md) when
 working from canix; it owns project scope and checkout paths. This skill owns
 the Simit-dependent repair loop.
 
@@ -188,8 +188,8 @@ Close with:
 ## Reference
 
 - Generic research base: [evidence-first-research](../evidence-first-research/SKILL.md) — this skill is a simit-grounded specialization of the generic evidence-first research pattern. Use the base directly for non-simit research.
-- Sibling research router: [research-routing](../research-routing/SKILL.md) — picks the right research specialist when the request is ambiguous between simit and other domains.
+- Sibling research router: [research-routing](.skillnet/deps/research-routing/SKILL.md) — picks the right research specialist when the request is ambiguous between simit and other domains.
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

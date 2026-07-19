@@ -12,6 +12,13 @@ syntactic repetition, retain intentional duplication, reject as a false
 positive, or defer with an owner. Do not force unrelated behavior through a
 trait merely to reduce line count.
 
+In modernize mode, produce a ranked cluster inventory even when lexical
+detectors score zero. Eliminate material production duplication unless the
+differences encode distinct domain policy or extraction would increase
+coupling; “small,” “private,” and “already compiling” are not sufficient retain
+reasons. Consolidate repeated orchestration and error-handling sequences, not
+only identical expressions.
+
 Keep production and test duplication distinct. Add focused behavioral tests
 before non-trivial extraction, verify each cluster independently, then run the
 full affected stage gate.

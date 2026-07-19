@@ -3,7 +3,8 @@ set -euo pipefail
 
 root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 graphify="$root/global_skills/graphify/SKILL.md"
-clause='**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.'
+clause='**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.'
+legacy_clause='**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.'
 
 declare -a files=()
 
@@ -48,17 +49,26 @@ for file in "${files[@]}"; do
     continue
   fi
 
+  policy_clause="$clause"
   count="$(
     rg --no-config --fixed-strings --count-matches \
       --regexp "$clause" "$file" || true
   )"
   if [[ "$count" != "1" ]]; then
-    echo "expected the Graphify prerequisite exactly once: $file (found ${count:-0})" >&2
-    failures=$((failures + 1))
-    continue
+    legacy_count="$(
+      rg --no-config --fixed-strings --count-matches \
+        --regexp "$legacy_clause" "$file" || true
+    )"
+    if [[ "$legacy_count" == "1" ]]; then
+      policy_clause="$legacy_clause"
+    else
+      echo "expected the Graphify prerequisite exactly once: $file (found ${count:-0} new, ${legacy_count:-0} legacy)" >&2
+      failures=$((failures + 1))
+      continue
+    fi
   fi
 
-  if ! awk -v clause="$clause" '
+  if ! awk -v clause="$policy_clause" '
     NR == 1 && $0 != "---" { exit 1 }
     $0 == "---" {
       delimiters += 1
@@ -94,6 +104,9 @@ elif ! rg --no-config --fixed-strings --quiet \
 elif ! rg --no-config --fixed-strings --quiet \
   --regexp '### Step 0 - GitHub repos and multi-path merge' "$graphify"; then
   echo "Graphify no longer defines the mandatory multi-path merge step" >&2
+  failures=$((failures + 1))
+elif [[ ! -f "$root/global_skills/references/graphify-policy.md" ]]; then
+  echo "Graphify policy reference is missing: global_skills/references/graphify-policy.md" >&2
   failures=$((failures + 1))
 fi
 

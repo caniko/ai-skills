@@ -1,6 +1,0 @@
-interface:
-  display_name: "Fix Loop Common"
-  short_description: "Shared contract for evidence-first repair loops."
-  default_prompt: "Use $fix-loop-common when a domain fix-loop skill directs you to its shared contract."
-policy:
-  allow_implicit_invocation: false

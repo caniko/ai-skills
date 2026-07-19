@@ -3,7 +3,7 @@ name: nixpkgs-pr-common
 description: "Shared references for nixpkgs PR skills. Use when another nixpkgs PR skill directs you here, or when you need common nixpkgs contribution decorum, review automation rules, live PR template handling, or caniko/nixpkgs-review-gha workflow instructions."
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # nixpkgs-pr-common
 
@@ -33,4 +33,4 @@ Use standard nixpkgs attrs (`pkgsCross.*`) for any build commands in the PR body
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

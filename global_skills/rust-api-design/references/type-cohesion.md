@@ -12,7 +12,14 @@ candidate an explicit retain, split-module, decompose-type, extract-component,
 or defer disposition with evidence.
 
 Treat more than 12 fields, more than 15 methods, constructor arity above 8, or
-more than three independently changing responsibilities as review triggers,
-not automatic refactoring rules. Preserve invariants, ownership, serde/FFI
-formats, public compatibility, and lock ordering. Add focused tests for any
-decomposition and run the affected full gate.
+more than three independently changing responsibilities as action thresholds
+in modernize mode. Decompose the type or extract components unless evidence
+shows it is a generated record, immutable schema/FFI mirror, flat lookup table,
+or another genuinely single-purpose exceptional shape. “Coherent lifecycle,”
+public compatibility, and “retain for this pass” are not sufficient exceptions
+when several responsibilities or independent field clusters exist.
+
+Preserve invariants, ownership, serde/FFI formats, and lock ordering through
+boundary adapters or versioned wire types while improving the internal model.
+Migrate in-repository construction and access sites, add focused tests, and run
+the affected full gate. Record threshold counts before and after the change.

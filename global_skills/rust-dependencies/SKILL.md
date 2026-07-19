@@ -3,7 +3,7 @@ name: rust-dependencies
 description: Audit and modernize Rust dependency policy, feature flags, MSRV, and breaking dependency upgrades. Use for dependency cleanup or migration work, or when rust-ultra routes dependency concerns here.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Rust Dependencies
 
@@ -18,8 +18,11 @@ relevant profile:
 
 Inspect manifests, lockfiles, source imports, build scripts, features, and
 repository policy before changing the dependency graph. Keep upgrades
-compatible where possible and report unavoidable semver or MSRV decisions.
+compatible where possible in focused or compatibility mode. In Rust-ultra
+modernize mode, take justified breaking upgrades, adapt all in-repository APIs
+and features, and report downstream/MSRV migration decisions. Do not churn a
+dependency solely to maximize version numbers.
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

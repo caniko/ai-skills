@@ -1,6 +1,6 @@
 ---
 name: graphify
-description: "Use for any question about a codebase, its architecture, file relationships, or project content — especially when graphify-out/ exists, where the question should be treated as a graphify query first. Turns any input (code, docs, papers, images, videos) into a persistent knowledge graph with god nodes, community detection, and query/path/explain tools."
+description: "Build and query persistent graphs for codebases, documents, media, and cross-repository architecture. Use first when graphify-out exists or scope spans repositories."
 ---
 
 # /graphify
@@ -675,3 +675,7 @@ When the user asks to install the post-commit auto-rebuild hook or wire graphify
 - Always show token cost in the report.
 - Never hide cohesion scores behind symbols - show the raw number.
 - Never run HTML viz on a graph with more than 5,000 nodes without warning the user.
+
+## Solution Placement
+
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

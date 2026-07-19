@@ -3,7 +3,7 @@ name: workspace-housekeeping
 description: Safely clean canix's workspace of repositories, forks, worktrees, archives, quarantine trees, and generated state. Use for projects/ cleanup or Workspace.pkl reconciliation.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # Workspace Housekeeping
 
@@ -24,7 +24,7 @@ applicable canix `AGENTS.md` before acting.
    canix workspace check --skip-physical-paths
    ```
 
-   Resolve individual entries with `canix --json workspace show <project>`.
+   Resolve individual entries with `canix --output json workspace show <project>`.
    If the installed binary lacks `workspace`, use the current admin CLI from
    `cli/`; never revive deleted workspace scripts or guess paths.
 3. Discover cleanup candidates with the dry-run command:
@@ -89,6 +89,5 @@ skill and follow its per-repository commit and literal-`push` rules.
 
 ## Solution Placement
 
-For durable fixes, prefer generic upstream → Fleetix → standalone flake →
-canix-toolbelt → canix. Keep host-specific policy and private fleet data in
-canix.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.
+Keep host-specific policy and private fleet data in canix.

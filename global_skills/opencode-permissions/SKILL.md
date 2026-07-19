@@ -3,7 +3,7 @@ name: opencode-permissions
 description: Add or diagnose opencode Bash permission rules in canix. Use for permission prompts, command-pattern lists, ignored rules, glob matching, or rendered verification.
 ---
 
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
+**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
 
 # OpenCode Permissions
 
@@ -56,4 +56,4 @@ in the evaluated output and do not add them to the data files.
 
 ## Solution Placement
 
-For durable solutions, prefer the highest suitable owner: generic upstream → Fleetix → standalone flake → canix-toolbelt → canix. Keep consumer policy with the consumer and record why higher layers do not fit.
+Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.
