@@ -1,4 +1,0 @@
-interface:
-  display_name: "Nixpkgs Init PRs"
-  short_description: "Create and shepherd general nixpkgs PRs."
-  default_prompt: "Prepare a general nixpkgs pull request end to end. Use a clean branch or worktree, keep the scope narrow, run targeted local validation, fetch and fill the current NixOS/nixpkgs pull request template truthfully, and dispatch the required review through caniko/nixpkgs-review-gha."

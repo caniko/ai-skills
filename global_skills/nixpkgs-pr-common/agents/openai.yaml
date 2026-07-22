@@ -1,6 +1,0 @@
-interface:
-  display_name: "Nixpkgs PR Common"
-  short_description: "Shared policy for nixpkgs pull request work."
-  default_prompt: "Use $nixpkgs-pr-common when a nixpkgs PR skill directs you to its shared contract."
-policy:
-  allow_implicit_invocation: false

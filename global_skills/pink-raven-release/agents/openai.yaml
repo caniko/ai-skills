@@ -1,4 +1,0 @@
-interface:
-  display_name: "Pink Raven Release"
-  short_description: "Release Pink Raven to runner through canix"
-  default_prompt: "Use $pink-raven-release to release Pink Raven to runner through canix and verify production."
