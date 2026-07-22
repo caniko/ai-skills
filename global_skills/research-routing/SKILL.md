@@ -12,8 +12,8 @@ active harness owns planning, dispatch, and execution.
 
 | Request shape | Recommended skill |
 |---|---|
-| Simit or downstream generated-file breakage | [`simit-dependent-fixes`](../simit-dependent-fixes/SKILL.md) |
-| Nixpkgs build failure intended for a PR | [`nixpkgs-build-failure-pr`](../nixpkgs-build-failure-pr/SKILL.md) |
+| Simit or downstream generated-file breakage | canix project-local `simit-dependent-fixes` |
+| Nixpkgs build failure intended for a PR | `nix-nixpkgs` project-local `nixpkgs-build-failure-pr` |
 | Thething host health | canix project-local `host-a-status` |
 | Existing plan/phase/roadmap progress or retirement | [`plan-progress-review`](../plan-progress-review/SKILL.md) |
 | Complex pre-implementation situation needing orientation | [`evidence-first-research`](../evidence-first-research/SKILL.md) in orientation mode |

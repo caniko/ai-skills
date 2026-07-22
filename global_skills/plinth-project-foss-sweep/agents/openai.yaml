@@ -1,4 +1,0 @@
-interface:
-  display_name: "Plinth Project FOSS Sweep"
-  short_description: "Apply Plinth project sites across owned FOSS repos"
-  default_prompt: "Use $plinth-project-foss-sweep to inventory recent owned FOSS repos from canix's Workspace.pkl and refresh their plinth-project sites."

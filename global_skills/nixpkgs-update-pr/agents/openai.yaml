@@ -1,6 +1,0 @@
-interface:
-  display_name: "Nixpkgs Update PRs"
-  short_description: "Bump an existing nixpkgs package to a new version and shepherd the PR."
-  default_prompt: "Update an existing NixOS/nixpkgs package to a newer upstream version end to end. Pin the exact new rev/version, refresh hashes (prefer nix-update or the lib.fakeHash loop), absorb any upstream restructure (moved sourceRoot, Cargo/Go/npm workspace and lockfile changes), validate the rebuild and smoke-test the binaries, fetch and fill the live nixpkgs PR template truthfully, open a draft PR, and dispatch caniko/nixpkgs-review-gha."
-policy:
-  allow_implicit_invocation: false
