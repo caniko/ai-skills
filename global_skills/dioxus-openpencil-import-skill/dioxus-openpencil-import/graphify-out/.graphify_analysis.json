@@ -1,0 +1,212 @@
+{
+  "communities": {
+    "0": [
+      "popen",
+      "scripts_dioxus_to_openpencil_drain_process_output",
+      "scripts_dioxus_to_openpencil_http_ready",
+      "scripts_dioxus_to_openpencil_log",
+      "scripts_dioxus_to_openpencil_maybe_serve_project",
+      "scripts_dioxus_to_openpencil_rationale_547",
+      "scripts_dioxus_to_openpencil_redact_url_for_report",
+      "scripts_dioxus_to_openpencil_wait_for_url",
+      "thread"
+    ],
+    "1": [
+      "scripts_dioxus_to_openpencil",
+      "scripts_dioxus_to_openpencil_main",
+      "scripts_dioxus_to_openpencil_openpencil_command",
+      "scripts_dioxus_to_openpencil_parse_headers",
+      "scripts_dioxus_to_openpencil_route_url",
+      "scripts_dioxus_to_openpencil_slugify",
+      "scripts_dioxus_to_openpencil_warn",
+      "scripts_dioxus_to_openpencil_write_combined_html"
+    ],
+    "2": [
+      "path",
+      "scripts_dioxus_to_openpencil_export_fig",
+      "scripts_dioxus_to_openpencil_import_html",
+      "scripts_dioxus_to_openpencil_run_command",
+      "scripts_dioxus_to_openpencil_validate_project",
+      "tests_test_core_test_workspace_validation_accepts_member_dioxus_dependency"
+    ],
+    "3": [
+      "tests_test_core",
+      "tests_test_core_test_export_command_uses_current_cli_flags",
+      "tests_test_core_test_route_discovery",
+      "tests_test_core_test_url_redaction_and_query_safe_slug",
+      "tests_test_core_test_viewport"
+    ],
+    "4": [
+      "scripts_dioxus_to_openpencil_deduplicate_routes",
+      "scripts_dioxus_to_openpencil_discover_dioxus_routes",
+      "scripts_dioxus_to_openpencil_route_name",
+      "scripts_dioxus_to_openpencil_routespec"
+    ],
+    "5": [
+      "tests_smoke_capture",
+      "tests_smoke_capture_main",
+      "tests_smoke_capture_quiethandler",
+      "tests_smoke_capture_quiethandler_log_message"
+    ],
+    "6": [
+      "any",
+      "scripts_dioxus_to_openpencil_compare_images",
+      "scripts_dioxus_to_openpencil_relative_to_output"
+    ],
+    "7": [
+      "argumentparser",
+      "scripts_dioxus_to_openpencil_build_parser",
+      "scripts_dioxus_to_openpencil_parse_viewport"
+    ],
+    "8": [
+      "tests_fake_openpencil",
+      "tests_fake_openpencil_main",
+      "tests_fake_openpencil_value_after"
+    ],
+    "9": [
+      "tests_test_skill_format",
+      "tests_test_skill_format_frontmatter_value",
+      "tests_test_skill_format_test_skill_frontmatter_matches_agent_skills_spec"
+    ],
+    "10": [
+      "assets_setup_example",
+      "assets_setup_example_ready"
+    ],
+    "11": [
+      "scripts_dioxus_to_openpencil_browser_executable",
+      "scripts_dioxus_to_openpencil_rationale_723"
+    ],
+    "12": [
+      "scripts_dioxus_to_openpencil_commandresult",
+      "scripts_dioxus_to_openpencil_commandresult_ok"
+    ]
+  },
+  "cohesion": {
+    "0": 0.3055555555555556,
+    "1": 0.5,
+    "2": 0.4666666666666667,
+    "3": 0.4,
+    "4": 0.5,
+    "5": 0.6666666666666666,
+    "6": 0.6666666666666666,
+    "7": 0.6666666666666666,
+    "8": 1.0,
+    "9": 1.0,
+    "10": 1.0,
+    "11": 1.0,
+    "12": 1.0
+  },
+  "gods": [
+    {
+      "id": "scripts_dioxus_to_openpencil_main",
+      "label": "main()",
+      "degree": 22
+    },
+    {
+      "id": "scripts_dioxus_to_openpencil_maybe_serve_project",
+      "label": "maybe_serve_project()",
+      "degree": 9
+    },
+    {
+      "id": "scripts_dioxus_to_openpencil_discover_dioxus_routes",
+      "label": "discover_dioxus_routes()",
+      "degree": 5
+    },
+    {
+      "id": "scripts_dioxus_to_openpencil_drain_process_output",
+      "label": "drain_process_output()",
+      "degree": 5
+    },
+    {
+      "id": "scripts_dioxus_to_openpencil_run_command",
+      "label": "run_command()",
+      "degree": 5
+    },
+    {
+      "id": "scripts_dioxus_to_openpencil_import_html",
+      "label": "import_html()",
+      "degree": 5
+    },
+    {
+      "id": "scripts_dioxus_to_openpencil_export_fig",
+      "label": "export_fig()",
+      "degree": 5
+    },
+    {
+      "id": "scripts_dioxus_to_openpencil_write_combined_html",
+      "label": "write_combined_html()",
+      "degree": 5
+    },
+    {
+      "id": "scripts_dioxus_to_openpencil_build_parser",
+      "label": "build_parser()",
+      "degree": 5
+    },
+    {
+      "id": "scripts_dioxus_to_openpencil_routespec",
+      "label": "RouteSpec",
+      "degree": 4
+    }
+  ],
+  "surprises": [
+    {
+      "source": "main()",
+      "target": "Path",
+      "source_files": [
+        "tests/fake_openpencil.py",
+        ""
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "note": "Bridges community 2 \u2192 community 8"
+    },
+    {
+      "source": "main()",
+      "target": "Path",
+      "source_files": [
+        "tests/smoke_capture.py",
+        ""
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "note": "Bridges community 2 \u2192 community 5"
+    },
+    {
+      "source": "test_route_discovery()",
+      "target": "Path",
+      "source_files": [
+        "tests/test_core.py",
+        ""
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "note": "Bridges community 2 \u2192 community 3"
+    },
+    {
+      "source": "main()",
+      "target": "RouteSpec",
+      "source_files": [
+        "scripts/dioxus_to_openpencil.py",
+        "scripts/dioxus_to_openpencil.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "note": "Bridges community 4 \u2192 community 1"
+    },
+    {
+      "source": "run_command()",
+      "target": "CommandResult",
+      "source_files": [
+        "scripts/dioxus_to_openpencil.py",
+        "scripts/dioxus_to_openpencil.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "note": "Bridges community 12 \u2192 community 2"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}
