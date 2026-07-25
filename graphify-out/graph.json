@@ -1,0 +1,215 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "Skillnet.pkl",
+      "file_type": "code",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "data_nvme0_can_canix_projects_repos_owned_codeberg_org_caniko_ai_skills_global_skills_skillnet"
+    },
+    {
+      "label": "Skill",
+      "file_type": "code",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L1",
+      "kind": "class",
+      "_origin": "ast",
+      "id": "global_skills_skillnet_skill"
+    },
+    {
+      "label": "role",
+      "file_type": "code",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L2",
+      "kind": "property",
+      "_origin": "ast",
+      "id": "global_skills_skillnet_role"
+    },
+    {
+      "label": "String",
+      "file_type": "code",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L2",
+      "kind": "type",
+      "_origin": "ast",
+      "id": "global_skills_skillnet_string"
+    },
+    {
+      "label": "dependencies",
+      "file_type": "code",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L3",
+      "kind": "property",
+      "_origin": "ast",
+      "id": "global_skills_skillnet_dependencies"
+    },
+    {
+      "label": "Listing<String>",
+      "file_type": "code",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L3",
+      "kind": "type",
+      "_origin": "ast",
+      "id": "global_skills_skillnet_listing_string"
+    },
+    {
+      "label": "source",
+      "file_type": "code",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L4",
+      "kind": "property",
+      "_origin": "ast",
+      "id": "global_skills_skillnet_source"
+    },
+    {
+      "label": "users",
+      "file_type": "code",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L5",
+      "kind": "property",
+      "_origin": "ast",
+      "id": "global_skills_skillnet_users"
+    },
+    {
+      "label": "skills",
+      "file_type": "code",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L11",
+      "kind": "property",
+      "_origin": "ast",
+      "id": "global_skills_skillnet_skills"
+    },
+    {
+      "label": "Mapping<String",
+      "file_type": "code",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L11",
+      "kind": "type",
+      "_origin": "ast",
+      "id": "global_skills_skillnet_mapping_string"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "data_nvme0_can_canix_projects_repos_owned_codeberg_org_caniko_ai_skills_global_skills_skillnet",
+      "target": "global_skills_skillnet_dependencies"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "data_nvme0_can_canix_projects_repos_owned_codeberg_org_caniko_ai_skills_global_skills_skillnet",
+      "target": "global_skills_skillnet_role"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "data_nvme0_can_canix_projects_repos_owned_codeberg_org_caniko_ai_skills_global_skills_skillnet",
+      "target": "global_skills_skillnet_skill"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "data_nvme0_can_canix_projects_repos_owned_codeberg_org_caniko_ai_skills_global_skills_skillnet",
+      "target": "global_skills_skillnet_skills"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "data_nvme0_can_canix_projects_repos_owned_codeberg_org_caniko_ai_skills_global_skills_skillnet",
+      "target": "global_skills_skillnet_source"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "data_nvme0_can_canix_projects_repos_owned_codeberg_org_caniko_ai_skills_global_skills_skillnet",
+      "target": "global_skills_skillnet_users"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L2",
+      "weight": 1.0,
+      "context": "type",
+      "_origin": "ast",
+      "source": "global_skills_skillnet_role",
+      "target": "global_skills_skillnet_string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L4",
+      "weight": 1.0,
+      "context": "type",
+      "_origin": "ast",
+      "source": "global_skills_skillnet_source",
+      "target": "global_skills_skillnet_string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "type",
+      "_origin": "ast",
+      "source": "global_skills_skillnet_dependencies",
+      "target": "global_skills_skillnet_listing_string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L5",
+      "weight": 1.0,
+      "context": "type",
+      "_origin": "ast",
+      "source": "global_skills_skillnet_users",
+      "target": "global_skills_skillnet_listing_string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "global_skills/Skillnet.pkl",
+      "source_location": "L11",
+      "weight": 1.0,
+      "context": "type",
+      "_origin": "ast",
+      "source": "global_skills_skillnet_skills",
+      "target": "global_skills_skillnet_mapping_string"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

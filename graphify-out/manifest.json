@@ -1,0 +1,77 @@
+{
+  "global_skills/Skillnet.pkl": {
+    "mtime": 1784752046.1360035,
+    "ast_hash": "7a6fc5a6bd29645cb1d3d4c4bd4b1560",
+    "semantic_hash": "7a6fc5a6bd29645cb1d3d4c4bd4b1560"
+  },
+  "global_skills/dioxus-openpencil-import-skill/dioxus-openpencil-import/assets/setup.example.js": {
+    "mtime": 1784726600.4544895,
+    "ast_hash": "02fdc596b96c0efb546425a27a9ca5ed",
+    "semantic_hash": "02fdc596b96c0efb546425a27a9ca5ed"
+  },
+  "global_skills/dioxus-openpencil-import-skill/dioxus-openpencil-import/scripts/dioxus_to_openpencil.py": {
+    "mtime": 1784737663.3693876,
+    "ast_hash": "5740470a5f826a9d81cdb474d560c473",
+    "semantic_hash": "5740470a5f826a9d81cdb474d560c473"
+  },
+  "global_skills/dioxus-openpencil-import-skill/dioxus-openpencil-import/tests/fake_openpencil.py": {
+    "mtime": 1784726600.4550161,
+    "ast_hash": "d4f637585ee29fd04fa563209ca4cffc",
+    "semantic_hash": "d4f637585ee29fd04fa563209ca4cffc"
+  },
+  "global_skills/dioxus-openpencil-import-skill/dioxus-openpencil-import/tests/smoke_capture.py": {
+    "mtime": 1784726600.4553473,
+    "ast_hash": "b981a478020f20245e383dac5560cebc",
+    "semantic_hash": "b981a478020f20245e383dac5560cebc"
+  },
+  "global_skills/dioxus-openpencil-import-skill/dioxus-openpencil-import/tests/test_core.py": {
+    "mtime": 1784726600.4554594,
+    "ast_hash": "ff9af38427ff29f475d589b3cee467f8",
+    "semantic_hash": "ff9af38427ff29f475d589b3cee467f8"
+  },
+  "global_skills/dioxus-openpencil-import-skill/dioxus-openpencil-import/tests/test_skill_format.py": {
+    "mtime": 1784726600.4556186,
+    "ast_hash": "117f7e19a07a42e38677f8dde86f95a8",
+    "semantic_hash": "117f7e19a07a42e38677f8dde86f95a8"
+  },
+  "global_skills/nix-ultra/scripts/survey-nix-repository": {
+    "mtime": 1784440265.4728596,
+    "ast_hash": "8958845772669fd28eb7badf89e6f183",
+    "semantic_hash": "8958845772669fd28eb7badf89e6f183"
+  },
+  "global_skills/rust-crate-release/scripts/audit_rust_crate_release.py": {
+    "mtime": 1783762667.348712,
+    "ast_hash": "156fb6162cb5017e1c67dfb7983b3891",
+    "semantic_hash": "156fb6162cb5017e1c67dfb7983b3891"
+  },
+  "global_skills/rust-quality/scripts/run-rust-pr-gates.sh": {
+    "mtime": 1780816838.756441,
+    "ast_hash": "786f775397ef6900da47866660f59274",
+    "semantic_hash": "786f775397ef6900da47866660f59274"
+  },
+  "global_skills/rust-ultra/scripts/survey-rust-project": {
+    "mtime": 1784440265.4728596,
+    "ast_hash": "7ade3c628d177550b5dc0184fb83f75c",
+    "semantic_hash": "7ade3c628d177550b5dc0184fb83f75c"
+  },
+  "global_skills/tzu-goal-prompt/scripts/tzu_goal_prompt.py": {
+    "mtime": 1780751392.2507815,
+    "ast_hash": "67f5213256c29339d99c9fc39aa57804",
+    "semantic_hash": "67f5213256c29339d99c9fc39aa57804"
+  },
+  "global_skills/ultra-system-reference/scripts/ultra-system": {
+    "mtime": 1784411130.1920128,
+    "ast_hash": "4edbb38719fa1e838840c1e1d4ac62fb",
+    "semantic_hash": "4edbb38719fa1e838840c1e1d4ac62fb"
+  },
+  "global_skills/ultra-system-reference/scripts/ultra_system.py": {
+    "mtime": 1784449000.8075275,
+    "ast_hash": "c511f86a46facf94fac8d02401a9ccf9",
+    "semantic_hash": "c511f86a46facf94fac8d02401a9ccf9"
+  },
+  "scripts/check-graphify-policy.sh": {
+    "mtime": 1784450615.626177,
+    "ast_hash": "e5142041af6d844607f22a19804bd3bd",
+    "semantic_hash": "e5142041af6d844607f22a19804bd3bd"
+  }
+}
