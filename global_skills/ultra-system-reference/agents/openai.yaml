@@ -1,6 +1,0 @@
-interface:
-  display_name: "Ultra System Reference"
-  short_description: "Shared three-phase contract for ultra orchestrators."
-  default_prompt: "Use $ultra-system-reference when an ultra orchestrator needs the shared frontier-plan, efficient-build, same-frontier-review, profile, and completion contract."
-policy:
-  allow_implicit_invocation: false

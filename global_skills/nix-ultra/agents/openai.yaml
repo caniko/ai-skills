@@ -1,4 +1,4 @@
 interface:
   display_name: "Nix Ultra"
-  short_description: "Plan, build, and review complete Nix improvements."
-  default_prompt: "Use $nix-ultra to frontier-plan, efficient-model build, and same-frontier review a complete Nix repository improvement with full profile and evaluation coverage."
+  short_description: "Route complete Nix improvements."
+  default_prompt: "Use $nix-ultra to route a complete Nix repository improvement through the focused Nix skills and validation gates."

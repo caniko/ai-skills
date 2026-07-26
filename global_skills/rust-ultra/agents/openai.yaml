@@ -1,4 +1,4 @@
 interface:
   display_name: "Rust Ultra"
-  short_description: "Plan, build, and review aggressive Rust modernization."
-  default_prompt: "Use $rust-ultra to frontier-plan, efficient-model build, and same-frontier review an aggressive Rust modernization with necessary breaking changes and complete in-repo migration."
+  short_description: "Route complete Rust modernization."
+  default_prompt: "Use $rust-ultra to route a complete Rust modernization through the focused Rust skills and validation gates."
