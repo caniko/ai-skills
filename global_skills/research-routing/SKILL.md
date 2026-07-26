@@ -3,8 +3,6 @@ name: research-routing
 description: Routing meta-skill for ambiguous research-shaped requests. Recommend the most specific evidence-backed specialist, with evidence-first-research as the fall-through. Use when the correct research owner is unclear; this skill performs no investigation or edits.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Research Routing
 
 Recommend one specialist; do not invoke it or perform the research here. The
@@ -43,7 +41,3 @@ Next action: invoke the recommendation directly; this router performs no edits.
 Do not route every request through this skill, select models/providers/effort,
 or silently invoke the recommended skill. “Audit” alone is not enough for plan
 progress review; require plan, phase, roadmap, migration, or planning language.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

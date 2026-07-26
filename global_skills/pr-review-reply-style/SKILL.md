@@ -3,8 +3,6 @@ name: pr-review-reply-style
 description: Draft concise, human-written PR review replies after addressing feedback, requested changes, or inline review threads.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # PR Review Reply Style
 
 Use this skill when writing a PR review-thread reply after handling feedback.
@@ -45,7 +43,3 @@ If no code change was needed:
 ```text
 Makes sense; I checked this path and left it as-is because ...
 ```
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

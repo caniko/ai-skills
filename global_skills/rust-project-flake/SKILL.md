@@ -3,8 +3,6 @@ name: rust-project-flake
 description: Create or modernize Rust Nix flakes with crane and simit. Use for flake outputs, devShells, checks, packages, cross builds, Cargo filtering, or build infrastructure.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Rust Project Flake
 
 ## Core Rule
@@ -81,7 +79,3 @@ rust-overlay.follows = "rs-harbor/rust-overlay";
 crane.follows = "rs-harbor/crane";
 flake-utils.follows = "rs-harbor/flake-utils";
 ```
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

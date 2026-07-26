@@ -3,8 +3,6 @@ name: tzu-goal-prompt
 description: Create a grounded goal prompt from tzu metadata and optional harness output. Use to seed another planning or implementation run without fabricating missing project context.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Tzu Goal Prompt
 
 Use this skill to turn existing harness evidence into a prompt that a future agent can act on. The goal is to preserve important claims from `tzu` and other harnesses while making their provenance explicit.
@@ -81,7 +79,3 @@ If an external harness output file is missing or empty, stop with the same block
 - Treating harness output as verified truth without source labels.
 - Dropping obligations, blockers, or validation commands because they are inconvenient.
 - Rewriting the generated prompt to sound more certain than the underlying evidence.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

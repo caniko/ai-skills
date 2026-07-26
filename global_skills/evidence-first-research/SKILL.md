@@ -3,8 +3,6 @@ name: evidence-first-research
 description: Produce evidence-backed research for investigations, audits, design decisions, or stale assumptions. Use when current facts or a citable handoff are required.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Evidence-First Research
 
 Use this skill to establish what is true before consequential design, implementation, migration, audit, roadmap, or cleanup work. Research is an input to later planning and execution; it is not a plan, model-selection procedure, dispatcher, or implementation workflow.
@@ -77,7 +75,3 @@ speculating.
 
 - Domain-grounded research skills add their own required sources, commands, and validation gates.
 - [`research-routing`](.skillnet/deps/research-routing/SKILL.md) provides recommendation-only routing when the correct specialist is unclear.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

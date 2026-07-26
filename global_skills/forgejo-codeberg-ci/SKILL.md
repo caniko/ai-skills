@@ -3,8 +3,6 @@ name: forgejo-codeberg-ci
 description: "Troubleshoot Codeberg/Forgejo CI using `fj` first, with git/curl fallback. Use when investigating Forgejo Actions workflow runs on Codeberg, publish failures, stuck jobs, tag-triggered releases, missing crates.io publishes, or repository-side CI state on codeberg.org."
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Forgejo Codeberg CI
 
 Use this skill for Codeberg-hosted CI troubleshooting.
@@ -152,7 +150,3 @@ Common runner checks:
 Load [runner](.skillnet/deps/runner/SKILL.md) for canonical labels, images,
 mounts, cache behavior, and runner registration facts. Do not infer a fix from
 timing alone.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

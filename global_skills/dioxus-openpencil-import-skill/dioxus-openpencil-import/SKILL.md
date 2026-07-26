@@ -8,8 +8,6 @@ metadata:
   version: "0.1.0"
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Dioxus to OpenPencil import
 
 Convert the **rendered web target** of a Dioxus project into editable OpenPencil `.fig` files. Do not parse RSX directly. Dioxus state, routing, server functions, and conditional rendering must run first so Chromium exposes the hydrated DOM and browser-computed styles.

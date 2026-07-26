@@ -3,8 +3,6 @@ name: rust-crate-release
 description: Prepare, validate, and publish Rust crates through the strict crates.io workflow. Use for release readiness, Cargo/docs metadata, Nix/Forgejo wiring, tags, and verification.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Rust Crate Release
 
 Load [policy.md](references/policy.md) first. Load only the mode references
@@ -39,7 +37,3 @@ for generated or hosted integrations.
 For canix-backed release credentials, load
 [simit-canix-release-secrets.md](references/simit-canix-release-secrets.md)
 before changing secret mappings.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

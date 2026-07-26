@@ -3,8 +3,6 @@ name: forgejo-docs
 description: Create or update a docs-only mdBook site for a Codeberg-hosted project, integrate it with a Nix flake, and publish it to Codeberg Pages through Forgejo Actions hosted by Codeberg. Use when the user asks for Codeberg documentation, mdBook docs, docs-only Pages publishing, or to remove a separate landing website while keeping documentation deployed.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # forgejo-docs
 
 ## What this does
@@ -39,7 +37,3 @@ If documentation content would need to be invented from missing source material,
 3. Use [../forgejo-pages/SKILL.md](../forgejo-pages/SKILL.md) for Pages deployment wiring.
 4. Verify the local docs build per mdbook-docs before adding CI.
 5. For custom domain wiring (`<name>.example.com`), use `codeberg-pages-dns` after the initial Pages deploy.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

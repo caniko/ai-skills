@@ -3,8 +3,6 @@ name: repo-pages
 description: Shared reference for repository-hosted Pages publishing (Codeberg Pages, GitLab Pages, and similar). Defines the build → publish model, branch gating, URL-matching pitfalls, and preconditions common to host-specific Pages skills. Not user-invokable on its own; loaded by `forgejo-pages`, `gitlab-pages`, and other Pages wiring skills.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # repo-pages
 
 ## What this is
@@ -66,7 +64,3 @@ A host-specific Pages skill should layer on top of this skill and define:
 - The final URL convention (user pages, project pages, group pages, custom domains).
 - The token or auth mechanism (e.g. `${{ forge.token }}`).
 - Host-specific eligibility rules (public + free/libre license for Codeberg Pages; Pages enabled by admins for self-managed GitLab; etc.).
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

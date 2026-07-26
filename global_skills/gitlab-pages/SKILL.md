@@ -3,8 +3,6 @@ name: gitlab-pages
 description: Add GitLab CI wiring for Pages deployment, including `.gitlab-ci.yml` and docs/site builds on GitLab.com or self-managed GitLab.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # gitlab-pages
 
 ## What this does
@@ -75,7 +73,3 @@ publish-pages:
 - If the build already writes to `public/`, `pages: true` is enough; keep `pages.publish` only when you need a non-default publish directory or want the path to stay explicit.
 - GitLab automatically appends `pages.publish` to `artifacts:paths`; do not duplicate that block unless the repository already has a reason to manage artifacts manually.
 - If the deployed site returns `404`, inspect the latest Pages job artifacts and confirm `public/index.html` exists. (See `repo-pages` for the base-URL / subpath pitfall behind most other 404s.)
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

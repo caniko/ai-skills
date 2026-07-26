@@ -3,8 +3,6 @@ name: rust-workspace-check
 description: Check whether a single-crate Rust project should be converted to a Cargo workspace. Applies file-count and LOC thresholds before performing analysis.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # rust-workspace-check — Cargo Workspace Readiness Assessment
 
 Lineage: this is a narrowly scoped Rust research specialist built on the generic research pattern; use broader research routing when the project exceeds this skill's file-count and LOC gate.
@@ -65,7 +63,3 @@ project files; print the read-only report.
 
 - Generic research base: [evidence-first-research](../evidence-first-research/SKILL.md) — rust-workspace-check is a narrowly scoped research specialist. For broader Rust-project investigation, use the base.
 - Sibling research router: [research-routing](.skillnet/deps/research-routing/SKILL.md).
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.
