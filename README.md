@@ -7,16 +7,13 @@ This repository is the canonical store for global skills at `ai-skills/global_sk
 ```text
 global_skills/
   <skill-name>/              # canonical global skills
-
-docs/planning/
-  skill-retirement-research.md  # historical audit and provenance
 ```
 
-Top-level generated catalog files:
+Catalog files are generated locally when needed:
 
-- `CATALOG.md`
-- `ROUTING.md`
-- `SKILL_CONFLICTS.md`
+```sh
+skillnet catalog generate
+```
 
 Configuration is centralized per user by Skillnet:
 
@@ -53,19 +50,11 @@ skillnet project sync --name <project>
 
 ### Cross-repository prerequisite
 
-Every canonical `SKILL.md`, global or project-local, must place this concise paragraph
-immediately after its YAML frontmatter:
-
-```markdown
-**Cross-repository work:** If scope spans repositories, invoke `$graphify` before discovery, planning, or edits. Query an existing graph; build/update a merged graph when missing, stale, or incomplete. Reuse a current graph for the same repository set.
-```
-
-`graphify` itself is the only exemption because self-invocation would recurse;
-its usage and multi-path reference must continue to define the merged
-cross-repository graph workflow directly. After adding or changing a skill, run:
+`defaultDependencies` loads `graphify-policy` and
+`solution-placement-policy` for every canonical skill. After adding or changing
+a skill, run:
 
 ```sh
-bash scripts/check-graphify-policy.sh
 skillnet catalog lint
 ```
 
@@ -89,7 +78,5 @@ when to pause or resume it. Skills may provide evidence, domain procedures,
 execution checklists, or plan-audit support; they must not route models or
 replace the harness's planning loop.
 
-Historical planning and audit provenance lives in
-[`docs/planning/skill-retirement-research.md`](docs/planning/skill-retirement-research.md).
-It is not the active source of truth for the current skill set; inspect the
-canonical `global_skills/` stores and generated catalog for that.
+The canonical `global_skills/` stores and Skillnet manifest are the source of
+truth for the current skill set. Generate catalog views locally when needed.

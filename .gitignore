@@ -7,6 +7,12 @@ result-*
 .pre-commit-config.yaml
 docs/planning/**/.calibration.json
 
+# Generated local views and graph state.
+/CATALOG.md
+/ROUTING.md
+/SKILL_CONFLICTS.md
+graphify-out/
+
 # Obsolete pre-.skills project mirror/aggregator state. Per-project canonical
 # content lives in each project's own repo at <project>/.skills/.
 projects/
