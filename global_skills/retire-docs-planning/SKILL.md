@@ -3,8 +3,6 @@ name: retire-docs-planning
 description: Retire obsolete planning or roadmap docs by moving durable guidance into stable docs, removing planning pages from navigation, and deleting shipped execution notes.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Retire Docs Planning
 
 Use this skill to remove planning sections from published documentation without losing knowledge that now belongs in the stable docs.
@@ -102,7 +100,3 @@ the runtime-loaded skill.
 - State any plan-progress status used to justify retirement or retention, or the clean verify guarantee supplied by a `clean-shipped` caller.
 - State what you verified and what you could not verify.
 - If you had to stop, name the missing or invalid artifact, the upstream producer that must fix it, the exact command or workflow to regenerate it, and the validation command that proves it is fixed.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

@@ -3,8 +3,6 @@ name: rust-security
 description: Audit Rust dependencies and code for security vulnerabilities, unsafe-code soundness, secret handling, command injection, and memory-safety hazards. Use for focused security reviews or when rust-ultra routes safety concerns here.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Rust Security
 
 Load [foundation.md](../rust-ultra/references/foundation.md), then the
@@ -18,7 +16,3 @@ relevant profile:
 Treat unresolved vulnerability findings, unsoundness, secret exposure, and
 missing authoritative security input as blockers. Do not weaken a sound unsafe
 abstraction merely to remove the `unsafe` keyword.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

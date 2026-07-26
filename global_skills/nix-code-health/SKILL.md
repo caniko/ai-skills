@@ -3,8 +3,6 @@ name: nix-code-health
 description: Improve Nix file organization, dead-code hygiene, formatter-neutral style, and generated shell scripts without changing behavior. Use for Nix reorganization, stale module cleanup, idiomatic style, heredoc, hook, or activation-script work.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Nix Code Health
 
 Load [foundation.md](../nix-ultra/references/foundation.md), then the
@@ -18,7 +16,3 @@ relevant profiles:
 Keep generated hardware/disk files, secret migrations, and operational
 comments stable unless the task explicitly includes them. Validate every
 structural move with formatter and focused evaluation.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

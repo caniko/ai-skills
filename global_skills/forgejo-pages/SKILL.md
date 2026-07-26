@@ -3,8 +3,6 @@ name: forgejo-pages
 description: Add Forgejo Actions hosted by Codeberg for Codeberg Pages deployment. Use when a user asks to add Forgejo Pages CI, Codeberg Pages publishing, Pages deployment, or static-site publishing for a Codeberg-hosted repository.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # forgejo-pages
 
 ## What this does
@@ -120,7 +118,3 @@ server selector:
 
 - Workflows belong in `.forgejo/workflows/`; Forgejo may also look in `.github/workflows/`, but prefer the native path.
 - The `site` input must match the final public Pages URL. For a repository named `pages`, the repository path segment may be omitted if publishing to `https://<user>.codeberg.page/`.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

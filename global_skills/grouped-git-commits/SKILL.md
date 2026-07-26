@@ -3,8 +3,6 @@ name: grouped-git-commits
 description: Commit current Git changes in coherent groups. Use for commit requests, dirty-tree splitting, staging preservation, or local commits without pushing.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Grouped Git Commits
 
 This skill is the canonical reference for everything about commits. Other
@@ -139,7 +137,3 @@ Require `git diff --cached --check` before every commit, a clean
 them, and any obvious focused test/formatter for the changed files. Confirm
 that every created subject matches the selected repository format and report
 any skipped validation or format fallback and why.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

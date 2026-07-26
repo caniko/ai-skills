@@ -3,8 +3,6 @@ name: fix-loop
 description: Evidence-first retries for failing commands, tests, builds, checks, migrations, and operational verification. Apply focused fixes until the exact gate and post-checks are green.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Fix Loop
 
 Use this skill for a bounded, evidence-first retry loop. It applies to local
@@ -141,7 +139,3 @@ Report all of the following in the handoff:
 - whether a reusable lesson was found. If one belongs in this skill, a
   domain-specific skill, or the shared contract, update that owner in the same
   change set and identify it separately from product/code changes.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

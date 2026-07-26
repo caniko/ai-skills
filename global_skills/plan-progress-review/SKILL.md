@@ -3,8 +3,6 @@ name: plan-progress-review
 description: Audit plans against repository state before retiring, consolidating, verifying, or rewriting phase docs, roadmaps, and migration checklists; report status only.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Plan Progress Review
 
 Use this reference skill to determine which parts of existing plans are done, still relevant, obsolete, contradictory, or unverifiable.
@@ -92,7 +90,3 @@ Do not emit model, provider, effort, or dispatch recommendations.
 
 - [`retire-docs-planning`](../retire-docs-planning/SKILL.md): consumer for
   deciding whether planning documentation can be removed.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

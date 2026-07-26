@@ -3,8 +3,6 @@ name: mdbook-docs
 description: Create or update a docs-only mdBook site, expose Nix `docs`/`site` outputs, and leave deployment to Pages CI. Use for docs packaging or pre-CI preparation.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # mdbook-docs
 
 ## What this does
@@ -131,7 +129,3 @@ Clean generated artifacts after verification if they are created in the worktree
 ```sh
 rm -rf docs/book
 ```
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.

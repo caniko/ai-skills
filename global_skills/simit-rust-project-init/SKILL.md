@@ -3,8 +3,6 @@ name: simit-rust-project-init
 description: Route Rust/Cargo simit initialization to ordinary CI or strict crates.io release setup. Use when the requested flake/CI wiring could be either path.
 ---
 
-**Cross-repository work:** Read `.skillnet/deps/graphify-policy/SKILL.md` before discovery, planning, or edits when scope spans repositories.
-
 # Simit Rust Project Init
 
 ## Purpose
@@ -30,7 +28,3 @@ If both paths appear plausible, inspect project files first. Prefer the generic
 CI child unless repository evidence or the user request clearly requires release
 infrastructure. Do not silently add release signing or publish workflow
 requirements to a project that only needs CI.
-
-## Solution Placement
-
-Read `.skillnet/deps/solution-placement-policy/SKILL.md` for the shared ownership rule.
