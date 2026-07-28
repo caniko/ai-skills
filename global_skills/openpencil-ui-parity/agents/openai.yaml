@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenPencil UI Parity"
+  short_description: "Align a live UI with OpenPencil designs."
+  default_prompt: "Use $openpencil-ui-parity to compare OpenPencil, production, and the local implementation, then repair measured parity gaps with $fix-loop."

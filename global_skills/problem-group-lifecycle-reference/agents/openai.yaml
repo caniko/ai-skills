@@ -1,0 +1,4 @@
+interface:
+  display_name: "Problem Group Lifecycle"
+  short_description: "Plan, fork, and build evidence-based groups"
+  default_prompt: "Use $problem-group-lifecycle-reference to turn investigation findings into forkable problem groups."
