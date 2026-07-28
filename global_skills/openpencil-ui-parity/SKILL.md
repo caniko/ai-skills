@@ -97,13 +97,13 @@ The final report must separate:
 For broad audits, create a JSON manifest and validate it with:
 
 ```bash
-python scripts/check_parity_manifest.py parity-manifest.json
+python3 scripts/check_parity_manifest.py parity-manifest.json
 ```
 
 Use `--run-gates` only after inspecting the manifest's command arrays:
 
 ```bash
-python scripts/check_parity_manifest.py parity-manifest.json --run-gates
+python3 scripts/check_parity_manifest.py parity-manifest.json --run-gates
 ```
 
 Paths are resolved relative to the manifest. Each surface requires a unique name and route, `[width, height]`, OpenPencil and implementation PNGs, a production status, at least one acceptance statement, and at least one exact gate command. `production.status` is one of `direct`, `auth-boundary`, or `not-deployed`; `direct` also requires a production PNG.
