@@ -1,8 +1,7 @@
 # Release Quality Gates
 
-Prefer project wrappers, generated Nix checks, and simit check modes. The
-reusable PR runner is `../../rust-quality/scripts/run-rust-pr-gates.sh`; use its
-`--prefix`, `--check`, and `--test` options when appropriate.
+Prefer generated Nix checks, simit check modes, and the repository's own
+wrappers.
 
 ```sh
 nix flake check --keep-going --print-build-logs

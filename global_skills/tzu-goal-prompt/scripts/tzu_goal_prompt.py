@@ -7,6 +7,7 @@ import argparse
 import contextlib
 import io
 import json
+import shlex
 import sqlite3
 import sys
 import tempfile
@@ -137,7 +138,7 @@ def missing_state_blocker(
         why="A tzu ProjectState is required to extract grounded goal, plan, and harness claims.",
         producer="tzu planning workflow",
         regenerate='Run `tzu plan "<goal>" --domain coding --context-root <path>` or export ProjectState JSON with the current plan.',
-        validate=f"test -s {shell_quote(validation_target)}",
+        validate=f"test -s {shlex.quote(str(validation_target))}",
     )
 
 
@@ -149,8 +150,8 @@ def load_external_outputs(paths: list[Path]) -> list[tuple[Path, str]]:
                 missing=f"external harness output `{path}` does not exist",
                 why="The prompt must preserve external harness claims from the exact supplied artifact.",
                 producer="the external harness workflow named by the user",
-                regenerate=f"Run the external harness and write its output to {shell_quote(path)}.",
-                validate=f"test -s {shell_quote(path)}",
+                regenerate=f"Run the external harness and write its output to {shlex.quote(str(path))}.",
+                validate=f"test -s {shlex.quote(str(path))}",
             )
         text = path.read_text(encoding="utf-8")
         if not text.strip():
@@ -158,8 +159,8 @@ def load_external_outputs(paths: list[Path]) -> list[tuple[Path, str]]:
                 missing=f"external harness output `{path}` is empty",
                 why="Empty harness output cannot support any factual project claims.",
                 producer="the external harness workflow named by the user",
-                regenerate=f"Re-run the external harness and write non-empty output to {shell_quote(path)}.",
-                validate=f"test -s {shell_quote(path)}",
+                regenerate=f"Re-run the external harness and write non-empty output to {shlex.quote(str(path))}.",
+                validate=f"test -s {shlex.quote(str(path))}",
             )
         outputs.append((path, text.rstrip()))
     return outputs
@@ -399,11 +400,6 @@ def inline(value: Any) -> str:
         return json.dumps(value, sort_keys=True)
     text = str(value).replace("\n", " ").strip()
     return text or "unknown"
-
-
-def shell_quote(path: Path | str) -> str:
-    text = str(path)
-    return "'" + text.replace("'", "'\"'\"'") + "'"
 
 
 def format_blocker(error: Blocker) -> str:

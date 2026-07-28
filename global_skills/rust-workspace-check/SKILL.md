@@ -5,7 +5,7 @@ description: Check whether a single-crate Rust project should be converted to a 
 
 # rust-workspace-check — Cargo Workspace Readiness Assessment
 
-Lineage: this is a narrowly scoped Rust research specialist built on the generic research pattern; use broader research routing when the project exceeds this skill's file-count and LOC gate.
+Lineage: this is a narrowly scoped Rust research specialist built on the generic research pattern; use `evidence-first-research` for broader project investigation.
 
 You are analyzing a Rust project to determine whether it has grown large enough to benefit from being split into a Cargo workspace with multiple crates. This is a gated routine: if the project is below size thresholds, exit early.
 
@@ -62,4 +62,3 @@ project files; print the read-only report.
 ## References
 
 - Generic research base: [evidence-first-research](../evidence-first-research/SKILL.md) — rust-workspace-check is a narrowly scoped research specialist. For broader Rust-project investigation, use the base.
-- Sibling research router: [research-routing](.skillnet/deps/research-routing/SKILL.md).

@@ -14,6 +14,7 @@ import argparse
 import contextlib
 import dataclasses
 import hashlib
+import html
 import json
 import os
 import re
@@ -510,18 +511,6 @@ class RouteSpec:
     name: str
 
 
-@dataclasses.dataclass(slots=True)
-class CommandResult:
-    command: list[str]
-    returncode: int
-    stdout: str
-    stderr: str
-
-    @property
-    def ok(self) -> bool:
-        return self.returncode == 0
-
-
 def log(message: str) -> None:
     print(f"[dioxus-openpencil] {message}", flush=True)
 
@@ -746,7 +735,9 @@ def openpencil_command(explicit: str | None, allow_npx: bool) -> list[str] | Non
     return None
 
 
-def run_command(command: Sequence[str], cwd: Path, timeout: float = 300) -> CommandResult:
+def run_command(
+    command: Sequence[str], cwd: Path, timeout: float = 300
+) -> subprocess.CompletedProcess[str]:
     completed = subprocess.run(
         list(command),
         cwd=cwd,
@@ -755,7 +746,7 @@ def run_command(command: Sequence[str], cwd: Path, timeout: float = 300) -> Comm
         timeout=timeout,
         check=False,
     )
-    return CommandResult(list(command), completed.returncode, completed.stdout, completed.stderr)
+    return completed
 
 
 def import_html(
@@ -777,14 +768,14 @@ def import_html(
     ]
     result = run_command(args, working_dir)
     return {
-        "command": result.command,
+        "command": list(result.args),
         "returncode": result.returncode,
         "stdout": result.stdout.strip(),
         "stderr": result.stderr.strip(),
         "output": str(fig_path),
         "status": (
             "ok"
-            if result.ok and fig_path.exists() and fig_path.stat().st_size > 0
+            if result.returncode == 0 and fig_path.exists() and fig_path.stat().st_size > 0
             else "failed"
         ),
     }
@@ -802,7 +793,7 @@ def export_fig(
             args.extend(["-s", str(scale)])
         result = run_command(args, working_dir)
         attempt = {
-            "command": result.command,
+            "command": list(result.args),
             "returncode": result.returncode,
             "stdout": result.stdout.strip(),
             "stderr": result.stderr.strip(),
@@ -810,7 +801,7 @@ def export_fig(
             "scale": scale,
         }
         attempts.append(attempt)
-        if result.ok and png_path.exists() and png_path.stat().st_size > 0:
+        if result.returncode == 0 and png_path.exists() and png_path.stat().st_size > 0:
             attempt["status"] = "ok"
             return {**attempt, "attempts": attempts}
     final = attempts[-1]
@@ -851,8 +842,8 @@ def write_combined_html(
     cards: list[str] = []
     for record in route_records:
         fragment = Path(record["html"]).read_text(encoding="utf-8")
-        name = str(record["name"]).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        route = str(record["route"]).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        name = html.escape(str(record["name"]), quote=False)
+        route = html.escape(str(record["route"]), quote=False)
         cards.append(
             f'''<div class="route-{slugify(record['route'])}" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start;">
   <p style="color:#111827;font-family:Inter,Arial,sans-serif;font-size:18px;font-weight:700;line-height:24px;">{name}</p>
