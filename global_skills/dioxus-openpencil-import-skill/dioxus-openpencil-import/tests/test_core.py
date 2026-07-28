@@ -66,7 +66,7 @@ def test_export_command_uses_current_cli_flags(monkeypatch, tmp_path):
         captured["command"] = list(command)
         output = Path(command[command.index("-o") + 1])
         output.write_bytes(b"png")
-        return module.CommandResult(list(command), 0, "ok", "")
+        return module.subprocess.CompletedProcess(list(command), 0, "ok", "")
 
     monkeypatch.setattr(module, "run_command", fake_run)
     fig = tmp_path / "input.fig"

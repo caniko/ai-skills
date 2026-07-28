@@ -4,9 +4,9 @@
 from __future__ import annotations
 
 import pathlib
-import re
 import sys
 import argparse
+import tomllib
 
 
 BASE_REQUIRED = {
@@ -16,15 +16,12 @@ BASE_REQUIRED = {
 }
 
 
-def read(path: pathlib.Path) -> str:
+def read_manifest(path: pathlib.Path) -> dict[str, object]:
     try:
-        return path.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return ""
-
-
-def has_manifest_field(manifest: str, field: str) -> bool:
-    return re.search(rf"(?m)^\s*{re.escape(field)}\s*=", manifest) is not None
+        with path.open("rb") as source:
+            return tomllib.load(source)
+    except (FileNotFoundError, tomllib.TOMLDecodeError):
+        return {}
 
 
 def main() -> int:
@@ -56,25 +53,26 @@ def main() -> int:
         if not (root / rel).exists():
             failures.append(f"missing {rel}: required for {reason}")
 
-    manifest = read(root / "Cargo.toml")
+    manifest = read_manifest(root / "Cargo.toml")
     kind = args.crate_kind
     if kind == "auto":
-        if re.search(r"(?m)^\[workspace\]", manifest):
+        if "workspace" in manifest:
             kind = "workspace"
         elif (root / "src/lib.rs").exists():
             kind = "library"
-        elif (root / "src/main.rs").exists() or "[[bin]]" in manifest:
+        elif (root / "src/main.rs").exists() or manifest.get("bin"):
             kind = "binary"
         else:
             failures.append("cannot infer crate kind: expected workspace, src/lib.rs, src/main.rs, or [[bin]]")
     if kind == "library" and not (root / "src/lib.rs").exists():
         failures.append("missing src/lib.rs: required for --crate-kind library")
-    if kind == "binary" and not ((root / "src/main.rs").exists() or "[[bin]]" in manifest):
+    if kind == "binary" and not ((root / "src/main.rs").exists() or manifest.get("bin")):
         failures.append("missing binary target: expected src/main.rs or [[bin]] in Cargo.toml")
-    if kind == "workspace" and not re.search(r"(?m)^\[workspace\]", manifest):
+    if kind == "workspace" and "workspace" not in manifest:
         failures.append("missing [workspace]: required for --crate-kind workspace")
 
     if manifest:
+        package = manifest.get("package") or {}
         for field in [
             "description",
             "license",
@@ -86,9 +84,11 @@ def main() -> int:
             "categories",
             "include",
         ]:
-            if not has_manifest_field(manifest, field):
+            if field not in package:
                 failures.append(f"Cargo.toml missing `{field}`")
-        if "[package.metadata.docs.rs]" not in manifest:
+        metadata = package.get("metadata") or {}
+        docs_metadata = metadata.get("docs") or {}
+        if "rs" not in docs_metadata:
             failures.append("Cargo.toml missing `[package.metadata.docs.rs]`")
 
     for rel in ["Cargo.lock", "flake.nix", "flake.lock"]:
@@ -110,7 +110,7 @@ def main() -> int:
         docs = "mdbook" if (root / "docs" / "book.toml").exists() else "rustdoc"
     if docs == "mdbook" and not (root / "docs" / "book.toml").exists():
         failures.append("missing docs/book.toml: required for --docs mdbook")
-    if docs == "rustdoc" and manifest and not has_manifest_field(manifest, "documentation"):
+    if docs == "rustdoc" and manifest and "documentation" not in (manifest.get("package") or {}):
         failures.append("Cargo.toml missing documentation: required for --docs rustdoc")
 
     if failures:

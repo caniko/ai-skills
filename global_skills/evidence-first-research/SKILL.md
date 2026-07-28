@@ -74,4 +74,3 @@ speculating.
 ## See also
 
 - Domain-grounded research skills add their own required sources, commands, and validation gates.
-- [`research-routing`](.skillnet/deps/research-routing/SKILL.md) provides recommendation-only routing when the correct specialist is unclear.
