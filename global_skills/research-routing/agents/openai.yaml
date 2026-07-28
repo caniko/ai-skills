@@ -1,6 +1,0 @@
-interface:
-  display_name: "Research Routing"
-  short_description: "Route ambiguous research requests to a specialist."
-  default_prompt: "Use $research-routing to select the narrowest research skill before investigation."
-policy:
-  allow_implicit_invocation: false
