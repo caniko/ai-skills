@@ -57,7 +57,10 @@ Generated GitHub workflows must have:
 - `permissions: contents: read` unless a step demonstrably needs more;
 - immutable action references (commit SHA plus a version comment);
 - no registry credentials, deployment tokens, or secret output in build jobs;
-- bounded matrix concurrency and no duplicate hand-written equivalent job.
+- bounded matrix concurrency and no duplicate hand-written equivalent job;
+- one concurrency group that coalesces a branch push with its pull request,
+  using `github.event.pull_request.head.ref || github.ref` and
+  `cancel-in-progress: true`.
 
 Keep the matrix build-only: `nix build --no-link` catches broken outputs
 without silently publishing or deploying anything.
