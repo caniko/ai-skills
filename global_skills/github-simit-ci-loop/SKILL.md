@@ -80,6 +80,22 @@ simit init ci --platform github --ci-provider actions --runtime nix --check --di
 Then run the smallest relevant local formatter and test gate. Do not add
 compiler environment overrides to hide a devshell or cross-toolchain bug.
 
+Check fresh-checkout dependencies before trusting the runner result. GitHub's
+checkout action does not initialize submodules unless asked, and a Cargo
+workspace may refer to a vendored submodule directly from its devshell. Inspect
+the gitlinks and materialize them explicitly:
+
+```text
+git submodule status --recursive
+git submodule update --init --recursive
+```
+
+If the pinned submodule object is no longer reachable from its upstream, stop
+and repair the upstream publication or move the gitlink to a tested reachable
+commit. Do not silently use a local checkout, a moving branch, or a different
+flake input as a substitute. Add the explicit initialization command to
+simit's `extra_setup` only after an empty-checkout test proves it is required.
+
 If a hosted run reports `No space left on device`, fix the input that caused
 the excess closure first. When the project has a proven runner-disk ceiling,
 use simit's `extra_setup` for a bounded ephemeral-runner cleanup and apply the
