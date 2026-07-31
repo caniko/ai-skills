@@ -12,6 +12,7 @@ docs/planning/**/.calibration.json
 /ROUTING.md
 /SKILL_CONFLICTS.md
 graphify-out/
+.opencode/
 
 # Obsolete pre-.skills project mirror/aggregator state. Per-project canonical
 # content lives in each project's own repo at <project>/.skills/.

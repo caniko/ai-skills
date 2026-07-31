@@ -21,11 +21,9 @@ Configuration is centralized per user by Skillnet:
 - `$XDG_CONFIG_HOME/skillnet/skillnet.catalog.toml` declares catalog metadata and taxonomy rules.
 - Older checkouts that still contain repository-local config can migrate it with `skillnet config migrate`; the command preserves the configured database and subscription state.
 
-`global_skills/Skillnet.pkl` uses schema version 2. `defaultUsers` grants the
-catalog to named users by default, while an individual skill may override that
-list with `users`; an omitted list remains unrestricted for compatibility.
-Skillnet verifies that dependencies are granted whenever an entrypoint is
-granted.
+`global_skills/` stores global skills as markdown skill packages. The catalog
+manifest (`Skillnet.pkl`) and its grants are per-store; generate them locally
+with `skillnet catalog generate` when needed.
 
 ## Authoring
 
