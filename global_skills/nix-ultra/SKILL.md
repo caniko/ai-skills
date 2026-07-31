@@ -26,4 +26,4 @@ the complete pass and reports unresolved findings, blockers, and validation.
 
 ## Boundaries
 
-Use `canix-cli` or project-local deployment skills for host-specific releases.
+Use project-local deployment skills for host-specific releases.

@@ -122,13 +122,12 @@ fj actions -r OWNER/REPO tasks
 Use the run-specific web/API endpoints from step 6 for jobs and logs when the
 installed CLI lacks those operations.
 
-For the runner runner, inspect the matching daemon and image state:
+For a self-hosted runner, inspect its daemon and container state on the
+runner host:
 
 ```sh
-sudo journalctl -u forgejo-runner-nixTrusted.service --since "10 minutes ago" --no-pager
-sudo journalctl -u forgejo-runner-codeberg.service --since "10 minutes ago" --no-pager
-sudo podman ps -a | grep -i forgejo
-sudo podman images | grep -E 'canix-runner|canix-nix-runner'
+systemctl status forgejo-runner   # or the configured runner service
+podman ps -a | grep -i forgejo
 ```
 
 Failure timing is a heuristic, not proof: failures in the first 10 seconds
@@ -138,15 +137,10 @@ step itself. Confirm the failing step from the run log before classifying it.
 
 Common runner checks:
 
-- JS/composite-action failures: verify `forgejo-runner-act` exists in the
-  runner image and that the container can reach Codeberg.
-- Nix failures: verify `NIX_REMOTE=daemon` and the host Nix daemon socket
-  mount on `nix-runner`.
-- Credential failures: inspect the service's systemd credential paths without
-  printing secret contents.
+- JS/composite-action failures: verify the runner image contains the action
+  runtime and that the container can reach Codeberg.
+- Nix failures: verify the runner can reach the host Nix daemon.
+- Credential failures: inspect service credential files without printing
+  secret contents.
 - Workspace permission failures: inspect the runner work directory ownership
   and the container workspace mount.
-
-Load [runner](.skillnet/deps/runner/SKILL.md) for canonical labels, images,
-mounts, cache behavior, and runner registration facts. Do not infer a fix from
-timing alone.

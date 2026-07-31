@@ -36,7 +36,7 @@ For exact starter flakes and module snippets, read [patterns.md](references/patt
 
 3. Implement narrowly:
    - Add or update `flake.nix`.
-   - Add small `nix/*.nix` files only when they reduce clutter or match existing project style. When modularizing or optimizing a large flake, use the shared routine at `.skillnet/deps/simit-project-init-common/references/flake-modularization.md`.
+   - Add small `nix/*.nix` files only when they reduce clutter or match existing project style. When modularizing or optimizing a large flake, split it into `nix/*.nix` files.
    - Keep package, check, and dev shell names predictable: `packages.default`, `checks.{default,clippy,fmt,nextest?}`, `devShells.default`.
    - For workspaces, build from the workspace root and add extra named packages only when the user needs multiple binaries.
 
