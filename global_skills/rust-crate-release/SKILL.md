@@ -33,7 +33,3 @@ owns publication. Never paste credentials into files, logs, or chat.
 Use `rust-quality` for general code-quality work, `rust-project-flake` for
 project-specific crane changes, and the canonical simit/Forgejo/Pages skills
 for generated or hosted integrations.
-
-For canix-backed release credentials, load
-[simit-canix-release-secrets.md](references/simit-canix-release-secrets.md)
-before changing secret mappings.

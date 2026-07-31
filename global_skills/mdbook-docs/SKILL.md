@@ -83,7 +83,7 @@ site = docs;
 
 Expose `docs` and `site` in `packages`. Add `pkgs.mdbook` to the dev shell.
 
-If the flake is already large or this update makes `flake.nix` hard to review, modularize using the shared routine at [.skillnet/deps/simit-project-init-common/references/flake-modularization.md](.skillnet/deps/simit-project-init-common/references/flake-modularization.md). Keep `docs` and `site` output names stable.
+If the flake is already large or this update makes `flake.nix` hard to review, modularize it into `nix/*.nix` files. Keep `docs` and `site` output names stable.
 
 ### 3. Update ignored artifacts
 
