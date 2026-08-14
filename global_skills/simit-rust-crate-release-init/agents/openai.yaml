@@ -1,0 +1,6 @@
+interface:
+  display_name: "Simit Rust Crate Release Init"
+  short_description: "Add simit release CI for Rust crates"
+  default_prompt: "Use $simit-rust-crate-release-init to apply release-ready simit flake and CI wiring to this Rust crate."
+policy:
+  allow_implicit_invocation: false

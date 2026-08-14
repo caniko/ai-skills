@@ -1,0 +1,125 @@
+class Skill {
+  role: String = "entrypoint"
+  dependencies: Listing<String> = new {}
+  source: String? = null
+  users: Listing<String>? = null
+}
+
+schemaVersion = 2
+defaultDependencies = List("graphify-policy", "solution-placement-policy")
+defaultUsers = List("can", "dejana")
+
+skills: Mapping<String, Skill> = new {
+  ["graphify-policy"] = new {
+    role = "reference"
+    source = "references/graphify-policy.md"
+  }
+  ["solution-placement-policy"] = new {
+    role = "reference"
+    source = "references/solution-placement.md"
+  }
+  ["atlas-runner"] = new {
+    role = "reference"
+    dependencies = List("canix-structure-reference")
+  }
+  ["canix-cli"] = new {
+    dependencies = List("canix-structure-reference")
+  }
+  ["canix-hosted-release-reference"] = new {
+    role = "reference"
+    dependencies = List("canix-structure-reference")
+  }
+  ["canix-project-space-reference"] = new {
+    dependencies = List("canix-structure-reference")
+  }
+  ["canix-structure-reference"] = new {
+    role = "reference"
+  }
+  ["codeberg-pages-dns"] = new {
+    dependencies = List("canix-structure-reference")
+  }
+  ["dioxus-openpencil-import"] = new {
+    dependencies = List()
+    source = "dioxus-openpencil-import-skill/dioxus-openpencil-import"
+  }
+  ["evidence-first-research"] = new {
+    dependencies = List("plan-progress-review", "research-routing")
+  }
+  ["forgejo-atlas-ci"] = new {
+    dependencies = List("atlas-runner", "forgejo-ci", "forgejo-ci-common", "simit-rust-project-ci-init")
+  }
+  ["forgejo-ci"] = new {
+    dependencies = List("atlas-runner", "forgejo-ci-common")
+  }
+  ["forgejo-ci-common"] = new {
+    role = "reference"
+  }
+  ["forgejo-codeberg-ci"] = new {
+    dependencies = List("atlas-runner")
+  }
+  ["forgejo-docs"] = new {
+    dependencies = List("forgejo-pages", "mdbook-docs")
+  }
+  ["forgejo-pages"] = new {
+    dependencies = List("repo-pages")
+  }
+  ["forgejo-site"] = new {
+    dependencies = List("canix-structure-reference", "codeberg-pages-dns", "forgejo-pages", "mdbook-docs", "simit-project-init-common")
+  }
+  ["gitlab-pages"] = new {
+    dependencies = List("repo-pages")
+  }
+  ["mdbook-docs"] = new {
+    dependencies = List("simit-project-init-common")
+  }
+  ["nix-ultra"] = new {
+    dependencies = List("nix-code-health", "nix-correctness", "nix-flake-architecture", "nix-module-design", "nix-security", "nix-test-gates")
+  }
+  ["plan-progress-review"] = new {
+    dependencies = List("retire-docs-planning")
+  }
+  ["plinth-project-visual-review"] = new {
+    dependencies = List("canix-structure-reference")
+  }
+  ["pr-review-reply-style"] = new {
+    dependencies = List("write-human-style")
+  }
+  ["repo-pages"] = new {
+    role = "reference"
+  }
+  ["research-routing"] = new {
+    role = "reference"
+  }
+  ["rust-project-flake"] = new {
+    dependencies = List("simit-project-init-common", "simit-rust-crate-release-init")
+  }
+  ["rust-ultra"] = new {
+    dependencies = List("rust-api-design", "rust-correctness", "rust-dependencies", "rust-quality", "rust-security")
+  }
+  ["rust-workspace-check"] = new {
+    dependencies = List("evidence-first-research", "research-routing")
+  }
+  ["simit-project-init-common"] = new {
+    role = "reference"
+    dependencies = List("canix-structure-reference")
+  }
+  ["simit-python-project-init"] = new {
+    dependencies = List("simit-project-init-common")
+  }
+  ["simit-rust-crate-release-init"] = new {
+    dependencies = List("simit-project-init-common")
+  }
+  ["simit-rust-project-ci-init"] = new {
+    dependencies = List("simit-project-init-common")
+  }
+  ["simit-rust-project-init"] = new {
+    dependencies = List("simit-rust-crate-release-init", "simit-rust-project-ci-init")
+  }
+  ["fix-loop"] = new {
+    dependencies = List("fix-loop-ref")
+  }
+  ["fix-loop-ref"] = new {
+    role = "reference"
+    source = "fix-loop/references/repair-contract.md"
+  }
+}

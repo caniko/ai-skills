@@ -1,0 +1,4 @@
+interface:
+  display_name: "Canix Project-Space Reference"
+  short_description: "Shared canix and project-workspace operating contract"
+  default_prompt: "Operate across canix and projects/ as one workspace: audit topology, plan safe repository changes, or generate validated assets for selected active projects."

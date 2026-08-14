@@ -36,4 +36,4 @@ If documentation content would need to be invented from missing source material,
 2. Apply the Codeberg-specific `site-url` and `git-repository-url` values above.
 3. Use [../forgejo-pages/SKILL.md](../forgejo-pages/SKILL.md) for Pages deployment wiring.
 4. Verify the local docs build per mdbook-docs before adding CI.
-5. For custom domain wiring (`<name>.example.com`), use `codeberg-pages-dns` after the initial Pages deploy.
+5. For custom domain wiring (`<name>.tartanoglu.com`), use `codeberg-pages-dns` after the initial Pages deploy.

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Atlas Runner Reference"
+  short_description: "Reference for atlas Forgejo runners and Attic."
+  default_prompt: "Use $atlas-runner for atlas runner or Attic cache details."
+policy:
+  allow_implicit_invocation: false

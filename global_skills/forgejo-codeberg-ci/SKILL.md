@@ -122,7 +122,7 @@ fj actions -r OWNER/REPO tasks
 Use the run-specific web/API endpoints from step 6 for jobs and logs when the
 installed CLI lacks those operations.
 
-For the runner runner, inspect the matching daemon and image state:
+For the atlas runner, inspect the matching daemon and image state:
 
 ```sh
 sudo journalctl -u forgejo-runner-nixTrusted.service --since "10 minutes ago" --no-pager
@@ -136,17 +136,17 @@ usually indicate container/runtime/network infrastructure; 10–60 seconds
 usually indicates action setup; later failures usually occur in the workflow
 step itself. Confirm the failing step from the run log before classifying it.
 
-Common runner checks:
+Common atlas checks:
 
 - JS/composite-action failures: verify `forgejo-runner-act` exists in the
   runner image and that the container can reach Codeberg.
 - Nix failures: verify `NIX_REMOTE=daemon` and the host Nix daemon socket
-  mount on `nix-runner`.
+  mount on `atlas-nix-trusted`.
 - Credential failures: inspect the service's systemd credential paths without
   printing secret contents.
 - Workspace permission failures: inspect the runner work directory ownership
   and the container workspace mount.
 
-Load [runner](.skillnet/deps/runner/SKILL.md) for canonical labels, images,
+Load [atlas-runner](.skillnet/deps/atlas-runner/SKILL.md) for canonical labels, images,
 mounts, cache behavior, and runner registration facts. Do not infer a fix from
 timing alone.

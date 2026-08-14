@@ -1,0 +1,6 @@
+interface:
+  display_name: "Forgejo Atlas CI"
+  short_description: "Configure Codeberg CI on atlas runners."
+  default_prompt: "Use $forgejo-atlas-ci when forgejo-ci routes Codeberg atlas runner workflow work."
+policy:
+  allow_implicit_invocation: false

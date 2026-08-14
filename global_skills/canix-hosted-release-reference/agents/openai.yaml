@@ -1,0 +1,6 @@
+interface:
+  display_name: "Canix Hosted Release Reference"
+  short_description: "Release flake projects through canix hosts"
+  default_prompt: "Use $canix-hosted-release-reference to release a flake-backed project through canix to its production host."
+policy:
+  allow_implicit_invocation: false

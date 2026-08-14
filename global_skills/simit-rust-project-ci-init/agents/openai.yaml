@@ -1,0 +1,6 @@
+interface:
+  display_name: "Simit Rust Project CI Init"
+  short_description: "Add simit flake-integrated CI for Rust projects"
+  default_prompt: "Use $simit-rust-project-ci-init to apply simit flake and CI wiring to this Rust project with persisted generic CI policy and without release publishing."
+policy:
+  allow_implicit_invocation: false

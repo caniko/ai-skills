@@ -1,0 +1,4 @@
+interface:
+  display_name: "Simit Python Project Init"
+  short_description: "Apply simit Python uv flake and CI initialization"
+  default_prompt: "Use $simit-python-project-init to apply simit py-harbor flake and CI wiring to this Python uv project."

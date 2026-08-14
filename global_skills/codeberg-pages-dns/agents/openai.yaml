@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codeberg Pages DNS"
+  short_description: "Register Codeberg Pages custom domains in canix DNS."
+  default_prompt: "Register a Codeberg Pages site under a custom domain using canix-managed DNS."

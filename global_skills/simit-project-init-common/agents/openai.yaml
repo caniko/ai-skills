@@ -1,0 +1,6 @@
+interface:
+  display_name: "Simit Project Init Common"
+  short_description: "Shared contract for Simit project initialization."
+  default_prompt: "Use $simit-project-init-common when a Simit initialization skill directs you to its shared contract."
+policy:
+  allow_implicit_invocation: false

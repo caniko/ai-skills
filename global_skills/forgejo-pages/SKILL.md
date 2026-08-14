@@ -11,7 +11,7 @@ Adds a Forgejo Actions workflow that builds a static site and publishes it to Co
 
 Use the term **Forgejo Actions hosted by Codeberg**. Avoid "Codeberg Actions"; Codeberg's hosted CI service is Forgejo Actions.
 
-This skill is for Codeberg's shared hosted runners. If the repository should run on our self-hosted runner runner, or the request is for Rust crate CI/release readiness rather than Pages publishing, use [../forgejo-runner-ci/SKILL.md](../forgejo-runner-ci/SKILL.md) and the Rust crate release CI skill instead.
+This skill is for Codeberg's shared hosted runners. If the repository should run on our self-hosted atlas runner, or the request is for Rust crate CI/release readiness rather than Pages publishing, use [../forgejo-atlas-ci/SKILL.md](../forgejo-atlas-ci/SKILL.md) and the Rust crate release CI skill instead.
 
 ## Shared Pages model
 
@@ -58,7 +58,7 @@ Default guidance:
 - Static or lint-only non-Nix jobs: `codeberg-tiny`.
 - Larger docs, site, or Nix builds: `codeberg-medium` or `codeberg-small-lazy`.
 
-Use flakes only when the workflow intentionally consumes flake outputs, such as a site/docs build that has no lighter maintained image-based path. Do not use this Pages skill as the source of truth for Rust crate CI; runner Rust jobs use Debian Rust containers and the action runtime described in the runner CI skills.
+Use flakes only when the workflow intentionally consumes flake outputs, such as a site/docs build that has no lighter maintained image-based path. Do not use this Pages skill as the source of truth for Rust crate CI; atlas Rust jobs use Debian Rust containers and the action runtime described in the atlas CI skills.
 
 ## Workflow
 
