@@ -80,7 +80,7 @@ skillnet project sync --name <project>
 
 ### Cross-repository prerequisite
 
-`defaultDependencies` loads `graphify-policy` and
+`defaultDependencies` loads `chaosbox-policy` and
 `solution-placement-policy` for every canonical skill. After adding or changing
 a skill, run:
 
