@@ -1,0 +1,45 @@
+# Install as .github/workflows/skillnet.yaml with a workflow-scoped credential.
+name: Skillnet composition
+
+on:
+  push:
+    branches: [trunk, maintenance/greptile-skills]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skillnet-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+      - name: Install published Skillnet
+        run: cargo install skillnet --version =0.6.0 --locked
+      - name: Compose Greptile consumer view
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/skillnet.toml" <<EOF
+          skills_root = "$GITHUB_WORKSPACE"
+          data_dir = "$RUNNER_TEMP/skillnet-data"
+          [global]
+          canonical_path = "$GITHUB_WORKSPACE/global_skills"
+          views = [{ label = "qualification", path = "$RUNNER_TEMP/skillnet-view" }]
+          EOF
+          skillnet --config "$RUNNER_TEMP/skillnet.toml" view sync --all
+          for skill in check-pr greploop cli-review; do
+            test -s "$RUNNER_TEMP/skillnet-view/$skill/SKILL.md"
+            test -s "$RUNNER_TEMP/skillnet-view/$skill/references/repository-contract.md"
+          done
+          test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/fix-loop/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/greploop/.skillnet/deps/check-pr/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/cli-review/.skillnet/deps/write-human-style/SKILL.md"

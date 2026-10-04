@@ -1,0 +1,30 @@
+class Skill {
+  role: String = "entrypoint"
+  dependencies: Listing<String> = new {}
+  source: String? = null
+}
+
+schemaVersion = 2
+defaultDependencies = List()
+
+skills: Mapping<String, Skill> = new {
+  ["check-pr"] = new {
+    dependencies = List("fix-loop", "pr-review-reply-style", "grouped-git-commits")
+  }
+  ["cli-review"] = new {
+    dependencies = List("write-human-style")
+  }
+  ["greploop"] = new {
+    dependencies = List("check-pr", "fix-loop", "grouped-git-commits")
+  }
+  ["fix-loop"] = new {
+    dependencies = List("fix-loop-ref")
+  }
+  ["fix-loop-ref"] = new {
+    role = "reference"
+    source = "fix-loop/references/repair-contract.md"
+  }
+  ["pr-review-reply-style"] = new {
+    dependencies = List("write-human-style")
+  }
+}

@@ -27,6 +27,30 @@ with `skillnet catalog generate` when needed.
 
 ## Authoring
 
+### Greptile review skills
+
+The MIT-licensed `check-pr`, `greploop`, and `cli-review` packages are imported
+from `greptileai/skills` at a recorded immutable revision. Each package retains
+its license, provenance and upstream references, plus a repository contract for
+scoped fixes, revision-bound evidence and hosted-only validation.
+
+- `check-pr`: inspect review feedback, descriptions and CI, then address confirmed issues.
+- `greploop`: iterate through current Greptile reviews with a bounded repair loop.
+- `cli-review`: explicitly authorized pre-PR CLI review; use hosted review for hosted-only tasks.
+
+Skillnet discovers these packages from `global_skills/` using the existing
+canonical-store configuration. Run `skillnet catalog generate`, then
+`skillnet view sync --all` to materialize configured consumer views. View sync evaluates
+configured Pkl manifests; during a no-local-evaluation pass, defer that step to
+the permitted qualification environment. The `Skillnet.pkl` manifest declares
+the three entrypoints and their review/Git dependencies. No subscription or second skill store
+is required.
+
+`ci/skillnet-composition.yaml` contains the hosted composition gate. Install it
+as `.github/workflows/skillnet.yaml` with a workflow-scoped publishing credential.
+The gate composes all three skills through published Skillnet and verifies the
+entrypoints, repository contracts and transitive dependencies.
+
 Author global skills directly in this repository:
 
 ```sh
