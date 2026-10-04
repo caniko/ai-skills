@@ -46,6 +46,8 @@ jobs:
           test -s "$RUNNER_TEMP/skillnet-view/cli-review/.skillnet/deps/write-human-style/SKILL.md"
           test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/fix-loop/.skillnet/deps/fix-loop-ref/SKILL.md"
           test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/grouped-git-commits/.skillnet/deps/chaosbox-policy/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/chaosbox-policy/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/fix-loop/.skillnet/deps/solution-placement-policy/SKILL.md"
           test -s "$RUNNER_TEMP/skillnet-view/cli-review/.skillnet/deps/write-human-style/.skillnet/deps/solution-placement-policy/SKILL.md"
           test ! -e "$RUNNER_TEMP/skillnet-view/fix-loop-ref"
       - name: Export qualified consumer packages

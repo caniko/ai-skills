@@ -5,7 +5,7 @@ class Skill {
 }
 
 schemaVersion = 2
-defaultDependencies = List()
+defaultDependencies = List("chaosbox-policy", "solution-placement-policy")
 
 skills: Mapping<String, Skill> = new {
   ["chaosbox-policy"] = new {
@@ -24,12 +24,6 @@ skills: Mapping<String, Skill> = new {
   }
   ["greploop"] = new {
     dependencies = List("check-pr", "fix-loop", "grouped-git-commits")
-  }
-  ["grouped-git-commits"] = new {
-    dependencies = List("chaosbox-policy", "solution-placement-policy")
-  }
-  ["write-human-style"] = new {
-    dependencies = List("chaosbox-policy", "solution-placement-policy")
   }
   ["fix-loop"] = new {
     dependencies = List("fix-loop-ref")
