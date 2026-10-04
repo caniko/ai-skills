@@ -54,7 +54,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/skillnet-artifact"
           # Dereference Skillnet's generated links so the archive remains
           # usable after the runner and its temporary bundle paths disappear.
-          tar --dereference -czf "$RUNNER_TEMP/skillnet-artifact/greptile-consumer-skills.tar.gz" \
+          tar --dereference --hard-dereference -czf "$RUNNER_TEMP/skillnet-artifact/greptile-consumer-skills.tar.gz" \
             -C "$RUNNER_TEMP/skillnet-view" check-pr greploop cli-review
           jq -n --arg repository "$GITHUB_REPOSITORY" --arg head "$GITHUB_SHA" \
             --arg run "$GITHUB_RUN_ID" --arg attempt "$GITHUB_RUN_ATTEMPT" \
