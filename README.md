@@ -38,6 +38,10 @@ scoped fixes, revision-bound evidence and hosted-only validation.
 - `greploop`: iterate through current Greptile reviews with a bounded repair loop.
 - `cli-review`: explicitly authorized pre-PR CLI review; use hosted review for hosted-only tasks.
 
+These packages do not enable automatic Greptile usage. Honor the operator's
+provider policy: when Greptile is excluded, do not request its review or treat
+its installation, credits, or score as a prerequisite for unrelated qualification.
+
 Skillnet discovers these packages from `global_skills/` using the existing
 canonical-store configuration. Run `skillnet catalog generate`, then
 `skillnet view sync --all` to materialize configured consumer views. View sync evaluates

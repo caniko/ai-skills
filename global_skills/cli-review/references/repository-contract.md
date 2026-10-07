@@ -7,6 +7,9 @@ repository context to Greptile are authorized. Respect a hosted-only or
 no-local-evaluation task by using a hosted PR review instead; installation or
 authentication does not override that constraint.
 
+If the operator's provider policy excludes Greptile, do not invoke this workflow
+or treat its installation, credentials, credits, or score as a merge prerequisite.
+
 Inspect the installed CLI's help and official package provenance before using an
 unfamiliar release. Installation and interactive login require the user's
 authorization. Do not expose credentials in prompts, files or command output.
