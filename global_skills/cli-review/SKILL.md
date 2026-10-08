@@ -78,31 +78,49 @@ fi
 
 Do not stage, stash, discard or commit the user's work merely to pass this guard.
 Select the intended target branch from the task or live PR/MR, not the repository
-default. If it is unknown, stop and ask. Resolve and retain both input commits:
+default. If it or its verified target remote is unknown, stop and ask. Fetch that
+remote branch freshly, never resolve a possibly stale local/tracking branch:
 
 ```bash
-REVIEW_BASE=<INTENDED_TARGET_BRANCH_OR_REF>
+: "${REVIEW_TARGET_REMOTE:?Set the verified target repository remote first}"
+: "${REVIEW_TARGET_BRANCH:?Set the intended target branch first}"
+git fetch --no-tags "$REVIEW_TARGET_REMOTE" "refs/heads/$REVIEW_TARGET_BRANCH" || exit 1
 HEAD_SHA=$(git rev-parse --verify HEAD) || exit 1
-BASE_SHA=$(git rev-parse --verify "$REVIEW_BASE^{commit}") || exit 1
+BASE_SHA=$(git rev-parse --verify 'FETCH_HEAD^{commit}') || exit 1
+REVIEW_BASE=$BASE_SHA
+assert_review_revision() {
+  local live_base status
+  live_base=$(git ls-remote --exit-code "$REVIEW_TARGET_REMOTE" "refs/heads/$REVIEW_TARGET_BRANCH") || return 1
+  live_base=${live_base%%[[:space:]]*}
+  status=$(git status --porcelain --untracked-files=all) || return 1
+  if [ "$live_base" != "$BASE_SHA" ] || [ "$(git rev-parse --verify HEAD)" != "$HEAD_SHA" ] || [ -n "$status" ]; then
+    echo "Review head/base/worktree moved; coverage is incomplete. Stop and requalify." >&2
+    return 1
+  fi
+}
+assert_review_revision || exit 1
 ```
 
 Verify the installed CLI supports the documented `--branch` base selector
 ([official CLI reference](https://www.greptile.com/docs/code-review/greptile-cli#review-options)).
-Pass the same intended target to both output modes. Retain its resolved commit
-and verify the worktree and source
-identity again before presenting results. If either changed, report incomplete
-coverage rather than treating the response as a review of the current checkout.
+Require support for an immutable Git commit as that selector; if unavailable,
+stop rather than fall back to a mutable local branch. Pass the fetched commit to
+both output modes. Run `assert_review_revision` again after the review and before
+presenting results, including a fresh remote target OID check. A moved target
+requires a fresh comparison, not an obsolete coverage claim.
 
 Prefer JSON output:
 
 ```bash
-greptile review --branch "$REVIEW_BASE" --json
+greptile review --branch "$REVIEW_BASE" --json || exit 1
+assert_review_revision || exit 1
 ```
 
 If JSON output is unsupported or fails with a usage error, fall back to:
 
 ```bash
-greptile review --branch "$REVIEW_BASE" --agent
+greptile review --branch "$REVIEW_BASE" --agent || exit 1
+assert_review_revision || exit 1
 ```
 
 Do not hide the raw command failure if both commands fail. Summarize the failing command and the next action the user needs to take.

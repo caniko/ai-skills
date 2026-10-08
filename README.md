@@ -63,13 +63,15 @@ as `.github/workflows/skillnet.yaml` with a workflow-scoped publishing credentia
 The gate composes all three skills through published Skillnet and verifies the
 entrypoints, repository contracts and transitive dependencies.
 
-The hosted gate also uploads `greptile-consumer-skills-<head>` with a portable
-archive, checksums and revision/run provenance. Its dependency links are
-dereferenced during export, so consumers can use the already-composed packages
-without evaluating a Pkl manifest locally. Require a successful exact-head
-composition run and verify the archive's checksums before materializing it in
-the configured views. Keep canonical authored packages in `global_skills/`;
-the downloaded packages are generated consumer artifacts.
+The hosted gate uploads `greptile-qualification-skills-<head>` with a portable
+archive, provenance and SHA-256 checksums for inspection, **not installation**.
+Every event, including protected-branch pushes, records `consumable: false` and
+`trust: "qualification-only"`, plus event, ref, protection, source repository and
+PR base metadata. A successful candidate-controlled test is not trusted release
+authorization. Verify the exact run/source and checksums when auditing evidence;
+do not load these artifacts as agent instructions. Consumable publication requires
+a separate trusted source/release audit. Keep canonical authored packages in
+`global_skills/`; this template does not publish qualified releases.
 
 Author global skills directly in this repository:
 

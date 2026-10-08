@@ -99,7 +99,12 @@ When supplied, pass the PR number to that same explicitly targeted command.
 
 **GitLab:**
 ```bash
-: "${MR_TARGET_REPO:?Set the verified GitLab target repository first}"
+: "${MR_TARGET_REPO:?Set the verified https://HOST/OWNER/REPO target URL first}"
+case "$MR_TARGET_REPO" in https://*/*) ;; *) echo "A fully qualified GitLab target URL is required." >&2; exit 1 ;; esac
+GITLAB_HOST=${MR_TARGET_REPO#https://}
+GITLAB_HOST=${GITLAB_HOST%%/*}
+: "${GITLAB_HOST:?Missing GitLab instance}"
+export GITLAB_HOST
 MR=$(glab mr view --repo "$MR_TARGET_REPO" --output json) || exit 1
 MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
 MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
@@ -109,7 +114,8 @@ HEAD_BRANCH=$(echo "$MR" | jq -er '.source_branch') || exit 1
 
 When a number is supplied, pass it to that same `glab mr view` with the explicit
 `--repo "$MR_TARGET_REPO"`. Retain the returned target project ID and MR IID for
-every later API operation; never re-infer the project from the local fork.
+every later API operation. Retain the URL's hostname and explicitly pass it to
+every API call; never re-infer the instance or project from the local fork.
 
 **Perforce:**
 ```bash
@@ -215,10 +221,10 @@ waiting and before reporting/fixing findings, and again before resolution.
 
 **GitLab:**
 ```bash
-glab api "projects/$MR_PROJECT_ID/merge_requests/$MR_IID"
+glab api --hostname "$GITLAB_HOST" "projects/$MR_PROJECT_ID/merge_requests/$MR_IID"
 # Fetch discussions (inline diff comments are type "DiffNote"; general comments have null type)
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"
 ```
 
 Inspect every page and compare note `updated_at` values to detect edited summaries.
@@ -282,12 +288,12 @@ Retain head/base-bound receipts; a target advance requires fresh comparison qual
 
 **GitLab:**
 ```bash
-MR=$(glab api "projects/$MR_PROJECT_ID/merge_requests/$MR_IID") || exit 1
+MR=$(glab api --hostname "$GITLAB_HOST" "projects/$MR_PROJECT_ID/merge_requests/$MR_IID") || exit 1
 # Load the MR identity helpers from references/gitlab-api.md first.
 MR_REVISION=$(mr_revision) || exit 1
 HEAD_SHA=$(echo "$MR_REVISION" | jq -er '.source_sha') || exit 1
 TARGET_SHA=$(echo "$MR_REVISION" | jq -er '.target_sha') || exit 1
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
 ```
 Use [the pipeline input/ownership binding](references/gitlab-api.md#fetch-pipeline-status-for-an-mr)
 to select a configured applicable pipeline, including a merged-results pipeline
@@ -454,7 +460,7 @@ Batch multiple resolutions into a single mutation using aliases (`t1`, `t2`, etc
 **GitLab** — fetch unresolved discussions (see [the GitLab API reference](references/gitlab-api.md)):
 
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
 ```
 
 Select discussions containing a relevant note with `resolvable == true` and
@@ -464,7 +470,7 @@ Inspect all notes before resolving and retain the enclosing discussion's `id`.
 Resolve each discussion individually (GitLab has no batch resolution):
 
 ```bash
-glab api --method PUT \
+glab api --hostname "$GITLAB_HOST" --method PUT \
   "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions/<DISCUSSION_ID>" \
   --field resolved=true
 ```

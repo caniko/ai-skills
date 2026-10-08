@@ -59,7 +59,7 @@ jobs:
           test -s "$RUNNER_TEMP/skillnet-view/forgejo-pages/.skillnet/deps/repo-pages/SKILL.md"
           test ! -e "$RUNNER_TEMP/skillnet-view/fix-loop-ref"
           test ! -e "$RUNNER_TEMP/skillnet-view/repo-pages"
-      - name: Export qualified consumer packages
+      - name: Export non-consumable qualification evidence
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/skillnet-artifact"
@@ -69,13 +69,17 @@ jobs:
             -C "$RUNNER_TEMP/skillnet-view" check-pr greploop cli-review
           jq -n --arg repository "$GITHUB_REPOSITORY" --arg head "$(git rev-parse HEAD)" \
             --arg run "$GITHUB_RUN_ID" --arg attempt "$GITHUB_RUN_ATTEMPT" \
-            '{schemaVersion: 1, repository: $repository, head: $head, run: $run, attempt: $attempt, skillnetVersion: "0.6.0", skills: ["check-pr", "greploop", "cli-review"]}' \
+            --arg event "$GITHUB_EVENT_NAME" --arg ref "$GITHUB_REF" \
+            --arg protected "$GITHUB_REF_PROTECTED" \
+            --arg sourceRepository "${{ github.event.pull_request.head.repo.full_name || github.repository }}" \
+            --arg base "${{ github.event.pull_request.base.sha || '' }}" \
+            '{schemaVersion: 1, repository: $repository, head: $head, run: $run, attempt: $attempt, event: $event, ref: $ref, refProtected: ($protected == "true"), sourceRepository: $sourceRepository, base: $base, trust: "qualification-only", consumable: false, skillnetVersion: "0.6.0", skills: ["check-pr", "greploop", "cli-review"]}' \
             > "$RUNNER_TEMP/skillnet-artifact/provenance.json"
           (cd "$RUNNER_TEMP/skillnet-artifact" && sha256sum greptile-consumer-skills.tar.gz provenance.json > SHA256SUMS)
-      - name: Upload qualified consumer packages
+      - name: Retain non-consumable qualification evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: greptile-consumer-skills-${{ env.CANDIDATE_HEAD }}
+          name: greptile-qualification-skills-${{ env.CANDIDATE_HEAD }}
           path: ${{ runner.temp }}/skillnet-artifact
           if-no-files-found: error
           retention-days: 30

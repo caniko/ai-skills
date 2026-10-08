@@ -1,7 +1,9 @@
 # Canix Secrets and Registries
 
-Load [canix-structure-reference](../.skillnet/deps/canix-structure-reference/SKILL.md) for
-canix/project roots, ownership boundaries, and generated-sidecar rules.
+Load canix-structure-reference from `.skillnet/deps/canix-structure-reference/SKILL.md`
+relative to the assembled **canix-cli package root**, not this reference directory,
+for canix/project roots, ownership boundaries, and generated-sidecar rules.
+The reference directory may itself be a symlink into the immutable source store.
 
 Use canix for agenix edits and registry-backed host/project data:
 

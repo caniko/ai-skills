@@ -94,7 +94,12 @@ When supplied, pass the PR number to that same explicitly targeted command.
 
 **GitLab:**
 ```bash
-: "${MR_TARGET_REPO:?Set the verified GitLab target repository first}"
+: "${MR_TARGET_REPO:?Set the verified https://HOST/OWNER/REPO target URL first}"
+case "$MR_TARGET_REPO" in https://*/*) ;; *) echo "A fully qualified GitLab target URL is required." >&2; exit 1 ;; esac
+GITLAB_HOST=${MR_TARGET_REPO#https://}
+GITLAB_HOST=${GITLAB_HOST%%/*}
+: "${GITLAB_HOST:?Missing GitLab instance}"
+export GITLAB_HOST
 MR=$(glab mr view --repo "$MR_TARGET_REPO" --output json) || exit 1
 MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
 MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
@@ -103,7 +108,8 @@ HEAD_BRANCH=$(echo "$MR" | jq -er '.source_branch') || exit 1
 ```
 
 When supplied, pass the IID to that same command with `--repo "$MR_TARGET_REPO"`.
-Use the captured target project ID and IID for all later MR API operations.
+Use the captured hostname, target project ID and IID for all later MR API
+operations, even when the checkout's default authenticated instance differs.
 
 For Git, require the local source to equal the hosted candidate **before** any
 review trigger, source analysis or publication:
@@ -250,12 +256,12 @@ If polling times out, stop the greploop workflow and report the timeout. Do not 
 **GitLab** — check if Greptile is already running before posting a trigger comment:
 
 ```bash
-MR=$(glab api "projects/$MR_PROJECT_ID/merge_requests/$MR_IID") || exit 1
+MR=$(glab api --hostname "$GITLAB_HOST" "projects/$MR_PROJECT_ID/merge_requests/$MR_IID") || exit 1
 # Load the MR identity helpers from the declared check-pr dependency first.
 MR_REVISION=$(mr_revision) || exit 1
 HEAD_SHA=$(echo "$MR_REVISION" | jq -er '.source_sha') || exit 1
 TARGET_SHA=$(echo "$MR_REVISION" | jq -er '.target_sha') || exit 1
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
 ```
 
 Load the comparison/pipeline binding from
@@ -267,13 +273,13 @@ an unrelated running pipeline does not establish a pending Greptile review.
 If no current request exists, retain its timestamp and request a review:
 
 ```bash
-DRAFT=$(glab api "projects/$MR_PROJECT_ID/merge_requests/$MR_IID" | jq -r '.draft') || exit 1
+DRAFT=$(glab api --hostname "$GITLAB_HOST" "projects/$MR_PROJECT_ID/merge_requests/$MR_IID" | jq -r '.draft') || exit 1
 case "$DRAFT" in
   true) REVIEW_TRIGGER="@greptileai review this draft" ;;
   false) REVIEW_TRIGGER="@greptileai review" ;;
   *) echo "Missing MR draft state; stop before requesting review." >&2; exit 1 ;;
 esac
-glab api --method POST "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes" -f body="$REVIEW_TRIGGER"
+glab api --hostname "$GITLAB_HOST" --method POST "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes" -f body="$REVIEW_TRIGGER"
 ```
 
 Retain `PIPELINE_ID`, owning `PIPELINE_PROJECT_ID` and `PIPELINE_SHA` after executing
@@ -298,7 +304,7 @@ while true; do
   fi
 
   assert_mr_revision || exit 1
-  GREPTILE_JOB=$(glab api "projects/$PIPELINE_PROJECT_ID/jobs/$JOB_ID") || exit 1
+  GREPTILE_JOB=$(glab api --hostname "$GITLAB_HOST" "projects/$PIPELINE_PROJECT_ID/jobs/$JOB_ID") || exit 1
   if ! echo "$GREPTILE_JOB" | jq -e --arg sha "$PIPELINE_SHA" --argjson pipeline "$PIPELINE_ID" --argjson project "$PIPELINE_PROJECT_ID" \
     '.commit.id == $sha and .pipeline.id == $pipeline and .pipeline.project_id == $project' >/dev/null; then
     echo "Review job is not bound to the verified MR pipeline/owner." >&2
@@ -370,12 +376,12 @@ like a Greptile bot. Apply exact authenticated author binding to inline comments
 
 **1. MR description (body):**
 ```bash
-glab api "projects/$MR_PROJECT_ID/merge_requests/$MR_IID" | jq -r '.description'
+glab api --hostname "$GITLAB_HOST" "projects/$MR_PROJECT_ID/merge_requests/$MR_IID" | jq -r '.description'
 ```
 
 **2. MR notes (comments):**
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"
 ```
 
 Filter for notes from the verified Greptile bot user and compare `updated_at`
@@ -431,7 +437,7 @@ query reports zero unresolved threads.
 
 **GitLab:**
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
 ```
 
 Paginate discussions and inspect all their notes for the verified Greptile
@@ -599,7 +605,7 @@ mutation {
 **GitLab** — fetch unresolved discussions and resolve each one (see [GitLab API reference](references/gitlab-api.md)):
 
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
 ```
 
 Select discussions containing a relevant note with `resolvable == true` and
@@ -607,7 +613,7 @@ Select discussions containing a relevant note with `resolvable == true` and
 by its `id`:
 
 ```bash
-glab api --method PUT \
+glab api --hostname "$GITLAB_HOST" --method PUT \
   "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions/<DISCUSSION_ID>" \
   --field resolved=true
 ```

@@ -30,7 +30,7 @@ for a draft or request another review while a matching request is pending.
 ## Fetch pipelines for an MR
 
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
 ```
 
 Check `status` field: `running`, `pending`, `success`, `failed`, `canceled`, `skipped`.
@@ -42,7 +42,7 @@ source/target inputs. Capture/recheck all `diff_refs` plus live target branch SH
 ## Fetch jobs for a pipeline (to find the Greptile job)
 
 ```bash
-glab api --paginate "projects/$PIPELINE_PROJECT_ID/pipelines/$PIPELINE_ID/jobs?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$PIPELINE_PROJECT_ID/pipelines/$PIPELINE_ID/jobs?per_page=100"
 ```
 
 Verify provider identity and bind one immutable job ID to the current request and
@@ -54,7 +54,7 @@ allows result processing; failed/canceled/skipped jobs remain blockers.
 ## Inspect pending MR-associated pipelines
 
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100" | \
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100" | \
   jq -s 'add | [.[] | select(.status == "running" or .status == "pending")]'
 ```
 
@@ -64,14 +64,14 @@ before considering any a pending Greptile review; mere MR association is not eno
 ## Find the selected pipeline
 
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100" | \
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100" | \
   jq -s --argjson id "$PIPELINE_ID" 'add | [.[] | select(.id == $id)]'
 ```
 
 ## Fetch MR notes (to find Greptile's confidence score)
 
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"
 ```
 
 Filter by the verified `author.username`, compare `updated_at` across all pages,
@@ -83,7 +83,7 @@ the first comment or a similar username does not establish provider identity.
 ## Fetch unresolved discussions (inline comments)
 
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
 ```
 
 Read all pages. Resolution fields belong to `notes[]`, not the discussion object.
@@ -92,7 +92,7 @@ Filter for unresolved inline diff comments from Greptile:
 ```bash
 : "${GREPTILE_BOT_USERNAME:?Missing verified GitLab service account}"
 : "${GREPTILE_BOT_USER_ID:?Missing verified GitLab service account ID}"
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100" | \
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100" | \
   jq -s --arg bot "$GREPTILE_BOT_USERNAME" --argjson bot_id "$GREPTILE_BOT_USER_ID" 'add | [.[] | select(any(.notes[]; .resolvable == true and .resolved == false and .type == "DiffNote" and .author.username == $bot and .author.id == $bot_id))]'
 ```
 
@@ -107,7 +107,7 @@ Each discussion has:
 ## Resolve a discussion
 
 ```bash
-glab api --method PUT \
+glab api --hostname "$GITLAB_HOST" --method PUT \
   "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions/<DISCUSSION_ID>" \
   --field resolved=true
 ```

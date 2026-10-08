@@ -4,12 +4,18 @@ Useful GitLab REST API calls for working with merge request discussions, using `
 
 Bind every MR operation to the verified target project, not the source fork's
 remote. Set `MR_TARGET_REPO` from the actual MR URL; ask if unknown. Capture the
-numeric target project ID and IID once and retain them throughout the workflow.
+numeric target project ID, IID and URL hostname once and retain them throughout
+the workflow. Every API call explicitly targets that instance.
 
 ## Fetch MR details
 
 ```bash
-: "${MR_TARGET_REPO:?Set the verified GitLab target repository first}"
+: "${MR_TARGET_REPO:?Set the verified https://HOST/OWNER/REPO target URL first}"
+case "$MR_TARGET_REPO" in https://*/*) ;; *) echo "A fully qualified GitLab target URL is required." >&2; exit 1 ;; esac
+GITLAB_HOST=${MR_TARGET_REPO#https://}
+GITLAB_HOST=${GITLAB_HOST%%/*}
+: "${GITLAB_HOST:?Missing GitLab instance}"
+export GITLAB_HOST
 MR=$(glab mr view <MR_IID> --repo "$MR_TARGET_REPO" --output json) || exit 1
 MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
 MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
@@ -33,9 +39,9 @@ closed. Load these Bash helpers before capture/polling/acceptance/resolution:
 # MR identity helpers
 mr_revision() {
   local mr branch target target_sha
-  mr=$(glab api "projects/$MR_PROJECT_ID/merge_requests/$MR_IID") || return 1
+  mr=$(glab api --hostname "$GITLAB_HOST" "projects/$MR_PROJECT_ID/merge_requests/$MR_IID") || return 1
   branch=$(echo "$mr" | jq -er '.target_branch | select(length > 0) | @uri') || return 1
-  target=$(glab api "projects/$MR_PROJECT_ID/repository/branches/$branch") || return 1
+  target=$(glab api --hostname "$GITLAB_HOST" "projects/$MR_PROJECT_ID/repository/branches/$branch") || return 1
   target_sha=$(echo "$target" | jq -er '.commit.id | select(length > 0)') || return 1
   echo "$mr" | jq -ceS --arg target "$target_sha" '
     {iid, source_project_id, target_project_id, source_branch, target_branch,
@@ -63,7 +69,7 @@ comparison before posting another request.
 ## Fetch all discussions (inline + general comments)
 
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
 ```
 
 Read every page; `--paginate` follows GitLab's pagination links.
@@ -82,14 +88,14 @@ Each note object:
 ## Filter for unresolved inline diff comments
 
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100" | \
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100" | \
   jq -s 'add | [.[] | select(any(.notes[]; .resolvable == true and .resolved == false and .type == "DiffNote"))]'
 ```
 
 ## Resolve a single discussion
 
 ```bash
-glab api --method PUT \
+glab api --hostname "$GITLAB_HOST" --method PUT \
   "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions/<DISCUSSION_ID>" \
   --field resolved=true
 ```
@@ -101,7 +107,7 @@ and ensure no follow-up remains outstanding.
 ## Fetch pipeline status for an MR
 
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
 ```
 
 Retain a selected policy-applicable pipeline's ID, owning `project_id` and `sha`
@@ -118,15 +124,15 @@ ordinary two-input merge or fall back to a detached pipeline required policy rej
 ```bash
 # Bind selected pipeline
 assert_mr_revision || exit 1
-MR_PIPELINES=$(glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100") || exit 1
+MR_PIPELINES=$(glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100") || exit 1
 echo "$MR_PIPELINES" | jq -se --argjson id "$PIPELINE_ID" --arg sha "$PIPELINE_SHA" \
   'add | any(.[]; .id == $id and .sha == $sha)' >/dev/null || exit 1
-PIPELINE=$(glab api "projects/$PIPELINE_PROJECT_ID/pipelines/$PIPELINE_ID") || exit 1
+PIPELINE=$(glab api --hostname "$GITLAB_HOST" "projects/$PIPELINE_PROJECT_ID/pipelines/$PIPELINE_ID") || exit 1
 echo "$PIPELINE" | jq -e --argjson id "$PIPELINE_ID" --argjson project "$PIPELINE_PROJECT_ID" --arg sha "$PIPELINE_SHA" \
   '.id == $id and .project_id == $project and .sha == $sha' >/dev/null || exit 1
 if [ "$PIPELINE_SHA" != "$HEAD_SHA" ]; then
   echo "$PIPELINE" | jq -e '.source == "merge_request_event"' >/dev/null || exit 1
-  MERGE_COMMIT=$(glab api "projects/$PIPELINE_PROJECT_ID/repository/commits/$PIPELINE_SHA") || exit 1
+  MERGE_COMMIT=$(glab api --hostname "$GITLAB_HOST" "projects/$PIPELINE_PROJECT_ID/repository/commits/$PIPELINE_SHA") || exit 1
   echo "$MERGE_COMMIT" | jq -e --arg sha "$PIPELINE_SHA" --arg head "$HEAD_SHA" --arg target "$TARGET_SHA" \
     '.id == $sha and .parent_ids == [$target, $head]' >/dev/null || exit 1
 fi
@@ -148,7 +154,7 @@ Sources: [MR API/diff_refs](https://docs.gitlab.com/api/merge_requests/#get-sing
 ## Fetch jobs for a specific pipeline
 
 ```bash
-glab api --paginate "projects/$PIPELINE_PROJECT_ID/pipelines/$PIPELINE_ID/jobs?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$PIPELINE_PROJECT_ID/pipelines/$PIPELINE_ID/jobs?per_page=100"
 ```
 
 Each job has `name`, `status`, `stage`, and `web_url`. Use the verified pipeline
@@ -159,7 +165,7 @@ comparison-bound evidence if either branch or diff identity changed.
 ## Fetch MR notes (general comments and bot reviews)
 
 ```bash
-glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"
+glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"
 ```
 
 Match the exact configured Greptile service account identity verified from trusted
@@ -169,13 +175,13 @@ Compare `updated_at` across every page, including older notes edited in place.
 ## Post a comment on an MR
 
 ```bash
-glab api --method POST "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes" -f body="your message here"
+glab api --hostname "$GITLAB_HOST" --method POST "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes" -f body="your message here"
 ```
 
 Or via API:
 
 ```bash
-glab api --method POST \
+glab api --hostname "$GITLAB_HOST" --method POST \
   "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes" \
   --field body="your message here"
 ```

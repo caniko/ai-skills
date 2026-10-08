@@ -19,7 +19,11 @@ gitlab_refs = [
 assert "CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}" in workflow
 assert "ref: ${{ env.CANDIDATE_HEAD }}" in workflow
 assert '--arg head "$(git rev-parse HEAD)"' in workflow
-assert "name: greptile-consumer-skills-${{ env.CANDIDATE_HEAD }}" in workflow
+assert "name: greptile-qualification-skills-${{ env.CANDIDATE_HEAD }}" in workflow
+assert 'trust: "qualification-only", consumable: false' in workflow
+for field in ('event: $event', 'ref: $ref', 'refProtected:', 'sourceRepository: $sourceRepository', 'base: $base'):
+    assert field in workflow
+assert '**not installation**' in (ROOT / 'README.md').read_text()
 for source in (check_pr, loop):
     for endpoint in ("comments", "reviews"):
         assert f'gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/pulls/$PR_NUMBER/{endpoint}?per_page=100"' in source
@@ -58,9 +62,11 @@ for source in (check_pr, loop):
             assert '--repo "$PR_TARGET_REPO"' in line, line
         if line.lstrip().startswith('gh api ') or '$(gh api ' in line:
             assert '--hostname "$GH_HOST"' in line, line
+        if 'glab api ' in line:
+            assert '--hostname "$GITLAB_HOST"' in line, line
     assert "comments(first: 100)" in source and "comments(first: 1)" not in source
     assert "commentCursor" in source and "pageInfo { hasNextPage endCursor }" in source
-    assert 'glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"' in source
+    assert 'glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"' in source
     assert ':fullpath' not in source
     assert 'glab mr view --repo "$MR_TARGET_REPO"' in source
     assert "refuse a dirty baseline" in source
@@ -90,7 +96,10 @@ assert '["canix-cli"] = new {\n    dependencies = List("canix-structure-referenc
 assert '["canix-structure-reference"] = new {\n    role = "reference"' in manifest
 for skill in ('canix-cli', 'canix-structure-reference', 'multi-host-agent-orchestration'):
     assert (ROOT / f'global_skills/{skill}/SKILL.md').is_file()
-assert '../.skillnet/deps/canix-structure-reference/SKILL.md' in (ROOT / 'global_skills/canix-cli/references/secrets-and-registry.md').read_text()
+registry_reference = (ROOT / 'global_skills/canix-cli/references/secrets-and-registry.md').read_text()
+assert '`.skillnet/deps/canix-structure-reference/SKILL.md`' in registry_reference
+assert '**canix-cli package root**' in registry_reference
+assert '../.skillnet/' not in registry_reference
 for skill in ("check-pr", "greploop"):
     reference = (ROOT / f"global_skills/{skill}/references/graphql-queries.md").read_text()
     assert "comments(first: 3)" not in reference
@@ -109,13 +118,13 @@ for cli_name in ("gh", "glab"):
         payload = json.dumps({"isDraft": state}) if cli_name == "gh" else json.dumps({"draft": state})
         mock = f'''{cli_name}() {{
   case "$*" in
-    'pr view '*|'api projects/101/merge_requests/1') printf '%s\\n' '{payload}' ;;
-    'pr comment '*|'api --method POST projects/101/merge_requests/1/notes -f body='*) printf '%s\\n' "$*" ;;
+    'pr view '*|'api --hostname gitlab.example projects/101/merge_requests/1') printf '%s\\n' '{payload}' ;;
+    'pr comment '*|'api --hostname gitlab.example --method POST projects/101/merge_requests/1/notes -f body='*) printf '%s\\n' "$*" ;;
     *) return 99 ;;
   esac
 }}
 '''
-        result = subprocess.run(["bash", "-c", "set -o pipefail\nGH_HOST=github.com\nPR_TARGET_REPO=upstream/repo\nPR_NUMBER=1\nMR_PROJECT_ID=101\nMR_IID=1\n" + mock + snippet], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(["bash", "-c", "set -o pipefail\nGH_HOST=github.com\nGITLAB_HOST=gitlab.example\nPR_TARGET_REPO=upstream/repo\nPR_NUMBER=1\nMR_PROJECT_ID=101\nMR_IID=1\n" + mock + snippet], capture_output=True, text=True, timeout=5)
         if state is None:
             assert result.returncode != 0 and "@greptileai" not in result.stdout
         else:
@@ -218,17 +227,18 @@ def gitlab_fixture(status="success", sha="merged", parents=("target", "candidate
     return setup + f'''
 glab() {{
   case "$*" in
-    'api --paginate projects/101/merge_requests/1/pipelines?per_page=100') printf '%s\\n' "$LIST_DATA" ;;
-    'api projects/101/merge_requests/1') printf '%s\\n' "$MR_DATA" ;;
-    'api projects/101/repository/branches/trunk') printf '%s\\n' "$TARGET_DATA" ;;
-    'api projects/202/pipelines/7') printf '%s\\n' "$PIPELINE_DATA" ;;
-    'api projects/202/repository/commits/'*) printf '%s\\n' "$COMMIT_DATA" ;;
-    'api projects/202/jobs/1') printf '%s\\n' "$JOB_DATA" ;;
+    'api --hostname gitlab.example --paginate projects/101/merge_requests/1/pipelines?per_page=100') printf '%s\\n' "$LIST_DATA" ;;
+    'api --hostname gitlab.example projects/101/merge_requests/1') printf '%s\\n' "$MR_DATA" ;;
+    'api --hostname gitlab.example projects/101/repository/branches/trunk') printf '%s\\n' "$TARGET_DATA" ;;
+    'api --hostname gitlab.example projects/202/pipelines/7') printf '%s\\n' "$PIPELINE_DATA" ;;
+    'api --hostname gitlab.example projects/202/repository/commits/'*) printf '%s\\n' "$COMMIT_DATA" ;;
+    'api --hostname gitlab.example projects/202/jobs/1') printf '%s\\n' "$JOB_DATA" ;;
     *) return 99 ;;
   esac
 }}
 MR_PROJECT_ID=101
 MR_IID=1
+GITLAB_HOST=gitlab.example
 PIPELINE_ID=7
 PIPELINE_PROJECT_ID=202
 PIPELINE_SHA={sha}
@@ -389,9 +399,46 @@ filter_snippet = marker + reference.split('```bash\n' + marker, 1)[1].split('```
 for identity in (True, False):
     payload = json.dumps([{"id": "real", "notes": [{"resolvable": True, "resolved": False, "type": "DiffNote", "author": {"username": "configured-reviewer", "id": 123}}]}, {"id": "spoof", "notes": [{"resolvable": True, "resolved": False, "type": "DiffNote", "author": {"username": "configured-reviewer", "id": 456}}]}])
     setup = 'GREPTILE_BOT_USERNAME=configured-reviewer\nGREPTILE_BOT_USER_ID=123\n' if identity else 'unset GREPTILE_BOT_USERNAME GREPTILE_BOT_USER_ID\n'
-    mock = f"MR_PROJECT_ID=101\nMR_IID=1\nglab() {{ [ \"$*\" = 'api --paginate projects/101/merge_requests/1/discussions?per_page=100' ] || return 99; printf '%s\\n' '{payload}'; }}\n"
+    mock = f"GITLAB_HOST=gitlab.example\nMR_PROJECT_ID=101\nMR_IID=1\nglab() {{ [ \"$*\" = 'api --hostname gitlab.example --paginate projects/101/merge_requests/1/discussions?per_page=100' ] || return 99; printf '%s\\n' '{payload}'; }}\n"
     result = subprocess.run(["bash", "-c", 'set -o pipefail\n' + setup + mock + filter_snippet], capture_output=True, text=True, timeout=5)
     assert (result.returncode == 0) == identity, result
     if identity:
         assert [item['id'] for item in json.loads(result.stdout)] == ['real'], result
+# URL-derived host binding must override a different checkout's default instance.
+for source in (check_pr, loop, gitlab_refs[0]):
+    for line in source.splitlines():
+        if 'glab api ' in line:
+            assert '--hostname "$GITLAB_HOST"' in line, line
+    marker = ': "${MR_TARGET_REPO'
+    setup = marker + source.split('```bash\n' + marker, 1)[1].split('```', 1)[0]
+    setup = setup.replace('<MR_IID>', '1')
+    for repo, success in (('https://gitlab.example/target/repo', True), ('owner/repo', False)):
+        mock = '''glab() {
+  [ "$GITLAB_HOST" = gitlab.example ] || return 99
+  case "$*" in 'mr view '*) printf '%s\\n' '{"target_project_id":101,"iid":1,"sha":"candidate","source_branch":"feature"}' ;; *) return 99 ;; esac
+}
+'''
+        result = subprocess.run(['bash', '-c', f'GITLAB_HOST=wrong.example\nMR_TARGET_REPO={repo}\n' + mock + setup], capture_output=True, text=True, timeout=5)
+        assert (result.returncode == 0) == success, result
+
+# Use a freshly fetched immutable base; remote target movement invalidates review.
+marker = ': "${REVIEW_TARGET_REMOTE'
+setup = marker + cli.split('```bash\n' + marker, 1)[1].split('```', 1)[0]
+for live_base, success in (('fresh-base', True), ('advanced-base', False)):
+    mock = f'''git() {{
+  case "$*" in
+    'fetch --no-tags target refs/heads/trunk') return 0 ;;
+    'rev-parse --verify HEAD') echo candidate ;;
+    'rev-parse --verify FETCH_HEAD^{{commit}}') echo fresh-base ;;
+    'ls-remote --exit-code target refs/heads/trunk') printf '%s\\trefs/heads/trunk\\n' '{live_base}' ;;
+    'status --porcelain --untracked-files=all') return 0 ;;
+    *) return 99 ;;
+  esac
+}}
+REVIEW_TARGET_REMOTE=target
+REVIEW_TARGET_BRANCH=trunk
+'''
+    result = subprocess.run(['bash', '-c', mock + setup + '\n[ "$REVIEW_BASE" = fresh-base ]'], capture_output=True, text=True, timeout=5)
+    assert (result.returncode == 0) == success, result
+assert cli.count('assert_review_revision || exit 1') == 3
 print("review source contracts passed")
