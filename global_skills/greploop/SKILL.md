@@ -26,19 +26,23 @@ Iteratively fix a PR/MR/CL until Greptile gives a perfect review: 5/5 confidence
 
 ### 0. Detect platform
 
-First check for Perforce, then fall back to git remote detection:
+Prefer an actual Git worktree; global Perforce configuration does not establish
+that the current directory belongs to a depot. Otherwise require a current-path
+Perforce mapping:
 
 ```bash
-# Check for Perforce environment
-if p4 info >/dev/null 2>&1; then
-  VCS="perforce"
-else
+if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
   REMOTE_URL=$(git remote get-url origin)
   if echo "$REMOTE_URL" | grep -qi "gitlab"; then
     VCS="gitlab"
   else
     VCS="github"
   fi
+elif p4 where "$PWD/..." >/dev/null 2>&1; then
+  VCS="perforce"
+else
+  echo "Current path is not a Git worktree or mapped Perforce workspace." >&2
+  exit 1
 fi
 ```
 
@@ -154,7 +158,8 @@ while true; do
     if [ "$CONCLUSION" = "success" ]; then
       echo "Greptile check passed!"
     else
-      echo "Greptile check completed with: $CONCLUSION"
+      echo "Greptile check completed with: $CONCLUSION" >&2
+      exit 1
     fi
     break
   fi
@@ -181,8 +186,6 @@ If no current request exists, retain its timestamp and request a review:
 ```bash
 glab mr note <MR_IID> --message "@greptileai review"
 ```
-
-**Perforce** — Perforce does not have native check runs. If Greptile is integrated via a webhook triggered on `p4 shelve`, wait for it to process. Check your Greptile installation's webhook endpoint or dashboard for the review status. Poll by re-fetching the Greptile review comment on the CL until a score appears.
 
 Bind `JOB_ID` to the current request's job in a pipeline at `HEAD_SHA`, using its
 provider and request evidence (see [GitLab API reference](references/gitlab-api.md)).
@@ -215,9 +218,12 @@ while true; do
 
   JOB_STATUS=$(echo "$GREPTILE_JOB" | jq -r '.status')
 
-  if [ "$JOB_STATUS" = "success" ] || [ "$JOB_STATUS" = "failed" ] || [ "$JOB_STATUS" = "canceled" ]; then
+  if [ "$JOB_STATUS" = "success" ]; then
     echo "Greptile job completed with: $JOB_STATUS"
     break
+  elif [ "$JOB_STATUS" = "failed" ] || [ "$JOB_STATUS" = "canceled" ] || [ "$JOB_STATUS" = "skipped" ]; then
+    echo "Greptile job completed with: $JOB_STATUS" >&2
+    exit 1
   fi
 
   echo "Waiting for Greptile... (status: $JOB_STATUS)"
@@ -227,9 +233,19 @@ done
 
 If polling times out, stop the greploop workflow and report the timeout. Do not continue with stale or missing review results.
 
+**Perforce** — retain the review ID, exact shelf identity and trigger receipt.
+Poll the configured webhook/review system for at most 60 attempts at ten-second
+intervals (ten minutes). Require successful completion attributable to that shelf
+and request, not just a score left by an older review. If the shelf changes, the
+review fails, or no current receipt arrives by the deadline, stop and report the
+blocker. Perforce has no native check run to substitute for this evidence.
+
 #### B. Fetch Greptile review results
 
 Greptile may surface its score in several places — check **all** of the relevant sources:
+Only use results attributable to the successfully completed current request and
+head/shelf. A newer timestamp alone does not prove that binding. If the summary
+cannot be tied to that receipt, report missing evidence rather than reuse a score.
 
 **GitHub:**
 
@@ -261,10 +277,11 @@ glab mr view <MR_IID> --output json | jq -r '.description'
 
 **2. MR notes (comments):**
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/notes"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/notes?per_page=100"
 ```
 
-Filter for notes from the Greptile bot user (check the `author.username` field — the exact username may vary per installation; verify on first run).
+Filter for notes from the verified Greptile bot user and compare `updated_at`
+across all pages, including older notes edited in place.
 
 **Perforce:**
 
@@ -304,7 +321,7 @@ gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments?per_page=100"
 
 This REST endpoint supplies comment history, **not** thread-resolution state.
 For the unresolved count, run the paginated GraphQL `reviewThreads` query in
-step E now and select verified reviewer threads with `isResolved == false`.
+step G now and select verified reviewer threads with `isResolved == false`.
 Follow every `pageInfo.endCursor`; do not count REST comments as unresolved.
 Keep historical/outdated findings in the ledger until their disposition is
 source-backed; neither age nor resolution alone proves a fix.
@@ -315,11 +332,13 @@ query reports zero unresolved threads.
 
 **GitLab:**
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/discussions"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
 ```
 
 Paginate discussions and inspect all their notes for the verified Greptile
-reviewer and unresolved `DiffNote` findings. Retain older/outdated findings until
+reviewer and `DiffNote` notes with `resolvable == true` and `resolved == false`.
+Resolution state belongs to each note, not the enclosing discussion. Retain that
+discussion's ID and inspect all replies before disposition. Keep older findings until
 a source-backed disposition exists; do not drop them merely because the head
 changed.
 
@@ -345,10 +364,49 @@ For each unresolved Greptile comment:
 1. Read the file and understand the comment in context.
 2. Determine if it's actionable (code change needed) or informational.
 3. If actionable, make the fix.
-4. If informational or a false positive, reply with the factual reason before
-   resolving the thread. Keep any unresolved product decision open.
+4. Record informational or false-positive dispositions for the reply in step G.
+   Keep any unresolved product decision open. Do not resolve threads yet.
 
-#### E. Resolve threads
+#### E. Commit and push / re-shelve
+
+**GitHub/GitLab:**
+```bash
+git add <scoped-files>
+git commit -m "fix: describe the confirmed review issue"
+git push
+```
+
+**Perforce:**
+```bash
+# Publish the updated shelf for the next review round
+p4 shelve -f -c <CL_NUMBER>
+```
+
+If publication fails or the remote head moved, stop and reconcile. Leave the
+threads open; a local edit or commit is not a published fix.
+
+#### F. Validate the published revision
+
+Capture the new head/base or shelf identity and obtain successful required CI
+and a completed review for it, using step A's bounded, current-request checks
+and the configured CI system. Retain exact-revision receipts; a completed
+Greptile review alone is not required CI. Failed, skipped, canceled, missing or
+pending gates keep threads open. Stop with the specific blocker at the deadline.
+Inspect new feedback and verify the live candidate still matches before resolution.
+
+#### G. Resolve threads
+
+Reply with the published fix revision and successful validation receipts before
+resolving actionable findings. Explain false positives with source-backed evidence.
+Do not close an outstanding question or a new finding from the latest review.
+
+**Perforce** — after successful shelf-bound validation, post a reply to each
+addressed finding through the configured Swarm or other review-system API, then
+call that system's supported comment/task resolution operation. Retain the reply
+ID, resolution receipt, review ID and shelf identity. Read back the review state
+to verify the finding is addressed. If the API or permission is unavailable,
+leave the finding open and report that blocker; do not claim zero unresolved
+comments or substitute a depot review-daemon command.
 
 **GitHub** — fetch unresolved review threads and resolve all that have been addressed (see [GraphQL reference](references/graphql-queries.md)):
 
@@ -362,7 +420,8 @@ query($cursor: String) {
         nodes {
           id
           isResolved
-          comments(first: 1) {
+          comments(first: 100) {
+            pageInfo { hasNextPage endCursor }
             nodes { body path author { login } }
           }
         }
@@ -379,6 +438,22 @@ been read. Inspect each thread's complete comment history before disposition;
 paginate the comments connection separately when needed.
 
 ```bash
+gh api graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
+query($threadId: ID!, $commentCursor: String) {
+  node(id: $threadId) {
+    ... on PullRequestReviewThread {
+      comments(first: 100, after: $commentCursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes { body path author { login } }
+      }
+    }
+  }
+}'
+```
+
+Repeat until all comments are read; a follow-up may invalidate the opening finding's disposition.
+
+```bash
 gh api graphql -f query='
 mutation {
   t1: resolveReviewThread(input: {threadId: "ID1"}) { thread { isResolved } }
@@ -389,10 +464,12 @@ mutation {
 **GitLab** — fetch unresolved discussions and resolve each one (see [GitLab API reference](references/gitlab-api.md)):
 
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
 ```
 
-Filter for `"resolved": false` discussions. Then resolve each by its `id`:
+Select discussions containing a relevant note with `resolvable == true` and
+`resolved == false`. Inspect every note before resolving the enclosing discussion
+by its `id`:
 
 ```bash
 glab api --method PUT \
@@ -401,27 +478,6 @@ glab api --method PUT \
 ```
 
 Repeat for each unresolved discussion ID. (GitLab has no batch resolution — loop through each one.)
-
-#### F. Commit and push / re-shelve
-
-**GitHub/GitLab:**
-```bash
-git add <scoped-files>
-git commit -m "fix: describe the confirmed review issue"
-git push
-```
-
-**Perforce:**
-```bash
-# Stage changes back into the CL and re-shelve for the next review round
-p4 shelve -f -c <CL_NUMBER>
-```
-
-Wait for checks to start after push/shelve:
-
-```bash
-sleep 5
-```
 
 Then go back to step **A**.
 

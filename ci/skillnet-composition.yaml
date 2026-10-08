@@ -3,7 +3,7 @@ name: Skillnet composition
 
 on:
   push:
-    branches: [trunk, maintenance/greptile-skills]
+    branches: [main, trunk, maintenance/greptile-skills]
   pull_request:
   workflow_dispatch:
 

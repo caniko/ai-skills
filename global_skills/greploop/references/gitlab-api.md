@@ -19,13 +19,13 @@ Key fields:
 ## Trigger Greptile review
 
 ```bash
-glab mr note <MR_IID> --message "@greptile review"
+glab mr note <MR_IID> --message "@greptileai review"
 ```
 
 ## Fetch pipelines for an MR
 
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/pipelines"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_page=100"
 ```
 
 Check `status` field: `running`, `pending`, `success`, `failed`, `canceled`, `skipped`.
@@ -33,54 +33,58 @@ Check `status` field: `running`, `pending`, `success`, `failed`, `canceled`, `sk
 ## Fetch jobs for a pipeline (to find the Greptile job)
 
 ```bash
-glab api "projects/:fullpath/pipelines/<PIPELINE_ID>/jobs"
+glab api --paginate "projects/:fullpath/pipelines/<PIPELINE_ID>/jobs?per_page=100"
 ```
 
-Filter jobs where `name` matches `greptile` (case-insensitive). Terminal statuses: `success`, `failed`, `canceled`.
+Verify provider identity and bind one immutable job ID to the current request and
+MR head, not just a matching name. Retried jobs have distinct IDs. Only `success`
+allows result processing; failed/canceled/skipped jobs remain blockers.
 
-## Check if any pipeline is running
+## Inspect pending pipelines at the current head
 
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/pipelines" | \
-  jq '[.[] | select(.status == "running" or .status == "pending")] | length'
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_page=100" | \
+  jq -s --arg sha "HEAD_SHA" 'add | [.[] | select(.sha == $sha and (.status == "running" or .status == "pending"))] | length'
 ```
 
-Returns `0` if no pipelines are running/pending.
+An unrelated pending pipeline is not evidence of a pending Greptile request.
 
 ## Find pipeline for a specific commit SHA
 
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/pipelines" | \
-  jq -r --arg sha "COMMIT_SHA" '[.[] | select(.sha == $sha)] | sort_by(.id) | last | .id // empty'
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_page=100" | \
+  jq -s --arg sha "COMMIT_SHA" 'add | [.[] | select(.sha == $sha)]'
 ```
 
 ## Fetch MR notes (to find Greptile's confidence score)
 
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/notes?per_page=100&sort=desc&order_by=created_at"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/notes?per_page=100"
 ```
 
-Filter by `author.username` for the Greptile bot. Scan `body` for a confidence pattern like `3/5` or `5/5`.
+Filter by the verified `author.username`, compare `updated_at` across all pages,
+and require binding to the completed current request/head before accepting a score.
 
 The Greptile bot username on GitLab may differ from GitHub's `greptile-apps[bot]` — check the first Greptile comment on the MR to identify the exact username.
 
 ## Fetch unresolved discussions (inline comments)
 
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
 ```
 
-Paginate with `&page=2`, etc. until response array length < `per_page`.
+Read all pages. Resolution fields belong to `notes[]`, not the discussion object.
 
 Filter for unresolved inline diff comments from Greptile:
 ```bash
-jq '[.[] | select(.resolved == false and (.notes[0].type == "DiffNote") and (.notes[0].author.username == "GREPTILE_BOT_USERNAME"))]'
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100" | \
+  jq -s 'add | [.[] | select(any(.notes[]; .resolvable == true and .resolved == false and .type == "DiffNote" and .author.username == "GREPTILE_BOT_USERNAME"))]'
 ```
 
 Each discussion has:
 - `id` — use this for resolution
-- `notes[0].body` — the comment text
-- `notes[0].position.new_path` — file path
+- `notes[]` — inspect all note bodies, resolution flags and follow-up replies
+- `notes[].position.new_path` — file path for inline notes
 
 ## Resolve a discussion
 
@@ -91,3 +95,5 @@ glab api --method PUT \
 ```
 
 GitLab has no batch resolution — issue one PUT per discussion.
+First reply with the published fix and successful exact-head validation, and
+ensure no follow-up question or new finding remains outstanding.

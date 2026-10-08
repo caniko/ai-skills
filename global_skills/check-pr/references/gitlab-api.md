@@ -19,17 +19,17 @@ Key fields (compared to GitHub equivalents):
 ## Fetch all discussions (inline + general comments)
 
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
 ```
 
-Paginate with `&page=2`, `&page=3`, etc. until the response array length is less than `per_page`.
+Read every page; `--paginate` follows GitLab's pagination links.
 
 Each discussion object:
 - `id` — discussion ID (used for resolution)
-- `resolved` — `true` or `false`
 - `notes` — array of note objects
 
 Each note object:
+- `resolvable`, `resolved` — whether this note can be and has been resolved
 - `type` — `"DiffNote"` for inline diff comments, `null` for general comments
 - `author.username` — author's username
 - `body` — comment text
@@ -38,8 +38,8 @@ Each note object:
 ## Filter for unresolved inline diff comments
 
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100" | \
-  jq '[.[] | select(.resolved == false and (.notes[0].type == "DiffNote"))]'
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100" | \
+  jq -s 'add | [.[] | select(any(.notes[]; .resolvable == true and .resolved == false and .type == "DiffNote"))]'
 ```
 
 ## Resolve a single discussion
@@ -50,20 +50,24 @@ glab api --method PUT \
   --field resolved=true
 ```
 
-There is no batch resolution in GitLab — issue one PUT per discussion.
+There is no batch resolution in GitLab — issue one PUT per discussion. First read
+all its notes, reply with the published fix and successful exact-head validation,
+and ensure no follow-up remains outstanding.
 
 ## Fetch pipeline status for an MR
 
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/pipelines"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_page=100"
 ```
 
 Pipeline statuses: `running`, `pending`, `success`, `failed`, `canceled`, `skipped`.
+Select the applicable pipeline at the captured MR `sha`; missing/pending pipelines
+do not qualify and older successful pipelines are not a fallback.
 
 ## Fetch jobs for a specific pipeline
 
 ```bash
-glab api "projects/:fullpath/pipelines/<PIPELINE_ID>/jobs"
+glab api --paginate "projects/:fullpath/pipelines/<PIPELINE_ID>/jobs?per_page=100"
 ```
 
 Each job has `name`, `status`, `stage`, and `web_url`.
@@ -71,10 +75,11 @@ Each job has `name`, `status`, `stage`, and `web_url`.
 ## Fetch MR notes (general comments and bot reviews)
 
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/notes?per_page=100"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/notes?per_page=100"
 ```
 
 Filter by `author.username` to find Greptile bot comments. The exact bot username depends on the Greptile installation — check the first Greptile comment to identify it.
+Compare `updated_at` across every page, including older notes edited in place.
 
 ## Post a comment on an MR
 

@@ -27,20 +27,23 @@ Analyze a pull request (GitHub), merge request (GitLab), or shelved changelist (
 
 ### 0. Detect platform
 
-First check if the user is working in a Perforce depot by looking for a `.p4config` file or `P4CLIENT`/`P4PORT` environment variables:
+Prefer an actual Git worktree; global Perforce configuration does not establish
+that the current directory belongs to a depot. Otherwise require a current-path
+Perforce mapping:
 
 ```bash
-# Check for Perforce environment
-if p4 info >/dev/null 2>&1; then
-  VCS="perforce"
-else
-  # Fall back to git remote detection
+if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
   REMOTE_URL=$(git remote get-url origin)
   if echo "$REMOTE_URL" | grep -qi "gitlab"; then
     VCS="gitlab"
   else
     VCS="github"
   fi
+elif p4 where "$PWD/..." >/dev/null 2>&1; then
+  VCS="perforce"
+else
+  echo "Current path is not a Git worktree or mapped Perforce workspace." >&2
+  exit 1
 fi
 ```
 
@@ -88,10 +91,11 @@ GitHub PRs are also issues, so general PR comments live on the issue comments en
 ```bash
 glab mr view <MR_IID> --output json
 # Fetch discussions (inline diff comments are type "DiffNote"; general comments have null type)
-glab api "projects/:fullpath/merge_requests/<MR_IID>/discussions"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/notes?per_page=100"
 ```
 
-For GitLab, paginate discussions if needed (add `?per_page=100&page=N`).
+Inspect every page and compare note `updated_at` values to detect edited summaries.
 
 **Perforce:**
 ```bash
@@ -213,9 +217,20 @@ p4 edit <file>
 p4 shelve -f -c <CL_NUMBER>
 ```
 
-### 8. Resolve review threads
+### 8. Validate the published revision
 
-After addressing comments, resolve the corresponding review threads.
+After publication, repeat step 3 against the new head (or exact updated shelf
+identity), retaining successful required checks and a current completed review.
+Verify the live head/base or shelf still matches that evidence. Failed, skipped,
+canceled, missing or pending gates keep actionable threads open; report the
+blocker instead of resolving. Reconcile any new feedback before proceeding.
+
+### 9. Resolve review threads
+
+Reply with the published fix revision and successful validation receipts before
+resolving each actionable thread. For an informational or false-positive finding,
+reply with source-backed evidence. Inspect the complete thread, including all
+follow-up replies, and keep outstanding questions or product decisions open.
 
 **Perforce** — respond to addressed findings through the configured Swarm or
 other review-system API and use that system's supported resolution operation.
@@ -234,8 +249,9 @@ query($cursor: String) {
         nodes {
           id
           isResolved
-          comments(first: 1) {
-            nodes { body path }
+          comments(first: 100) {
+            pageInfo { hasNextPage endCursor }
+            nodes { body path author { login } }
           }
         }
       }
@@ -245,6 +261,23 @@ query($cursor: String) {
 ```
 
 If `hasNextPage` is true, repeat with `-f cursor=ENDCURSOR` to get remaining threads.
+For each thread with more comments, paginate the comments connection separately:
+
+```bash
+gh api graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
+query($threadId: ID!, $commentCursor: String) {
+  node(id: $threadId) {
+    ... on PullRequestReviewThread {
+      comments(first: 100, after: $commentCursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes { body path author { login } }
+      }
+    }
+  }
+}'
+```
+
+Repeat until that thread's comments have all been read.
 
 Then resolve threads that have been addressed or are informational:
 
@@ -262,10 +295,12 @@ Batch multiple resolutions into a single mutation using aliases (`t1`, `t2`, etc
 **GitLab** — fetch unresolved discussions (see [the GitLab API reference](references/gitlab-api.md)):
 
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
 ```
 
-Filter for discussions where `"resolved": false`. Collect each discussion's `id`.
+Select discussions containing a relevant note with `resolvable == true` and
+`resolved == false`; these fields belong to `notes[]`, not the discussion.
+Inspect all notes before resolving and retain the enclosing discussion's `id`.
 
 Resolve each discussion individually (GitLab has no batch resolution):
 
@@ -277,7 +312,7 @@ glab api --method PUT \
 
 Repeat for each unresolved discussion ID.
 
-### 9. Multiple PRs/MRs/CLs
+### 10. Multiple PRs/MRs/CLs
 
 If checking a chain of PRs/MRs/CLs, process them sequentially.
 

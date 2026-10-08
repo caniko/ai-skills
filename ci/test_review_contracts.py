@@ -1,6 +1,8 @@
 """Small source-contract regression check; hosted composition runs this too."""
 
+import json
 from pathlib import Path
+import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -9,6 +11,10 @@ check_pr = (ROOT / "global_skills/check-pr/SKILL.md").read_text()
 loop = (ROOT / "global_skills/greploop/SKILL.md").read_text()
 cli = (ROOT / "global_skills/cli-review/SKILL.md").read_text()
 manifest = (ROOT / "global_skills/Skillnet.pkl").read_text()
+gitlab_refs = [
+    (ROOT / f"global_skills/{skill}/references/gitlab-api.md").read_text()
+    for skill in ("check-pr", "greploop")
+]
 
 assert "CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}" in workflow
 assert "ref: ${{ env.CANDIDATE_HEAD }}" in workflow
@@ -34,4 +40,49 @@ assert "jq -r '.head_sha'" in loop and "jq -r '.commit.id'" in loop
 assert "Do not guess the run by" in loop and "Retried jobs have distinct IDs" in loop
 assert "npm i -g greptile" not in cli and "| sh" not in cli
 assert "trusted checksum or signature" in cli
+assert "branches: [main, trunk, maintenance/greptile-skills]" in workflow
+for source in (check_pr, loop):
+    assert source.index("git rev-parse --is-inside-work-tree") < source.index("p4 where")
+    assert "p4 info" not in source
+    assert "comments(first: 100)" in source and "comments(first: 1)" not in source
+    assert "commentCursor" in source and "pageInfo { hasNextPage endCursor }" in source
+    assert 'glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/notes?per_page=100"' in source
+for reference in gitlab_refs:
+    assert "select(.resolved == false" not in reference
+    assert "any(.notes[];" in reference and ".resolvable == true" in reference
+    assert "jq -s 'add |" in reference
+assert loop.index("#### E. Commit and push") < loop.index("#### F. Validate") < loop.index("#### G. Resolve")
+assert check_pr.index("### 8. Validate") < check_pr.index("### 9. Resolve")
+assert 'echo "Greptile check completed with: $CONCLUSION" >&2\n      exit 1' in loop
+assert 'echo "Greptile job completed with: $JOB_STATUS" >&2\n    exit 1' in loop
+assert "at most 60 attempts" in loop and "shelf identity" in loop
+assert "**Perforce** — after successful shelf-bound validation" in loop
+
+# Run the actual documented polling snippets with terminal API responses only;
+# no network, credentials, sleeping, or repository mutations are involved.
+for marker, cli_name, head_command, response, statuses in (
+    ("CHECK_RUN_ID", "gh", "pr view", {"head_sha": "candidate", "status": "completed"},
+     {"conclusion": ("success", "failure", "cancelled", "timed_out", "skipped")}),
+    ("JOB_ID", "glab", "mr view", {"commit": {"id": "candidate"}},
+     {"status": ("success", "failed", "canceled", "skipped")}),
+):
+    snippet = loop.split(f"```bash\n{marker}=", 1)[1].split("```", 1)[0]
+    snippet = f"{marker}=" + snippet
+    snippet = snippet.replace("<CURRENT_REVIEW_CHECK_RUN_ID>", "1").replace("<CURRENT_REVIEW_JOB_ID>", "1")
+    snippet = snippet.replace("<PR_NUMBER>", "1").replace("<MR_IID>", "1")
+    for field, values in statuses.items():
+        for value in values:
+            payload = json.dumps({**response, field: value})
+            head_payload = "candidate" if cli_name == "gh" else json.dumps({"sha": "candidate"})
+            mock = f'''{cli_name}() {{
+  case "$*" in
+    '{head_command}'*) printf '%s\\n' '{head_payload}' ;;
+    'api '*) printf '%s\\n' '{payload}' ;;
+    *) return 99 ;;
+  esac
+}}
+HEAD_SHA=candidate
+'''
+            result = subprocess.run(["bash", "-c", mock + snippet], capture_output=True, text=True, timeout=5)
+            assert (result.returncode == 0) == (value == "success"), (value, result.stdout, result.stderr)
 print("review source contracts passed")
