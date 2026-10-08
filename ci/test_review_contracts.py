@@ -28,18 +28,22 @@ assert "p4 diff2" not in check_pr
 assert "p4 review" not in check_pr
 for source in (check_pr, loop):
     assert 'p4 changes -s shelved' in source
-assert "at most 20 attempts" in check_pr and "sha == HEAD_SHA" in check_pr
+assert "at most 20 attempts" in check_pr and "assert_mr_revision" in check_pr
 assert "isResolved == false" in loop and "not** thread-resolution state" in loop
 assert '["repo-pages"] = new {\n    role = "reference"' in manifest
 for skill in ("gitlab-pages", "forgejo-pages"):
     assert f'["{skill}"] = new {{\n    dependencies = List("repo-pages")' in manifest
     assert f'/{skill}/.skillnet/deps/repo-pages/SKILL.md' in workflow
 assert 'repos/{owner}/{repo}/check-runs/$CHECK_RUN_ID' in loop
-assert 'projects/:fullpath/jobs/$JOB_ID' in loop
-assert "jq -r '.head_sha'" in loop and "jq -r '.commit.id'" in loop
+assert 'projects/$PIPELINE_PROJECT_ID/jobs/$JOB_ID' in loop
+assert "jq -r '.head_sha'" in loop and ".commit.id == $sha" in loop
 assert "Do not guess the run by" in loop and "Retried jobs have distinct IDs" in loop
 assert "npm i -g greptile" not in cli and "| sh" not in cli
 assert "trusted checksum or signature" in cli
+assert 'greptile review --branch "$REVIEW_BASE" --json' in cli
+assert 'greptile review --branch "$REVIEW_BASE" --agent' in cli
+assert "withheld/excluded" in cli and "coverage as unknown/incomplete" in cli
+assert "explicitly authorizes transmitting each named path" in cli
 assert "branches: [main, trunk, maintenance/greptile-skills]" in workflow
 for source in (check_pr, loop):
     assert source.index("git rev-parse --is-inside-work-tree") < source.index("p4 where")
@@ -106,7 +110,7 @@ assert "/check-pr/.skillnet/deps/pr-review-reply-style/.skillnet/deps/write-huma
 
 # Exercise the actual CLI coverage guard without running a reviewer or mutating git.
 guard = "WORKTREE_STATUS=" + cli.split("```bash\nWORKTREE_STATUS=", 1)[1].split("```", 1)[0]
-assert cli.index("WORKTREE_STATUS=") < cli.index("greptile review --json")
+assert cli.index("WORKTREE_STATUS=") < cli.index('greptile review --branch "$REVIEW_BASE" --json')
 for status in ("", " M tracked.md", "M  staged.md", "?? new.md"):
     mock = f"git() {{ printf '%s\\n' '{status}'; }}\n"
     result = subprocess.run(["bash", "-c", mock + guard], capture_output=True, text=True, timeout=5)
@@ -117,8 +121,6 @@ for status in ("", " M tracked.md", "M  staged.md", "?? new.md"):
 for marker, cli_name, head_command, response, statuses in (
     ("CHECK_RUN_ID", "gh", "pr view", {"head_sha": "candidate", "status": "completed"},
      {"conclusion": ("success", "failure", "cancelled", "timed_out", "skipped")}),
-    ("JOB_ID", "glab", "mr view", {"commit": {"id": "candidate"}},
-     {"status": ("success", "failed", "canceled", "skipped")}),
 ):
     snippet = loop.split(f"```bash\n{marker}=", 1)[1].split("```", 1)[0]
     snippet = f"{marker}=" + snippet
@@ -159,4 +161,74 @@ BASE_SHA=base
 '''
     result = subprocess.run(["bash", "-c", mock + snippet], capture_output=True, text=True, timeout=5)
     assert result.returncode != 0 and "head/base moved" in result.stderr, result
+
+# Exercise the shared GitLab identity/input proof and real polling snippet. Fork
+# pipelines belong to project 202; MR/target APIs belong to project 101.
+reference = gitlab_refs[0]
+helpers = "# MR identity helpers" + reference.split("```bash\n# MR identity helpers", 1)[1].split("```", 1)[0]
+binding = "# Bind selected pipeline" + reference.split("```bash\n# Bind selected pipeline", 1)[1].split("```", 1)[0]
+poll = "JOB_ID=" + loop.split("```bash\nJOB_ID=", 1)[1].split("```", 1)[0]
+poll = poll.replace("<CURRENT_REVIEW_JOB_ID>", "1")
+for source in (check_pr, loop, *gitlab_refs):
+    assert "sha == HEAD_SHA" not in source
+    assert "projects/$PIPELINE_PROJECT_ID" in source or "through that owner" in source
+
+
+def gitlab_fixture(status="success", sha="merged", parents=("target", "candidate")):
+    mr = {"iid": 1, "source_project_id": 202, "target_project_id": 101,
+          "source_branch": "feature", "target_branch": "trunk", "sha": "candidate",
+          "diff_refs": {"base_sha": "base", "start_sha": "target", "head_sha": "candidate"}}
+    payloads = {
+        "MR_DATA": mr, "TARGET_DATA": {"commit": {"id": "target"}},
+        "LIST_DATA": [{"id": 7, "project_id": 202, "sha": sha}],
+        "PIPELINE_DATA": {"id": 7, "project_id": 202, "sha": sha, "source": "merge_request_event"},
+        "COMMIT_DATA": {"id": sha, "parent_ids": list(parents)},
+        "JOB_DATA": {"commit": {"id": sha}, "pipeline": {"id": 7, "project_id": 202}, "status": status},
+    }
+    setup = "\n".join(f"{key}='{json.dumps(value)}'" for key, value in payloads.items())
+    return setup + f'''
+glab() {{
+  case "$*" in
+    'api --paginate projects/101/merge_requests/1/pipelines?per_page=100') printf '%s\\n' "$LIST_DATA" ;;
+    'api projects/101/merge_requests/1') printf '%s\\n' "$MR_DATA" ;;
+    'api projects/101/repository/branches/trunk') printf '%s\\n' "$TARGET_DATA" ;;
+    'api projects/202/pipelines/7') printf '%s\\n' "$PIPELINE_DATA" ;;
+    'api projects/202/repository/commits/'*) printf '%s\\n' "$COMMIT_DATA" ;;
+    'api projects/202/jobs/1') printf '%s\\n' "$JOB_DATA" ;;
+    *) return 99 ;;
+  esac
+}}
+MR_PROJECT_ID=101
+MR_IID=1
+PIPELINE_ID=7
+PIPELINE_PROJECT_ID=202
+PIPELINE_SHA={sha}
+HEAD_SHA=candidate
+TARGET_SHA=target
+{helpers}
+MR_REVISION=$(mr_revision) || exit 90
+'''
+
+
+for status in ("success", "failed", "canceled", "skipped"):
+    result = subprocess.run(["bash", "-c", gitlab_fixture(status) + binding + poll], capture_output=True, text=True, timeout=5)
+    assert (result.returncode == 0) == (status == "success"), (status, result.stderr)
+for sha, parents, success in (
+    ("candidate", (), True), ("merged", ("target", "candidate"), True),
+    ("merged", ("old-target", "candidate"), False),
+    ("merged", ("target", "old-source"), False),
+):
+    result = subprocess.run(["bash", "-c", gitlab_fixture(sha=sha, parents=parents) + binding], capture_output=True, text=True, timeout=5)
+    assert (result.returncode == 0) == success, (sha, parents, result.stderr)
+for mutation in (
+    'TARGET_DATA=\'{"commit":{"id":"advanced-target"}}\'',
+    'MR_DATA=$(echo "$MR_DATA" | jq \'.sha = "new-source" | .diff_refs.head_sha = "new-source"\')',
+    'MR_DATA=$(echo "$MR_DATA" | jq \'.diff_refs.start_sha = "new-diff"\')',
+    'LIST_DATA=\'[]\'',
+    'PIPELINE_DATA=$(echo "$PIPELINE_DATA" | jq \'.project_id = 999\')',
+    'JOB_DATA=$(echo "$JOB_DATA" | jq \'.pipeline.id = 999\')',
+    'JOB_DATA=$(echo "$JOB_DATA" | jq \'.pipeline.project_id = 999\')',
+):
+    result = subprocess.run(["bash", "-c", gitlab_fixture() + mutation + "\n" + binding + poll], capture_output=True, text=True, timeout=5)
+    assert result.returncode != 0, (mutation, result.stdout)
 print("review source contracts passed")

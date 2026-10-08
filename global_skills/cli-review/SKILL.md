@@ -77,20 +77,32 @@ fi
 ```
 
 Do not stage, stash, discard or commit the user's work merely to pass this guard.
-Record the committed head/base being reviewed and verify the worktree and source
+Select the intended target branch from the task or live PR/MR, not the repository
+default. If it is unknown, stop and ask. Resolve and retain both input commits:
+
+```bash
+REVIEW_BASE=<INTENDED_TARGET_BRANCH_OR_REF>
+HEAD_SHA=$(git rev-parse --verify HEAD) || exit 1
+BASE_SHA=$(git rev-parse --verify "$REVIEW_BASE^{commit}") || exit 1
+```
+
+Verify the installed CLI supports the documented `--branch` base selector
+([official CLI reference](https://www.greptile.com/docs/code-review/greptile-cli#review-options)).
+Pass the same intended target to both output modes. Retain its resolved commit
+and verify the worktree and source
 identity again before presenting results. If either changed, report incomplete
 coverage rather than treating the response as a review of the current checkout.
 
 Prefer JSON output:
 
 ```bash
-greptile review --json
+greptile review --branch "$REVIEW_BASE" --json
 ```
 
 If JSON output is unsupported or fails with a usage error, fall back to:
 
 ```bash
-greptile review --agent
+greptile review --branch "$REVIEW_BASE" --agent
 ```
 
 Do not hide the raw command failure if both commands fail. Summarize the failing command and the next action the user needs to take.
@@ -103,6 +115,18 @@ Parse JSON output when available and report:
 - Number of findings
 - Highest severity findings first
 - Files that need edits
+- Coverage: intended base/head, all changed paths, and every path withheld/excluded
+  by the CLI's sensitive-file filter, with its exclusion reason
 - Suggested next command or fix path
 
 When output is plain text, preserve the same structure as much as possible. Keep the summary concise and focused on actionable findings.
+
+Compare the CLI's disclosed reviewed/withheld file inventory with the committed
+diff for the recorded comparison. If the installed output format does not expose
+enough coverage information, report coverage as unknown/incomplete, not a complete
+zero-finding review. Any withheld path makes full-candidate coverage incomplete.
+Never print file contents or secrets to explain the exclusion. Only after the user
+explicitly authorizes transmitting each named path and it is verified safe may an
+authorized rerun add `--include` for those paths; never automatically override the
+filter. Preserve the same `--branch` and source identity on that rerun.
+([Sensitive-file behavior](https://www.greptile.com/docs/code-review/greptile-cli#include-a-sensitive-file).)

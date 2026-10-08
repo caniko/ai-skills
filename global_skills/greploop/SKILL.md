@@ -186,11 +186,19 @@ If polling times out, stop the greploop workflow and report the timeout. Do not 
 **GitLab** — check if Greptile is already running before posting a trigger comment:
 
 ```bash
-HEAD_SHA=$(glab mr view <MR_IID> --output json | jq -r '.sha')
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_page=100"
+MR=$(glab mr view <MR_IID> --output json) || exit 1
+MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
+MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
+# Load the MR identity helpers from the declared check-pr dependency first.
+MR_REVISION=$(mr_revision) || exit 1
+HEAD_SHA=$(echo "$MR_REVISION" | jq -er '.source_sha') || exit 1
+TARGET_SHA=$(echo "$MR_REVISION" | jq -er '.target_sha') || exit 1
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
 ```
 
-Inspect the current-head pipelines and their paginated jobs for the verified
+Load the comparison/pipeline binding from
+[check-pr's declared dependency](.skillnet/deps/check-pr/references/gitlab-api.md).
+Inspect MR-associated pipelines and their paginated jobs for the verified
 provider. Reconcile an existing review request before posting another trigger;
 an unrelated running pipeline does not establish a pending Greptile review.
 If no current request exists, retain its timestamp and request a review:
@@ -205,8 +213,10 @@ esac
 glab mr note <MR_IID> --message "$REVIEW_TRIGGER"
 ```
 
-Bind `JOB_ID` to the current request's job in a pipeline at `HEAD_SHA`, using its
-provider and request evidence (see [GitLab API reference](references/gitlab-api.md)).
+Retain `PIPELINE_ID`, owning `PIPELINE_PROJECT_ID` and `PIPELINE_SHA` after executing
+the referenced pipeline binding. A merged-results temporary SHA need not equal
+`HEAD_SHA`; its current source/target parents must be proven. Bind `JOB_ID` to
+this pipeline and provider/request comparison evidence (see [GitLab API reference](references/gitlab-api.md)).
 Retried jobs have distinct IDs: do not reuse the earlier attempt or select all
 jobs whose names match. Stop if no attributable job appears within ten minutes.
 Then poll that immutable job ID:
@@ -224,13 +234,11 @@ while true; do
     exit 1
   fi
 
-  if [ "$(glab mr view <MR_IID> --output json | jq -r '.sha')" != "$HEAD_SHA" ]; then
-    echo "MR head moved; stop and reconcile the review request." >&2
-    exit 1
-  fi
-  GREPTILE_JOB=$(glab api "projects/:fullpath/jobs/$JOB_ID") || exit 1
-  if [ "$(echo "$GREPTILE_JOB" | jq -r '.commit.id')" != "$HEAD_SHA" ]; then
-    echo "Review job is not bound to the candidate head." >&2
+  assert_mr_revision || exit 1
+  GREPTILE_JOB=$(glab api "projects/$PIPELINE_PROJECT_ID/jobs/$JOB_ID") || exit 1
+  if ! echo "$GREPTILE_JOB" | jq -e --arg sha "$PIPELINE_SHA" --argjson pipeline "$PIPELINE_ID" --argjson project "$PIPELINE_PROJECT_ID" \
+    '.commit.id == $sha and .pipeline.id == $pipeline and .pipeline.project_id == $project' >/dev/null; then
+    echo "Review job is not bound to the verified MR pipeline/owner." >&2
     exit 1
   fi
 
@@ -429,12 +437,16 @@ Reuse existing successful review/CI receipts when the published head or shelf
 has not changed; do not trigger another review merely to validate a no-edit pass.
 For GitHub, reuse requires the same base too. Re-run step A's head/base guard
 immediately before accepting validation receipts.
+For GitLab, call `assert_mr_revision` immediately before acceptance; source-only
+and merged-results receipts must retain the proven current comparison inputs.
 
 #### G. Resolve threads
 
 Re-run step A's head/base guard immediately before each GitHub reply/resolution.
 If either revision moved, leave the thread open and obtain fresh comparison-bound
 review and CI evidence; a successful old-head check is not enough.
+For GitLab, call `assert_mr_revision` immediately before each reply/resolution;
+leave threads open if source/target/diff identity moved.
 
 Reply with the published fix revision and successful validation receipts before
 resolving actionable findings. Explain false positives with source-backed evidence.

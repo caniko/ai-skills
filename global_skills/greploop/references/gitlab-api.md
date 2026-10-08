@@ -30,31 +30,38 @@ glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_pa
 ```
 
 Check `status` field: `running`, `pending`, `success`, `failed`, `canceled`, `skipped`.
+Select only after [check-pr's comparison and pipeline binding](../.skillnet/deps/check-pr/references/gitlab-api.md).
+Retain the selected pipeline's ID, SHA and owning `project_id`, not an assumed
+target project. Merged-results SHA differs from source head; retain proven current
+source/target inputs. Capture/recheck all `diff_refs` plus live target branch SHA.
 
 ## Fetch jobs for a pipeline (to find the Greptile job)
 
 ```bash
-glab api --paginate "projects/:fullpath/pipelines/<PIPELINE_ID>/jobs?per_page=100"
+glab api --paginate "projects/$PIPELINE_PROJECT_ID/pipelines/$PIPELINE_ID/jobs?per_page=100"
 ```
 
 Verify provider identity and bind one immutable job ID to the current request and
-MR head, not just a matching name. Retried jobs have distinct IDs. Only `success`
+MR comparison, pipeline SHA and owning project, not just a matching name. Use
+`projects/$PIPELINE_PROJECT_ID/jobs/$JOB_ID` for a single job, including fork-owned
+pipelines. Retried jobs have distinct IDs. Only `success`
 allows result processing; failed/canceled/skipped jobs remain blockers.
 
-## Inspect pending pipelines at the current head
+## Inspect pending MR-associated pipelines
 
 ```bash
 glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_page=100" | \
-  jq -s --arg sha "HEAD_SHA" 'add | [.[] | select(.sha == $sha and (.status == "running" or .status == "pending"))] | length'
+  jq -s 'add | [.[] | select(.status == "running" or .status == "pending")]'
 ```
 
-An unrelated pending pipeline is not evidence of a pending Greptile request.
+Bind these candidates to current comparison inputs and provider/request identity
+before considering any a pending Greptile review; mere MR association is not enough.
 
-## Find pipeline for a specific commit SHA
+## Find the selected pipeline
 
 ```bash
 glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_page=100" | \
-  jq -s --arg sha "COMMIT_SHA" 'add | [.[] | select(.sha == $sha)]'
+  jq -s --argjson id "$PIPELINE_ID" 'add | [.[] | select(.id == $id)]'
 ```
 
 ## Fetch MR notes (to find Greptile's confidence score)
@@ -98,3 +105,8 @@ glab api --method PUT \
 GitLab has no batch resolution — issue one PUT per discussion.
 First reply with the published fix and successful exact-head validation, and
 ensure no follow-up question or new finding remains outstanding.
+Call `assert_mr_revision` immediately before replying/resolving; target branch
+movement can invalidate evidence without a source push. Sources:
+[MR API](https://docs.gitlab.com/api/merge_requests/#get-single-mr),
+[merged results](https://docs.gitlab.com/ci/pipelines/merged_results_pipelines/),
+[fork pipeline ownership](https://docs.gitlab.com/ci/pipelines/merge_request_pipelines/#use-with-forked-projects).

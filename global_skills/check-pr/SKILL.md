@@ -146,14 +146,23 @@ head/base-bound receipts; a target advance requires fresh comparison qualificati
 
 **GitLab:**
 ```bash
-HEAD_SHA=$(glab mr view <MR_IID> --output json | jq -r '.sha')
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_page=100"
+MR=$(glab mr view <MR_IID> --output json) || exit 1
+MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
+MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
+# Load the MR identity helpers from references/gitlab-api.md first.
+MR_REVISION=$(mr_revision) || exit 1
+HEAD_SHA=$(echo "$MR_REVISION" | jq -er '.source_sha') || exit 1
+TARGET_SHA=$(echo "$MR_REVISION" | jq -er '.target_sha') || exit 1
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
 ```
-Select the applicable pipeline with `sha == HEAD_SHA` and retain its ID. Do not
-fall back to an older SHA while waiting for the new pipeline to appear. On each
-attempt, verify the MR still has that head and inspect that pipeline's jobs.
+Use [the pipeline input/ownership binding](references/gitlab-api.md#fetch-pipeline-status-for-an-mr)
+to select a configured applicable pipeline, including a merged-results pipeline
+whose temporary SHA differs from the source head. Retain its ID, owner and SHA.
+On each attempt call `assert_mr_revision` and inspect jobs through that owner.
 Pipeline statuses: `running`, `pending`, `success`, `failed`, `canceled`, `skipped`.
 Only actual successful current-head gates qualify; old terminal pipelines do not.
+Immediately before accepting receipts and before each GitLab reply/resolution,
+call `assert_mr_revision`; a source, live target or diff-ref change invalidates reuse.
 
 **Perforce:** Perforce doesn't have built-in CI checks natively. If the team uses a review tool (Swarm, etc.) or an external CI triggered by shelve events, check the relevant system. Otherwise, proceed to analysis immediately.
 
