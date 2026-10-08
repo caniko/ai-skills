@@ -90,6 +90,9 @@ for cli_name in ("gh", "glab"):
         else:
             expected = "@greptileai review this draft" if state else "@greptileai review"
             assert result.returncode == 0 and result.stdout.rstrip().endswith(expected), result
+trigger_reference = (ROOT / "global_skills/greploop/references/gitlab-api.md").read_text()
+assert "step A's draft-aware trigger" in trigger_reference
+assert 'glab mr note <MR_IID> --message "@greptileai review"' not in trigger_reference
 
 # Run the actual documented polling snippets with terminal API responses only;
 # no network, credentials, sleeping, or repository mutations are involved.

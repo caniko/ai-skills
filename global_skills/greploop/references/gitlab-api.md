@@ -14,13 +14,14 @@ Key fields:
 - `iid` — internal MR number (use this, not `id`)
 - `source_branch` — equivalent to GitHub's `headRefName`
 - `sha` — HEAD commit SHA
+- `draft` — whether the MR requires the draft-specific review trigger
 - `description` — MR body (Greptile may update this with the confidence score)
 
 ## Trigger Greptile review
 
-```bash
-glab mr note <MR_IID> --message "@greptileai review"
-```
+Use [step A's draft-aware trigger](../SKILL.md#a-trigger-greptile-review) after
+reconciling the current request and MR head. Do not use the normal review trigger
+for a draft or request another review while a matching request is pending.
 
 ## Fetch pipelines for an MR
 
