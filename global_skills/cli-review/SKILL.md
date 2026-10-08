@@ -64,6 +64,23 @@ Wait for the user to complete the login flow before continuing.
 
 ### 4. Run the review
 
+The CLI reviews committed changes; uncommitted edits are not uploaded. Require a
+clean worktree before either review mode, including staged and untracked files:
+
+```bash
+WORKTREE_STATUS=$(git status --porcelain --untracked-files=all) || exit 1
+if [ -n "$WORKTREE_STATUS" ]; then
+  echo "Uncommitted changes are outside CLI review coverage; stop without altering them." >&2
+  printf '%s\n' "$WORKTREE_STATUS" >&2
+  exit 1
+fi
+```
+
+Do not stage, stash, discard or commit the user's work merely to pass this guard.
+Record the committed head/base being reviewed and verify the worktree and source
+identity again before presenting results. If either changed, report incomplete
+coverage rather than treating the response as a review of the current checkout.
+
 Prefer JSON output:
 
 ```bash

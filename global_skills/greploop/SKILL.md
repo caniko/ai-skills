@@ -107,13 +107,17 @@ sleep 5
 **GitHub** — check if Greptile is already running before posting a new trigger comment:
 
 ```bash
-HEAD_SHA=$(gh pr view <PR_NUMBER> --json headRefOid -q .headRefOid)
+PR_REVISION=$(gh pr view <PR_NUMBER> --json headRefOid,baseRefOid) || exit 1
+HEAD_SHA=$(echo "$PR_REVISION" | jq -er '.headRefOid') || exit 1
+BASE_SHA=$(echo "$PR_REVISION" | jq -er '.baseRefOid') || exit 1
 gh api --paginate "repos/{owner}/{repo}/commits/$HEAD_SHA/check-runs?per_page=100"
 ```
 
 Verify the installed review provider's app identity, not just a matching check
 name. Reconcile every matching pending request/check at this head before posting
 another trigger. If a current request is already queued or running, reuse it.
+Require its receipt to cover the captured head/base pair; a check's `head_sha`
+alone does not prove base coverage. A request for an older base cannot be reused.
 Otherwise retain the current check IDs and request timestamp, then request a
 fresh review:
 
@@ -147,8 +151,10 @@ while true; do
     exit 1
   fi
 
-  if [ "$(gh pr view <PR_NUMBER> --json headRefOid -q .headRefOid)" != "$HEAD_SHA" ]; then
-    echo "PR head moved; stop and reconcile the review request." >&2
+  CURRENT_REVISION=$(gh pr view <PR_NUMBER> --json headRefOid,baseRefOid) || exit 1
+  if [ "$(echo "$CURRENT_REVISION" | jq -r '.headRefOid')" != "$HEAD_SHA" ] \
+    || [ "$(echo "$CURRENT_REVISION" | jq -r '.baseRefOid')" != "$BASE_SHA" ]; then
+    echo "PR head/base moved; stop and reconcile the review request." >&2
     exit 1
   fi
   GREPTILE_CHECK=$(gh api "repos/{owner}/{repo}/check-runs/$CHECK_RUN_ID") || exit 1
@@ -364,10 +370,19 @@ Filter to comments from the Greptile bot user that have not been marked as resol
 
 #### C. Check exit conditions
 
+Before a successful exit, perform step F for this unchanged revision, even when
+the initial review has no findings. Reuse its completed review receipt rather
+than requesting another review. Discover required/expected CI gates as described
+in check-pr step 3; a verified empty gate set is recorded as N/A, not CI success.
+
 Stop the loop if **any** of these are true:
 
-- Confidence score is **5/5** AND there are **zero unresolved comments**
-- Max iterations reached (report current state)
+- Confidence score is **5/5** AND there are **zero unresolved comments** AND
+  independent current-revision CI requirements are satisfied (or verified N/A).
+- Max iterations reached (report incomplete qualification, not success).
+
+Pending, failed, skipped, canceled, missing or unknown expected gates prevent a
+successful exit. Never present a clean review score as independent CI acceptance.
 
 #### D. Fix actionable comments
 
@@ -412,8 +427,14 @@ pending gates keep threads open. Stop with the specific blocker at the deadline.
 Inspect new feedback and verify the live candidate still matches before resolution.
 Reuse existing successful review/CI receipts when the published head or shelf
 has not changed; do not trigger another review merely to validate a no-edit pass.
+For GitHub, reuse requires the same base too. Re-run step A's head/base guard
+immediately before accepting validation receipts.
 
 #### G. Resolve threads
+
+Re-run step A's head/base guard immediately before each GitHub reply/resolution.
+If either revision moved, leave the thread open and obtain fresh comparison-bound
+review and CI evidence; a successful old-head check is not enough.
 
 Reply with the published fix revision and successful validation receipts before
 resolving actionable findings. Explain false positives with source-backed evidence.

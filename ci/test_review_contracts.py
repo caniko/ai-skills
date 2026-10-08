@@ -93,6 +93,24 @@ for cli_name in ("gh", "glab"):
 trigger_reference = (ROOT / "global_skills/greploop/references/gitlab-api.md").read_text()
 assert "step A's draft-aware trigger" in trigger_reference
 assert 'glab mr note <MR_IID> --message "@greptileai review"' not in trigger_reference
+exit_conditions = loop.split("#### C. Check exit conditions", 1)[1].split("#### D.", 1)[0]
+assert "Before a successful exit, perform step F" in exit_conditions
+assert "independent current-revision CI requirements are satisfied" in exit_conditions
+assert "headRefOid,baseRefOid" in loop and '"$BASE_SHA"' in loop
+assert "immediately before each GitHub reply/resolution" in loop
+assert "configured gate set is confirmed empty" in check_pr
+assert "An empty status response alone never establishes N/A" in check_pr
+reply_style = (ROOT / "global_skills/pr-review-reply-style/SKILL.md").read_text()
+assert ".skillnet/deps/write-human-style/SKILL.md" in reply_style
+assert "/check-pr/.skillnet/deps/pr-review-reply-style/.skillnet/deps/write-human-style/SKILL.md" in workflow
+
+# Exercise the actual CLI coverage guard without running a reviewer or mutating git.
+guard = "WORKTREE_STATUS=" + cli.split("```bash\nWORKTREE_STATUS=", 1)[1].split("```", 1)[0]
+assert cli.index("WORKTREE_STATUS=") < cli.index("greptile review --json")
+for status in ("", " M tracked.md", "M  staged.md", "?? new.md"):
+    mock = f"git() {{ printf '%s\\n' '{status}'; }}\n"
+    result = subprocess.run(["bash", "-c", mock + guard], capture_output=True, text=True, timeout=5)
+    assert (result.returncode == 0) == (not status), (status, result.stderr)
 
 # Run the actual documented polling snippets with terminal API responses only;
 # no network, credentials, sleeping, or repository mutations are involved.
@@ -109,7 +127,7 @@ for marker, cli_name, head_command, response, statuses in (
     for field, values in statuses.items():
         for value in values:
             payload = json.dumps({**response, field: value})
-            head_payload = "candidate" if cli_name == "gh" else json.dumps({"sha": "candidate"})
+            head_payload = json.dumps({"headRefOid": "candidate", "baseRefOid": "base"}) if cli_name == "gh" else json.dumps({"sha": "candidate"})
             mock = f'''{cli_name}() {{
   case "$*" in
     '{head_command}'*) printf '%s\\n' '{head_payload}' ;;
@@ -118,7 +136,27 @@ for marker, cli_name, head_command, response, statuses in (
   esac
 }}
 HEAD_SHA=candidate
+BASE_SHA=base
 '''
             result = subprocess.run(["bash", "-c", mock + snippet], capture_output=True, text=True, timeout=5)
             assert (result.returncode == 0) == (value == "success"), (value, result.stdout, result.stderr)
+
+# A successful head-only check cannot validate a changed PR comparison.
+snippet = "CHECK_RUN_ID=" + loop.split("```bash\nCHECK_RUN_ID=", 1)[1].split("```", 1)[0]
+snippet = snippet.replace("<CURRENT_REVIEW_CHECK_RUN_ID>", "1").replace("<PR_NUMBER>", "1")
+for live_head, live_base in (("moved-head", "base"), ("candidate", "moved-base")):
+    current = json.dumps({"headRefOid": live_head, "baseRefOid": live_base})
+    check = json.dumps({"head_sha": "candidate", "status": "completed", "conclusion": "success"})
+    mock = f'''gh() {{
+  case "$*" in
+    'pr view '*) printf '%s\\n' '{current}' ;;
+    'api '*) printf '%s\\n' '{check}' ;;
+    *) return 99 ;;
+  esac
+}}
+HEAD_SHA=candidate
+BASE_SHA=base
+'''
+    result = subprocess.run(["bash", "-c", mock + snippet], capture_output=True, text=True, timeout=5)
+    assert result.returncode != 0 and "head/base moved" in result.stderr, result
 print("review source contracts passed")

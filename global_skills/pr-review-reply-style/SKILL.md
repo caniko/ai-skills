@@ -9,7 +9,7 @@ Use this skill when writing a PR review-thread reply after handling feedback.
 
 ## Style
 
-Load and apply [`$write-human-style`](../write-human-style/SKILL.md) before
+Load and apply [`$write-human-style`](.skillnet/deps/write-human-style/SKILL.md) before
 drafting. It owns the general voice, clarity, concision, and anti-boilerplate
 rules. This skill adds only review-thread behavior.
 

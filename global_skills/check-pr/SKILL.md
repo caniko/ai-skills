@@ -121,15 +121,28 @@ Key Perforce CL fields:
 
 ### 3. Wait for pending checks
 
-Capture the candidate head before checking status. Check only that revision's
+First discover the required/expected gate set from the repository contract,
+native target-branch protection/rules and CI configuration (including external
+integrations). Retain that evidence. For GitHub inspect applicable rules and
+required checks for the PR's target; for GitLab inspect project/merge policies
+and the effective CI configuration, including referenced includes. An unavailable
+policy/configuration is an unknown gate set, not an empty one.
+
+If the configured gate set is confirmed empty, record CI as **N/A** and skip the
+wait for a pipeline/check that is not expected to exist; proceed to analysis.
+An empty status response alone never establishes N/A. Expected checks that have
+not appeared remain missing-gate blockers.
+
+Capture the candidate head/base before checking status. Check only that revision's
 checks, with at most 20 attempts at 30-second intervals (ten minutes). If checks
 remain pending or no current-head pipeline appears by that deadline, report the
 pending/missing gates as blockers and stop waiting. Never interpret an API error,
 missing check, skipped or canceled gate as a pass. A head change requires fresh
 revision binding.
 
-**GitHub:** capture `headRefOid`, then inspect `statusCheckRollup` from `gh pr view`
-and verify the head has not changed on each attempt.
+**GitHub:** capture `headRefOid` and `baseRefOid`, then inspect `statusCheckRollup`
+from `gh pr view` and verify both revisions still match on each attempt. Retain
+head/base-bound receipts; a target advance requires fresh comparison qualification.
 
 **GitLab:**
 ```bash
@@ -226,6 +239,10 @@ canceled, missing or pending gates keep actionable threads open; report the
 blocker instead of resolving. Reconcile any new feedback before proceeding.
 
 ### 9. Resolve review threads
+
+For GitHub, re-read `headRefOid` and `baseRefOid` immediately before each reply or
+resolution. If either changed, leave threads open and repeat revision-bound
+qualification instead of accepting old comparison evidence.
 
 Reply with the published fix revision and successful validation receipts before
 resolving each actionable thread. For an informational or false-positive finding,

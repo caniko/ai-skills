@@ -49,6 +49,7 @@ jobs:
           test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/fix-loop/SKILL.md"
           test -s "$RUNNER_TEMP/skillnet-view/greploop/.skillnet/deps/check-pr/SKILL.md"
           test -s "$RUNNER_TEMP/skillnet-view/cli-review/.skillnet/deps/write-human-style/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/pr-review-reply-style/.skillnet/deps/write-human-style/SKILL.md"
           test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/fix-loop/.skillnet/deps/fix-loop-ref/SKILL.md"
           test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/grouped-git-commits/.skillnet/deps/chaosbox-policy/SKILL.md"
           test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/chaosbox-policy/SKILL.md"
