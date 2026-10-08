@@ -22,6 +22,9 @@ Analyze a pull request (GitHub), merge request (GitLab), or shelved changelist (
 ## Inputs
 
 - **PR/MR/CL number** (optional): If not provided, detect the PR/MR for the current branch, or the default pending changelist for p4.
+- **GitLab target repository**: Set `MR_TARGET_REPO` to the verified upstream
+  target project, not a source fork. An IID is project-local; if the target is
+  unknown, ask for the MR URL instead of guessing from the checkout's remote.
 
 ## Instructions
 
@@ -49,6 +52,21 @@ fi
 
 For self-hosted GitLab instances whose hostname doesn't contain "gitlab", the user can override by passing `--vcs gitlab` as an input. For Perforce, the user can override by passing `--vcs perforce`.
 
+For Git, refuse a dirty baseline before switching branches or making fixes.
+Preserve staged, unstaged and untracked work untouched; ask the user to provide a
+clean task-owned checkout. Do not stash/reset or commit someone else's work.
+
+```bash
+BASELINE_STATUS=$(git status --porcelain=v1 --untracked-files=all) || exit 1
+if [ -n "$BASELINE_STATUS" ]; then
+  echo "Dirty baseline; preserve existing work and stop before edits/publication." >&2
+  exit 1
+fi
+```
+
+Keep the checkout task-owned for the fix phase. If concurrent foreign edits arrive,
+stop and preserve them; the clean entry check does not authorize later foreign work.
+
 ### 1. Identify the PR/MR/CL
 
 If a number was provided, use it. Otherwise, detect it:
@@ -60,8 +78,15 @@ gh pr view --json number -q .number
 
 **GitLab:**
 ```bash
-glab mr view --output json | jq '.iid'
+: "${MR_TARGET_REPO:?Set the verified GitLab target repository first}"
+MR=$(glab mr view --repo "$MR_TARGET_REPO" --output json) || exit 1
+MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
+MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
 ```
+
+When a number is supplied, pass it to that same `glab mr view` with the explicit
+`--repo "$MR_TARGET_REPO"`. Retain the returned target project ID and MR IID for
+every later API operation; never re-infer the project from the local fork.
 
 **Perforce:**
 ```bash
@@ -85,14 +110,62 @@ gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/reviews?per_page=100"
 gh api --paginate "repos/{owner}/{repo}/issues/<PR_NUMBER>/comments?per_page=100"
 ```
 
-GitHub PRs are also issues, so general PR comments live on the issue comments endpoint. Greptile may edit a single general PR comment on each review cycle instead of creating a new review or comment. Always inspect the latest Greptile-authored general comment by `updated_at`, including any "Prompt to fix all with AI" section, before concluding that the PR is clear.
+GitHub PRs are also issues, so general PR comments live on the issue comments endpoint. Greptile may edit a single general PR comment on each review cycle. First retain the configured app's exact bot login and numeric actor ID from trusted installation/provider configuration; use the guarded filter in [the GraphQL reference](references/graphql-queries.md#fetch-general-pr-comments-edited-in-place-rest). Similar logins and human-editable description text do not authenticate provider evidence. Inspect only authenticated, current-request-bound summaries by `updated_at`, including "Prompt to fix all with AI".
+
+During this initial collection, also fetch thread state **before** analysis or
+categorization. REST comment history has no thread-level resolution state:
+
+```bash
+gh api graphql -f query='
+query($cursor: String) {
+  repository(owner: "OWNER", name: "REPO") {
+    pullRequest(number: PR_NUMBER) {
+      reviewThreads(first: 100, after: $cursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          id
+          isResolved
+          comments(first: 100) {
+            pageInfo { hasNextPage endCursor }
+            nodes { databaseId body path author { login } }
+          }
+        }
+      }
+    }
+  }
+}'
+```
+
+Follow every thread cursor. Separately paginate each thread's remaining comments:
+
+```bash
+gh api graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
+query($threadId: ID!, $commentCursor: String) {
+  node(id: $threadId) {
+    ... on PullRequestReviewThread {
+      comments(first: 100, after: $commentCursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes { databaseId body path author { login } }
+      }
+    }
+  }
+}'
+```
+
+Read every page before proceeding ([reference](references/graphql-queries.md)). Join
+REST comment IDs to GraphQL `databaseId`; missing thread state is unknown, not
+unresolved. Resolved threads are historical, not automatically current actionable
+feedback. Read all replies and retain their source-backed disposition in the
+ledger; if a defect demonstrably persists, report it separately with current-source
+evidence rather than blindly replaying a resolved request. Refresh state after
+waiting and before reporting/fixing findings, and again before resolution.
 
 **GitLab:**
 ```bash
-glab mr view <MR_IID> --output json
+glab api "projects/$MR_PROJECT_ID/merge_requests/$MR_IID"
 # Fetch discussions (inline diff comments are type "DiffNote"; general comments have null type)
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/notes?per_page=100"
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"
 ```
 
 Inspect every page and compare note `updated_at` values to detect edited summaries.
@@ -146,9 +219,7 @@ head/base-bound receipts; a target advance requires fresh comparison qualificati
 
 **GitLab:**
 ```bash
-MR=$(glab mr view <MR_IID> --output json) || exit 1
-MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
-MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
+MR=$(glab api "projects/$MR_PROJECT_ID/merge_requests/$MR_IID") || exit 1
 # Load the MR identity helpers from references/gitlab-api.md first.
 MR_REVISION=$(mr_revision) || exit 1
 HEAD_SHA=$(echo "$MR_REVISION" | jq -er '.source_sha') || exit 1
@@ -184,6 +255,8 @@ Once all checks are complete, evaluate these areas:
 #### C. Review Comments
 
 - Inline code review comments that need addressing
+- Use initial GraphQL `isResolved` state, not every historical REST comment, to
+  identify current GitHub inline feedback. Keep resolved findings in the audit.
 - Look for bot review comments (e.g. from `greptile-apps[bot]` on GitHub, or the Greptile bot user on GitLab, linters, etc.)
 - Human reviewer comments
 - **Perforce:** comments from the configured Swarm or other review-system API
@@ -227,7 +300,10 @@ If there are actionable items:
 
 **GitHub/GitLab:** commit and push:
 ```bash
-git add <files>
+git diff --cached --quiet || { echo "Unexpected staged work; stop without changing it." >&2; exit 1; }
+git add -- <files>
+git diff --cached --check || exit 1
+# Inspect the entire staged diff and verify every hunk belongs to this task.
 git commit -m "fix: describe the confirmed review issue"
 git push
 ```
@@ -263,47 +339,8 @@ other review-system API and use that system's supported resolution operation.
 Do not substitute an automated depot review-daemon command for a comment API.
 Retain the reply and resolution receipts bound to the selected review/changelist.
 
-**GitHub** — fetch unresolved thread IDs (paginate if needed — see [the GraphQL reference](references/graphql-queries.md)):
-
-```bash
-gh api graphql -f query='
-query($cursor: String) {
-  repository(owner: "OWNER", name: "REPO") {
-    pullRequest(number: PR_NUMBER) {
-      reviewThreads(first: 100, after: $cursor) {
-        pageInfo { hasNextPage endCursor }
-        nodes {
-          id
-          isResolved
-          comments(first: 100) {
-            pageInfo { hasNextPage endCursor }
-            nodes { body path author { login } }
-          }
-        }
-      }
-    }
-  }
-}'
-```
-
-If `hasNextPage` is true, repeat with `-f cursor=ENDCURSOR` to get remaining threads.
-For each thread with more comments, paginate the comments connection separately:
-
-```bash
-gh api graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
-query($threadId: ID!, $commentCursor: String) {
-  node(id: $threadId) {
-    ... on PullRequestReviewThread {
-      comments(first: 100, after: $commentCursor) {
-        pageInfo { hasNextPage endCursor }
-        nodes { body path author { login } }
-      }
-    }
-  }
-}'
-```
-
-Repeat until that thread's comments have all been read.
+**GitHub** — repeat step 2's paginated thread-state collection, including all
+secondary comment pages, to obtain fresh unresolved IDs and follow-up replies.
 
 Then resolve threads that have been addressed or are informational:
 
@@ -321,7 +358,7 @@ Batch multiple resolutions into a single mutation using aliases (`t1`, `t2`, etc
 **GitLab** — fetch unresolved discussions (see [the GitLab API reference](references/gitlab-api.md)):
 
 ```bash
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
 ```
 
 Select discussions containing a relevant note with `resolvable == true` and
@@ -332,7 +369,7 @@ Resolve each discussion individually (GitLab has no batch resolution):
 
 ```bash
 glab api --method PUT \
-  "projects/:fullpath/merge_requests/<MR_IID>/discussions/<DISCUSSION_ID>" \
+  "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions/<DISCUSSION_ID>" \
   --field resolved=true
 ```
 

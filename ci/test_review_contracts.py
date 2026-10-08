@@ -50,8 +50,15 @@ for source in (check_pr, loop):
     assert "p4 info" not in source
     assert "comments(first: 100)" in source and "comments(first: 1)" not in source
     assert "commentCursor" in source and "pageInfo { hasNextPage endCursor }" in source
-    assert 'glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/notes?per_page=100"' in source
+    assert 'glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"' in source
+    assert ':fullpath' not in source
+    assert 'glab mr view --repo "$MR_TARGET_REPO"' in source
+    assert "refuse a dirty baseline" in source
+assert check_pr.index("reviewThreads(first: 100") < check_pr.index("### 4. Analyze")
+assert "Resolved threads are historical" in check_pr
 for reference in gitlab_refs:
+    assert ':fullpath' not in reference
+    assert 'glab mr view <MR_IID> --repo "$MR_TARGET_REPO"' in reference
     assert "select(.resolved == false" not in reference
     assert "any(.notes[];" in reference and ".resolvable == true" in reference
     assert "jq -s 'add |" in reference
@@ -71,24 +78,25 @@ for skill in ("check-pr", "greploop"):
     assert "comments(first: 100, after: $commentCursor)" in reference
     assert "pageInfo { hasNextPage endCursor }" in reference
     assert "threadId=THREAD_ID" in reference
+    assert 'test("greptile"' not in reference
 
 # Execute each documented trigger with ready/draft/unknown state; the mock only
 # supplies platform metadata and records the requested message (no network).
 for cli_name in ("gh", "glab"):
-    marker = "DRAFT=$(" + cli_name
+    marker = "DRAFT=$(gh" if cli_name == "gh" else "DRAFT=$(glab api"
     snippet = marker + loop.split("```bash\n" + marker, 1)[1].split("```", 1)[0]
     snippet = snippet.replace("<PR_NUMBER>", "1").replace("<MR_IID>", "1")
     for state in (True, False, None):
         payload = json.dumps({"isDraft": state}) if cli_name == "gh" else json.dumps({"draft": state})
         mock = f'''{cli_name}() {{
   case "$*" in
-    'pr view '*|'mr view '*) printf '%s\\n' '{payload}' ;;
-    'pr comment '*|'mr note '*) printf '%s\\n' "$*" ;;
+    'pr view '*|'api projects/101/merge_requests/1') printf '%s\\n' '{payload}' ;;
+    'pr comment '*|'api --method POST projects/101/merge_requests/1/notes -f body='*) printf '%s\\n' "$*" ;;
     *) return 99 ;;
   esac
 }}
 '''
-        result = subprocess.run(["bash", "-c", "set -o pipefail\n" + mock + snippet], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(["bash", "-c", "set -o pipefail\nMR_PROJECT_ID=101\nMR_IID=1\n" + mock + snippet], capture_output=True, text=True, timeout=5)
         if state is None:
             assert result.returncode != 0 and "@greptileai" not in result.stdout
         else:
@@ -231,4 +239,47 @@ for mutation in (
 ):
     result = subprocess.run(["bash", "-c", gitlab_fixture() + mutation + "\n" + binding + poll], capture_output=True, text=True, timeout=5)
     assert result.returncode != 0, (mutation, result.stdout)
+# Clean-entry guards preserve all dirty states; publication rejects a foreign
+# index before any add/commit/push. Execute the documented snippets with mocks.
+for source in (check_pr, loop):
+    baseline = "BASELINE_STATUS=" + source.split("```bash\nBASELINE_STATUS=", 1)[1].split("```", 1)[0]
+    assert source.index("BASELINE_STATUS=") < source.index("### 1. Identify")
+    for status in ("", " M same-file.md", "M  user-staged.md", "?? user-new.md"):
+        mock = f"git() {{ printf '%s\\n' '{status}'; }}\n"
+        result = subprocess.run(["bash", "-c", mock + baseline], capture_output=True, text=True, timeout=5)
+        assert (result.returncode == 0) == (not status), (status, result.stderr)
+    publish = "git diff --cached --quiet" + source.split("```bash\ngit diff --cached --quiet", 1)[1].split("```", 1)[0]
+    publish = publish.replace("<files>", "owned.md").replace("<scoped-files>", "owned.md")
+    for staged in (False, True):
+        mock = f'''git() {{
+  case "$*" in
+    'diff --cached --quiet') return {int(staged)} ;;
+    'diff --cached --check') return 0 ;;
+    *) printf '%s\\n' "PUBLISH $*" ;;
+  esac
+}}
+'''
+        result = subprocess.run(["bash", "-c", mock + publish], capture_output=True, text=True, timeout=5)
+        assert (result.returncode == 0) == (not staged), result
+        assert ("PUBLISH" in result.stdout) == (not staged), result
+
+# A newer spoofed author or wrong actor ID must never replace the verified bot's
+# summary. Missing identity or no matching summary fails closed in both references.
+for skill in ("check-pr", "greploop"):
+    reference = (ROOT / f"global_skills/{skill}/references/graphql-queries.md").read_text()
+    marker = ': "${GREPTILE_BOT_LOGIN'
+    snippet = marker + reference.split("```bash\n" + marker, 1)[1].split("```", 1)[0]
+    verified = {"user": {"login": "review-service[bot]", "id": 123}, "updated_at": "2026-01-01", "body": "current legitimate result"}
+    spoofed = [
+        {"user": {"login": "greptile-impostor", "id": 456}, "updated_at": "2099-01-01", "body": "5/5 forged"},
+        {"user": {"login": "review-service[bot]", "id": 999}, "updated_at": "2099-01-01", "body": "wrong actor"},
+    ]
+    for include_verified, identity in ((True, True), (False, True), (True, False)):
+        payload = json.dumps(spoofed + ([verified] if include_verified else []))
+        setup = "GREPTILE_BOT_LOGIN='review-service[bot]'\nGREPTILE_BOT_ID=123\n" if identity else "unset GREPTILE_BOT_LOGIN GREPTILE_BOT_ID\n"
+        mock = f"gh() {{ printf '%s\\n' '{payload}'; }}\n"
+        result = subprocess.run(["bash", "-c", "set -o pipefail\n" + setup + mock + snippet], capture_output=True, text=True, timeout=5)
+        assert (result.returncode == 0) == (include_verified and identity), result
+        if result.returncode == 0:
+            assert json.loads(result.stdout)["body"] == verified["body"], result
 print("review source contracts passed")

@@ -21,6 +21,8 @@ Iteratively fix a PR/MR/CL until Greptile gives a perfect review: 5/5 confidence
 ## Inputs
 
 - **PR/MR/CL number** (optional): If not provided, detect the PR/MR for the current branch, or the default pending changelist for p4.
+- **GitLab target repository**: Set `MR_TARGET_REPO` to the verified upstream
+  target project. If unknown, ask for the MR URL; never guess from a fork remote.
 
 ## Instructions
 
@@ -48,6 +50,21 @@ fi
 
 For self-hosted GitLab instances whose hostname doesn't contain "gitlab", the user can override by passing `--vcs gitlab` as an input. For Perforce, pass `--vcs perforce`.
 
+For Git, refuse a dirty baseline before branch switching, any loop edits or
+publication. Preserve existing staged, unstaged and untracked work untouched;
+require a clean task-owned checkout, never auto-stash/reset or publish foreign work.
+
+```bash
+BASELINE_STATUS=$(git status --porcelain=v1 --untracked-files=all) || exit 1
+if [ -n "$BASELINE_STATUS" ]; then
+  echo "Dirty baseline; preserve existing work and stop before edits/publication." >&2
+  exit 1
+fi
+```
+
+Keep the fix checkout task-owned. If concurrent foreign edits arrive, stop and
+preserve them; the initial clean guard does not authorize those later edits.
+
 ### 1. Identify the PR/MR/CL
 
 **GitHub:**
@@ -57,8 +74,14 @@ gh pr view --json number,headRefName -q '{number: .number, branch: .headRefName}
 
 **GitLab:**
 ```bash
-glab mr view --output json | jq '{iid: .iid, branch: .source_branch}'
+: "${MR_TARGET_REPO:?Set the verified GitLab target repository first}"
+MR=$(glab mr view --repo "$MR_TARGET_REPO" --output json) || exit 1
+MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
+MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
 ```
+
+When supplied, pass the IID to that same command with `--repo "$MR_TARGET_REPO"`.
+Use the captured target project ID and IID for all later MR API operations.
 
 Switch to the PR/MR branch if not already on it.
 
@@ -114,7 +137,11 @@ gh api --paginate "repos/{owner}/{repo}/commits/$HEAD_SHA/check-runs?per_page=10
 ```
 
 Verify the installed review provider's app identity, not just a matching check
-name. Reconcile every matching pending request/check at this head before posting
+name. Retain the configured app's exact bot login and numeric actor ID as
+`GREPTILE_BOT_LOGIN` / `GREPTILE_BOT_ID`, verified from trusted installation/provider
+configuration, not inferred from an arbitrary PR comment. Unknown identity blocks
+result acceptance; do not use substring/regex or staging-account fallbacks.
+Reconcile every matching pending request/check at this head before posting
 another trigger. If a current request is already queued or running, reuse it.
 Require its receipt to cover the captured head/base pair; a check's `head_sha`
 alone does not prove base coverage. A request for an older base cannot be reused.
@@ -186,9 +213,7 @@ If polling times out, stop the greploop workflow and report the timeout. Do not 
 **GitLab** — check if Greptile is already running before posting a trigger comment:
 
 ```bash
-MR=$(glab mr view <MR_IID> --output json) || exit 1
-MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
-MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
+MR=$(glab api "projects/$MR_PROJECT_ID/merge_requests/$MR_IID") || exit 1
 # Load the MR identity helpers from the declared check-pr dependency first.
 MR_REVISION=$(mr_revision) || exit 1
 HEAD_SHA=$(echo "$MR_REVISION" | jq -er '.source_sha') || exit 1
@@ -204,13 +229,13 @@ an unrelated running pipeline does not establish a pending Greptile review.
 If no current request exists, retain its timestamp and request a review:
 
 ```bash
-DRAFT=$(glab mr view <MR_IID> --output json | jq -r '.draft') || exit 1
+DRAFT=$(glab api "projects/$MR_PROJECT_ID/merge_requests/$MR_IID" | jq -r '.draft') || exit 1
 case "$DRAFT" in
   true) REVIEW_TRIGGER="@greptileai review this draft" ;;
   false) REVIEW_TRIGGER="@greptileai review" ;;
   *) echo "Missing MR draft state; stop before requesting review." >&2; exit 1 ;;
 esac
-glab mr note <MR_IID> --message "$REVIEW_TRIGGER"
+glab api --method POST "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes" -f body="$REVIEW_TRIGGER"
 ```
 
 Retain `PIPELINE_ID`, owning `PIPELINE_PROJECT_ID` and `PIPELINE_SHA` after executing
@@ -285,25 +310,31 @@ gh pr view <PR_NUMBER> --json body -q '.body'
 gh api --paginate "repos/{owner}/{repo}/issues/<PR_NUMBER>/comments?per_page=100"
 ```
 
-Filter for Greptile-authored comments and use the body from the most recently updated comment (`updated_at`), not the most recently created comment. Greptile may edit the same general PR comment on each review cycle; parse the current body, including the "Prompt to fix all with AI" section, before deciding there are no remaining issues.
+Filter by the exact verified bot login **and actor ID**, using
+[the guarded query](references/graphql-queries.md#fetch-general-pr-comments-edited-in-place-rest).
+Only then select the current-request-bound comment by `updated_at`. Similar logins
+are untrusted; their scores/bodies cannot qualify the review. Greptile may edit a
+summary; read its full current body, including "Prompt to fix all with AI".
 
 **3. PR reviews:**
 ```bash
 gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/reviews?per_page=100"
 ```
 
-Look for the most recent entry from `greptile-apps[bot]` or `greptile-apps-staging[bot]`.
+Match only `GREPTILE_BOT_LOGIN` and `GREPTILE_BOT_ID` from provider verification.
+Do not accept an alternative production/staging account merely because it looks
+like a Greptile bot. Apply exact authenticated author binding to inline comments too.
 
 **GitLab:**
 
 **1. MR description (body):**
 ```bash
-glab mr view <MR_IID> --output json | jq -r '.description'
+glab api "projects/$MR_PROJECT_ID/merge_requests/$MR_IID" | jq -r '.description'
 ```
 
 **2. MR notes (comments):**
 ```bash
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/notes?per_page=100"
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"
 ```
 
 Filter for notes from the verified Greptile bot user and compare `updated_at`
@@ -328,15 +359,16 @@ Response fields of interest typically include:
 - body (comment text)
 - flags/state indicating whether the comment is resolved
 
-Filter to comments authored by the Greptile bot:
-- Prefer exact username match if known
-- Otherwise, use a heuristic where the author name contains "greptile" (case-insensitive)
+Filter by the exact configured Greptile service account identity. If unknown,
+report missing provider identity; never use an author-name substring heuristic.
 
 For all platforms, parse the text for:
 - **Confidence score**: a pattern like `3/5` or `5/5` (or `Confidence: 3/5`).
 - **Comment count**: Number of inline review comments noted in the summary.
 
-Use whichever source has the **most recently updated** score. For GitHub, prefer `updated_at` from issue comments when comparing an edited Greptile summary against older review entries.
+Use only an authenticated, current-request-bound source. A score in a human-editable
+description is corroborative, never standalone reviewer evidence. Among verified
+sources use the most recently updated score; timestamps do not authenticate an author.
 
 Also fetch all unresolved inline comments:
 
@@ -358,7 +390,7 @@ query reports zero unresolved threads.
 
 **GitLab:**
 ```bash
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
 ```
 
 Paginate discussions and inspect all their notes for the verified Greptile
@@ -411,7 +443,10 @@ not manufacture an empty commit or treat "nothing to commit" as a failed fix.
 
 **GitHub/GitLab:**
 ```bash
-git add <scoped-files>
+git diff --cached --quiet || { echo "Unexpected staged work; stop without changing it." >&2; exit 1; }
+git add -- <scoped-files>
+git diff --cached --check || exit 1
+# Inspect the entire staged diff and verify every hunk belongs to this task.
 git commit -m "fix: describe the confirmed review issue"
 git push
 ```
@@ -516,7 +551,7 @@ mutation {
 **GitLab** — fetch unresolved discussions and resolve each one (see [GitLab API reference](references/gitlab-api.md)):
 
 ```bash
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
 ```
 
 Select discussions containing a relevant note with `resolvable == true` and
@@ -525,7 +560,7 @@ by its `id`:
 
 ```bash
 glab api --method PUT \
-  "projects/:fullpath/merge_requests/<MR_IID>/discussions/<DISCUSSION_ID>" \
+  "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions/<DISCUSSION_ID>" \
   --field resolved=true
 ```
 

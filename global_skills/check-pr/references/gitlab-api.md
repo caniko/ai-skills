@@ -2,12 +2,17 @@
 
 Useful GitLab REST API calls for working with merge request discussions, using `glab api`.
 
-`glab api` automatically resolves `:fullpath` to the URL-encoded project path from the local git remote.
+Bind every MR operation to the verified target project, not the source fork's
+remote. Set `MR_TARGET_REPO` from the actual MR URL; ask if unknown. Capture the
+numeric target project ID and IID once and retain them throughout the workflow.
 
 ## Fetch MR details
 
 ```bash
-glab mr view <MR_IID> --output json
+: "${MR_TARGET_REPO:?Set the verified GitLab target repository first}"
+MR=$(glab mr view <MR_IID> --repo "$MR_TARGET_REPO" --output json) || exit 1
+MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
+MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
 ```
 
 Key fields (compared to GitHub equivalents):
@@ -58,7 +63,7 @@ comparison before posting another request.
 ## Fetch all discussions (inline + general comments)
 
 ```bash
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100"
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100"
 ```
 
 Read every page; `--paginate` follows GitLab's pagination links.
@@ -77,7 +82,7 @@ Each note object:
 ## Filter for unresolved inline diff comments
 
 ```bash
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_page=100" | \
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100" | \
   jq -s 'add | [.[] | select(any(.notes[]; .resolvable == true and .resolved == false and .type == "DiffNote"))]'
 ```
 
@@ -85,7 +90,7 @@ glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/discussions?per_
 
 ```bash
 glab api --method PUT \
-  "projects/:fullpath/merge_requests/<MR_IID>/discussions/<DISCUSSION_ID>" \
+  "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions/<DISCUSSION_ID>" \
   --field resolved=true
 ```
 
@@ -96,7 +101,7 @@ and ensure no follow-up remains outstanding.
 ## Fetch pipeline status for an MR
 
 ```bash
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_page=100"
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
 ```
 
 Retain a selected policy-applicable pipeline's ID, owning `project_id` and `sha`
@@ -154,22 +159,23 @@ comparison-bound evidence if either branch or diff identity changed.
 ## Fetch MR notes (general comments and bot reviews)
 
 ```bash
-glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/notes?per_page=100"
+glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"
 ```
 
-Filter by `author.username` to find Greptile bot comments. The exact bot username depends on the Greptile installation — check the first Greptile comment to identify it.
+Match the exact configured Greptile service account identity verified from trusted
+installation metadata, not a substring or the first commenter claiming to be the bot.
 Compare `updated_at` across every page, including older notes edited in place.
 
 ## Post a comment on an MR
 
 ```bash
-glab mr note <MR_IID> --message "your message here"
+glab api --method POST "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes" -f body="your message here"
 ```
 
 Or via API:
 
 ```bash
 glab api --method POST \
-  "projects/:fullpath/merge_requests/<MR_IID>/notes" \
+  "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes" \
   --field body="your message here"
 ```

@@ -19,6 +19,7 @@ query($cursor: String) {
           comments(first: 100) {
             pageInfo { hasNextPage endCursor }
             nodes {
+              databaseId
               body
               path
               author { login }
@@ -44,7 +45,7 @@ query($threadId: ID!, $commentCursor: String) {
     ... on PullRequestReviewThread {
       comments(first: 100, after: $commentCursor) {
         pageInfo { hasNextPage endCursor }
-        nodes { body path author { login } createdAt }
+        nodes { databaseId body path author { login } createdAt }
       }
     }
   }
@@ -98,11 +99,21 @@ gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments?per_page=100"
 
 General PR comments are issue comments. Greptile may update one summary comment repeatedly, so select by `updated_at` instead of `created_at`:
 
+First retain `GREPTILE_BOT_LOGIN` and `GREPTILE_BOT_ID` from trusted configured
+app/installation identity, not from any arbitrary commenter. Match both exactly;
+missing identity blocks acceptance. Timestamp orders already-authenticated evidence
+and never proves current-request binding. Use the same exact author checks for
+reviews/inline comments; validate request/revision attribution separately. A
+missing matching summary is not a clean review.
+
 ```bash
+: "${GREPTILE_BOT_LOGIN:?Missing verified review bot login}"
+: "${GREPTILE_BOT_ID:?Missing verified review bot actor ID}"
 gh api --paginate "repos/{owner}/{repo}/issues/<PR_NUMBER>/comments?per_page=100" \
-  | jq -s 'add
-    | map(select(.user.login | test("greptile"; "i")))
+  | jq -se --arg bot "$GREPTILE_BOT_LOGIN" --argjson bot_id "$GREPTILE_BOT_ID" 'add
+    | map(select(.user.login == $bot and .user.id == $bot_id))
     | sort_by(.updated_at)
     | last
+    | select(. != null)
     | {author: .user.login, updated_at, body}'
 ```
