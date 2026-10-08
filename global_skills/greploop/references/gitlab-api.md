@@ -90,9 +90,14 @@ Read all pages. Resolution fields belong to `notes[]`, not the discussion object
 
 Filter for unresolved inline diff comments from Greptile:
 ```bash
+: "${GREPTILE_BOT_USERNAME:?Missing verified GitLab service account}"
+: "${GREPTILE_BOT_USER_ID:?Missing verified GitLab service account ID}"
 glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/discussions?per_page=100" | \
-  jq -s 'add | [.[] | select(any(.notes[]; .resolvable == true and .resolved == false and .type == "DiffNote" and .author.username == "GREPTILE_BOT_USERNAME"))]'
+  jq -s --arg bot "$GREPTILE_BOT_USERNAME" --argjson bot_id "$GREPTILE_BOT_USER_ID" 'add | [.[] | select(any(.notes[]; .resolvable == true and .resolved == false and .type == "DiffNote" and .author.username == $bot and .author.id == $bot_id))]'
 ```
+
+Retain both identity values from trusted configured installation metadata, not
+from an arbitrary comment. Missing identity blocks acceptance, not a zero count.
 
 Each discussion has:
 - `id` — use this for resolution

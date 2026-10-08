@@ -8,7 +8,7 @@ compatibility: Requires jq and git with authenticated gh (GitHub CLI) or glab (G
 metadata:
   author: greptileai
   version: "1.3"
-allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*) Bash(jq:*)
+allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*) Bash(jq:*) Bash(canix repo review:*) Bash(canix repo merge:*) Bash(canix-toolbelt repo review:*) Bash(canix-toolbelt repo merge:*)
 ---
 
 # Check PR
@@ -40,11 +40,16 @@ Perforce mapping:
 
 ```bash
 if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
-  REMOTE_URL=$(git remote get-url origin)
-  if echo "$REMOTE_URL" | grep -qi "gitlab"; then
-    VCS="gitlab"
-  else
-    VCS="github"
+  if [ "${VCS:-}" != "github" ] && [ "${VCS:-}" != "gitlab" ]; then
+    REMOTE_URL=$(git remote get-url "${PLATFORM_REMOTE:-origin}") || {
+      echo "Cannot identify platform: select a verified remote or explicit VCS." >&2
+      exit 1
+    }
+    case "$REMOTE_URL" in
+      *gitlab*) VCS="gitlab" ;;
+      *github*) VCS="github" ;;
+      *) echo "Unknown forge: set VCS from the verified candidate URL." >&2; exit 1 ;;
+    esac
   fi
 elif p4 where "$PWD/..." >/dev/null 2>&1; then
   VCS="perforce"
@@ -55,6 +60,9 @@ fi
 ```
 
 For self-hosted GitLab instances whose hostname doesn't contain "gitlab", the user can override by passing `--vcs gitlab` as an input. For Perforce, the user can override by passing `--vcs perforce`.
+
+Map an explicit Git platform input to `VCS` before detection. Set `PLATFORM_REMOTE`
+when origin is not the intended remote; a failed lookup never defaults to GitHub.
 
 For Git, refuse a dirty baseline before switching branches or making fixes.
 Preserve staged, unstaged and untracked work untouched; ask the user to provide a

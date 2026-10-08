@@ -8,7 +8,7 @@ compatibility: Requires jq and git with authenticated gh (GitHub CLI) or glab (G
 metadata:
   author: greptileai
   version: "1.3"
-allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*) Bash(jq:*)
+allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*) Bash(jq:*) Bash(canix repo review:*) Bash(canix repo merge:*) Bash(canix-toolbelt repo review:*) Bash(canix-toolbelt repo merge:*)
 ---
 
 # Greploop
@@ -37,11 +37,16 @@ Perforce mapping:
 
 ```bash
 if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
-  REMOTE_URL=$(git remote get-url origin)
-  if echo "$REMOTE_URL" | grep -qi "gitlab"; then
-    VCS="gitlab"
-  else
-    VCS="github"
+  if [ "${VCS:-}" != "github" ] && [ "${VCS:-}" != "gitlab" ]; then
+    REMOTE_URL=$(git remote get-url "${PLATFORM_REMOTE:-origin}") || {
+      echo "Cannot identify platform: select a verified remote or explicit VCS." >&2
+      exit 1
+    }
+    case "$REMOTE_URL" in
+      *gitlab*) VCS="gitlab" ;;
+      *github*) VCS="github" ;;
+      *) echo "Unknown forge: set VCS from the verified candidate URL." >&2; exit 1 ;;
+    esac
   fi
 elif p4 where "$PWD/..." >/dev/null 2>&1; then
   VCS="perforce"
@@ -52,6 +57,9 @@ fi
 ```
 
 For self-hosted GitLab instances whose hostname doesn't contain "gitlab", the user can override by passing `--vcs gitlab` as an input. For Perforce, pass `--vcs perforce`.
+
+Map an explicit Git platform input to `VCS` before detection. Set `PLATFORM_REMOTE`
+for another verified remote; a failed lookup never silently defaults to GitHub.
 
 For Git, refuse a dirty baseline before branch switching, any loop edits or
 publication. Preserve existing staged, unstaged and untracked work untouched;
@@ -328,6 +336,9 @@ Only use results attributable to the successfully completed current request and
 head/shelf. A newer timestamp alone does not prove that binding. If the summary
 cannot be tied to that receipt, report missing evidence rather than reuse a score.
 
+Include the current finding/disposition watermark in request attribution. After
+step G changes that state, an older same-head score is not a post-resolution review.
+
 **GitHub:**
 
 **1. PR description (body):**
@@ -603,11 +614,15 @@ glab api --method PUT \
 
 Repeat for each unresolved discussion ID. (GitLab has no batch resolution — loop through each one.)
 
-Then go back to steps **B/C**, using the review already completed in step F.
-Count that result as the next bounded iteration and evaluate its exit conditions
-before requesting anything else. Return to A only if the candidate changed or a
-current completed review receipt is missing; do not retrigger a review already
-obtained during validation.
+If actual replies/resolutions changed the finding disposition and the retained
+score is below 5/5, return to A before reevaluating the score for one deduplicated
+post-resolution review at the same source, bound to the new disposition watermark.
+Reuse only a request/receipt covering that watermark; the prior completed score
+does not cover the changed disposition. Preserve the five-iteration limit and
+reuse successful unchanged-source CI. A source change or missing current completed
+receipt also requires A. Otherwise, do not retrigger a completed review merely for
+validation. Then go back to steps **B/C** with the applicable completed review,
+counting its result as the next bounded iteration.
 
 ### 3. Report
 

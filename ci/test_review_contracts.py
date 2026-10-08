@@ -50,6 +50,8 @@ for source in (check_pr, loop):
     assert 'p4 -ztag -Mj info' in source
     assert '$P4USER' not in source and '$P4CLIENT' not in source
     assert 'Bash(jq:*)' in source and 'Requires jq' in source
+    for tool in ('canix repo review', 'canix repo merge', 'canix-toolbelt repo review', 'canix-toolbelt repo merge'):
+        assert f'Bash({tool}:*)' in source
     assert 'git push\n' not in source
     for line in source.splitlines():
         if 'gh pr ' in line and not line.lstrip().startswith('from `'):
@@ -83,6 +85,7 @@ assert "If there are no scoped edits" in loop and "skip commit/push/re-shelve" i
 assert "Then go back to steps **B/C**" in loop
 assert "Then go back to step **A**" not in loop
 assert "Reuse existing successful review/CI receipts" in loop
+assert 'post-resolution review' in loop and 'disposition watermark' in loop
 for skill in ("check-pr", "greploop"):
     reference = (ROOT / f"global_skills/{skill}/references/graphql-queries.md").read_text()
     assert "comments(first: 3)" not in reference
@@ -351,4 +354,39 @@ for change in ("123", "default", "456", None):
     mock = f"p4() {{ printf '%s\\n' '{payload}'; }}\n"
     result = subprocess.run(["bash", "-c", "set -o pipefail\n" + mock + association], capture_output=True, text=True, timeout=5)
     assert (result.returncode == 0) == (change == "123"), result
+# Platform detection fails explicitly without the selected remote, and an explicit
+# platform selection avoids touching origin in a valid Git worktree.
+for source in (check_pr, loop):
+    detection = 'if [ "$(git rev-parse' + source.split('```bash\nif [ "$(git rev-parse', 1)[1].split('```', 1)[0]
+    for platform, remote, success in (("", "missing", False), ("", "gitlab", True), ("", "github", True), ("", "unknown", False), ("gitlab", "missing", True), ("github", "missing", True)):
+        mock = f'''VCS='{platform}'
+PLATFORM_REMOTE=selected-remote
+git() {{
+  case "$*" in
+    'rev-parse --is-inside-work-tree') echo true ;;
+    'remote get-url selected-remote')
+      if [ '{remote}' = missing ]; then return 1; fi
+      echo 'https://{remote}.example/owner/repo.git' ;;
+    *) return 99 ;;
+  esac
+}}
+p4() {{ return 99; }}
+'''
+        result = subprocess.run(["bash", "-c", mock + detection + '\nprintf "%s" "$VCS"'], capture_output=True, text=True, timeout=5)
+        assert (result.returncode == 0) == success, result
+        if success:
+            assert result.stdout.strip() == (platform or remote), result
+
+# Use the real configured GitLab service account, never its placeholder name.
+reference = gitlab_refs[1]
+marker = ': "${GREPTILE_BOT_USERNAME'
+filter_snippet = marker + reference.split('```bash\n' + marker, 1)[1].split('```', 1)[0]
+for identity in (True, False):
+    payload = json.dumps([{"id": "real", "notes": [{"resolvable": True, "resolved": False, "type": "DiffNote", "author": {"username": "configured-reviewer", "id": 123}}]}, {"id": "spoof", "notes": [{"resolvable": True, "resolved": False, "type": "DiffNote", "author": {"username": "configured-reviewer", "id": 456}}]}])
+    setup = 'GREPTILE_BOT_USERNAME=configured-reviewer\nGREPTILE_BOT_USER_ID=123\n' if identity else 'unset GREPTILE_BOT_USERNAME GREPTILE_BOT_USER_ID\n'
+    mock = f"MR_PROJECT_ID=101\nMR_IID=1\nglab() {{ [ \"$*\" = 'api --paginate projects/101/merge_requests/1/discussions?per_page=100' ] || return 99; printf '%s\\n' '{payload}'; }}\n"
+    result = subprocess.run(["bash", "-c", 'set -o pipefail\n' + setup + mock + filter_snippet], capture_output=True, text=True, timeout=5)
+    assert (result.returncode == 0) == identity, result
+    if identity:
+        assert [item['id'] for item in json.loads(result.stdout)] == ['real'], result
 print("review source contracts passed")
