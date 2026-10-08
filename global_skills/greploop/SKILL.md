@@ -60,8 +60,9 @@ Switch to the PR/MR branch if not already on it.
 
 **Perforce:**
 ```bash
-# List pending changelists for current user/client
-p4 changes -s pending -u $P4USER -c $P4CLIENT
+# List shelved and pending candidates for current user/client
+p4 changes -s shelved -u "$P4USER" -c "$P4CLIENT"
+p4 changes -s pending -u "$P4USER" -c "$P4CLIENT"
 
 # Describe a specific CL
 p4 describe -s <CL_NUMBER>
@@ -102,21 +103,29 @@ sleep 5
 **GitHub** — check if Greptile is already running before posting a new trigger comment:
 
 ```bash
-GREPTILE_STATE=$(gh pr checks <PR_NUMBER> --json name,state | jq -r '.[] | select(.name | test("greptile"; "i")) | .state')
-```
-
-If Greptile is **not** already running (`PENDING` or `IN_PROGRESS`), request a fresh review:
-
-```bash
-if [ "$GREPTILE_STATE" != "PENDING" ] && [ "$GREPTILE_STATE" != "IN_PROGRESS" ]; then
-  gh pr comment <PR_NUMBER> --body "@greptileai review"
-fi
-```
-
-Then poll for the Greptile check run to complete:
-
-```bash
 HEAD_SHA=$(gh pr view <PR_NUMBER> --json headRefOid -q .headRefOid)
+gh api --paginate "repos/{owner}/{repo}/commits/$HEAD_SHA/check-runs?per_page=100"
+```
+
+Verify the installed review provider's app identity, not just a matching check
+name. Reconcile every matching pending request/check at this head before posting
+another trigger. If a current request is already queued or running, reuse it.
+Otherwise retain the current check IDs and request timestamp, then request a
+fresh review:
+
+```bash
+gh pr comment <PR_NUMBER> --body "@greptileai review"
+```
+
+Bind `CHECK_RUN_ID` to the single check belonging to that current request and
+head. For a new request, do not reuse a completed check that predates the
+request; retain its provider/request evidence. If no attributable run appears
+within ten minutes, stop and report the missing receipt. Do not guess the run by
+its name, choose an arbitrary latest run, or concatenate multiple JSON objects.
+Then poll that immutable check ID:
+
+```bash
+CHECK_RUN_ID=<CURRENT_REVIEW_CHECK_RUN_ID>
 ATTEMPTS=0
 MAX_ATTEMPTS=60
 POLL_INTERVAL_SECONDS=10
@@ -128,16 +137,17 @@ while true; do
     exit 1
   fi
 
-  GREPTILE_CHECK=$(gh api "repos/{owner}/{repo}/commits/$HEAD_SHA/check-runs" \
-    --jq '.check_runs[] | select(.name | test("greptile"; "i"))' 2>/dev/null)
-  
-  if [ -z "$GREPTILE_CHECK" ]; then
-    echo "Waiting for Greptile check to appear..."
-    sleep "$POLL_INTERVAL_SECONDS"
-    continue
+  if [ "$(gh pr view <PR_NUMBER> --json headRefOid -q .headRefOid)" != "$HEAD_SHA" ]; then
+    echo "PR head moved; stop and reconcile the review request." >&2
+    exit 1
   fi
-  
-  STATUS=$(echo "$GREPTILE_CHECK" | jq -r '.status // "completed"')
+  GREPTILE_CHECK=$(gh api "repos/{owner}/{repo}/check-runs/$CHECK_RUN_ID") || exit 1
+  if [ "$(echo "$GREPTILE_CHECK" | jq -r '.head_sha')" != "$HEAD_SHA" ]; then
+    echo "Review check is not bound to the candidate head." >&2
+    exit 1
+  fi
+
+  STATUS=$(echo "$GREPTILE_CHECK" | jq -r '.status')
   CONCLUSION=$(echo "$GREPTILE_CHECK" | jq -r '.conclusion // "pending"')
   
   if [ "$STATUS" = "completed" ]; then
@@ -159,24 +169,29 @@ If polling times out, stop the greploop workflow and report the timeout. Do not 
 **GitLab** — check if Greptile is already running before posting a trigger comment:
 
 ```bash
-PIPELINES=$(glab api "projects/:fullpath/merge_requests/<MR_IID>/pipelines")
-GREPTILE_RUNNING=$(echo "$PIPELINES" | jq '[.[] | select(.status == "running" or .status == "pending")] | length')
+HEAD_SHA=$(glab mr view <MR_IID> --output json | jq -r '.sha')
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_page=100"
 ```
 
-If no pipeline is running, post a trigger comment:
+Inspect the current-head pipelines and their paginated jobs for the verified
+provider. Reconcile an existing review request before posting another trigger;
+an unrelated running pipeline does not establish a pending Greptile review.
+If no current request exists, retain its timestamp and request a review:
 
 ```bash
-if [ "$GREPTILE_RUNNING" = "0" ]; then
-  glab mr note <MR_IID> --message "@greptileai review"
-fi
+glab mr note <MR_IID> --message "@greptileai review"
 ```
 
 **Perforce** — Perforce does not have native check runs. If Greptile is integrated via a webhook triggered on `p4 shelve`, wait for it to process. Check your Greptile installation's webhook endpoint or dashboard for the review status. Poll by re-fetching the Greptile review comment on the CL until a score appears.
 
-Then poll for the Greptile pipeline job to complete (see [GitLab API reference](references/gitlab-api.md)):
+Bind `JOB_ID` to the current request's job in a pipeline at `HEAD_SHA`, using its
+provider and request evidence (see [GitLab API reference](references/gitlab-api.md)).
+Retried jobs have distinct IDs: do not reuse the earlier attempt or select all
+jobs whose names match. Stop if no attributable job appears within ten minutes.
+Then poll that immutable job ID:
 
 ```bash
-HEAD_SHA=$(glab mr view <MR_IID> --output json | jq -r '.sha')
+JOB_ID=<CURRENT_REVIEW_JOB_ID>
 ATTEMPTS=0
 MAX_ATTEMPTS=60
 POLL_INTERVAL_SECONDS=10
@@ -188,24 +203,14 @@ while true; do
     exit 1
   fi
 
-  PIPELINES=$(glab api "projects/:fullpath/merge_requests/<MR_IID>/pipelines")
-  # Find the most recent pipeline for this SHA
-  PIPELINE_ID=$(echo "$PIPELINES" | jq -r --arg sha "$HEAD_SHA" \
-    '[.[] | select(.sha == $sha)] | sort_by(.id) | last | .id // empty')
-
-  if [ -z "$PIPELINE_ID" ]; then
-    echo "Waiting for Greptile pipeline to appear..."
-    sleep "$POLL_INTERVAL_SECONDS"
-    continue
+  if [ "$(glab mr view <MR_IID> --output json | jq -r '.sha')" != "$HEAD_SHA" ]; then
+    echo "MR head moved; stop and reconcile the review request." >&2
+    exit 1
   fi
-
-  JOBS=$(glab api "projects/:fullpath/pipelines/$PIPELINE_ID/jobs")
-  GREPTILE_JOB=$(echo "$JOBS" | jq '.[] | select(.name | test("greptile"; "i"))')
-
-  if [ -z "$GREPTILE_JOB" ]; then
-    echo "Waiting for Greptile job to appear..."
-    sleep "$POLL_INTERVAL_SECONDS"
-    continue
+  GREPTILE_JOB=$(glab api "projects/:fullpath/jobs/$JOB_ID") || exit 1
+  if [ "$(echo "$GREPTILE_JOB" | jq -r '.commit.id')" != "$HEAD_SHA" ]; then
+    echo "Review job is not bound to the candidate head." >&2
+    exit 1
   fi
 
   JOB_STATUS=$(echo "$GREPTILE_JOB" | jq -r '.status')
@@ -242,7 +247,7 @@ Filter for Greptile-authored comments and use the body from the most recently up
 
 **3. PR reviews:**
 ```bash
-gh api repos/{owner}/{repo}/pulls/<PR_NUMBER>/reviews
+gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/reviews?per_page=100"
 ```
 
 Look for the most recent entry from `greptile-apps[bot]` or `greptile-apps-staging[bot]`.
@@ -294,17 +299,29 @@ Also fetch all unresolved inline comments:
 
 **GitHub:**
 ```bash
-gh api repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments
+gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments?per_page=100"
 ```
 
-Also carry forward actionable items from the latest Greptile general PR comment, especially the "Prompt to fix all with AI" section, even if the inline comment endpoint returns zero unresolved comments.
+This REST endpoint supplies comment history, **not** thread-resolution state.
+For the unresolved count, run the paginated GraphQL `reviewThreads` query in
+step E now and select verified reviewer threads with `isResolved == false`.
+Follow every `pageInfo.endCursor`; do not count REST comments as unresolved.
+Keep historical/outdated findings in the ledger until their disposition is
+source-backed; neither age nor resolution alone proves a fix.
+
+Also carry forward actionable items from the latest Greptile general PR comment,
+especially the "Prompt to fix all with AI" section, even if the GraphQL thread
+query reports zero unresolved threads.
 
 **GitLab:**
 ```bash
 glab api "projects/:fullpath/merge_requests/<MR_IID>/discussions"
 ```
 
-Filter to `DiffNote` type discussions (`notes[0].type == "DiffNote"`) from Greptile that are on the latest commit and not yet resolved (`"resolved": false`).
+Paginate discussions and inspect all their notes for the verified Greptile
+reviewer and unresolved `DiffNote` findings. Retain older/outdated findings until
+a source-backed disposition exists; do not drop them merely because the head
+changed.
 
 **Perforce:**
 If using Swarm:
@@ -356,6 +373,10 @@ query($cursor: String) {
 ```
 
 Resolve addressed threads:
+
+If `hasNextPage` is true, repeat with `-f cursor=ENDCURSOR` until every thread has
+been read. Inspect each thread's complete comment history before disposition;
+paginate the comments connection separately when needed.
 
 ```bash
 gh api graphql -f query='

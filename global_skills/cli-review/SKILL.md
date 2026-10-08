@@ -7,7 +7,7 @@ license: MIT
 metadata:
   author: greptileai
   version: "1.0"
-allowed-tools: Bash(git:*) Bash(greptile:*) Bash(command:*) Bash(curl:*) Bash(npm:*)
+allowed-tools: Bash(git:*) Bash(greptile:*) Bash(command:*)
 ---
 
 # CLI Review
@@ -37,19 +37,14 @@ Check whether `greptile` is installed:
 command -v greptile
 ```
 
-If it is missing, do not install it automatically. Ask the user for permission, then show the recommended install command:
+If it is missing, stop and report the prerequisite. Installation requires explicit
+authorization and an operator-approved distribution pinned to a release and
+verified against its trusted checksum or signature. Do not install a mutable
+latest package or pipe a downloaded installer to a shell. If a verified release
+is unavailable, leave the review blocked rather than guessing a version or digest.
 
-```bash
-npm i -g greptile
-```
-
-If npm is unavailable, offer the shell installer fallback:
-
-```bash
-curl -fsSL "https://greptile.com/cli/install" | sh
-```
-
-After installation, re-run `command -v greptile`.
+After the operator provisions it, re-run `command -v greptile` and inspect the
+installed CLI's version/help before using it.
 
 ### 3. Ensure authentication
 

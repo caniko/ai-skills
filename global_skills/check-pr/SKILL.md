@@ -62,8 +62,9 @@ glab mr view --output json | jq '.iid'
 
 **Perforce:**
 ```bash
-# List pending changelists for the current user/client
-p4 changes -s pending -u $P4USER -c $P4CLIENT
+# List shelved and pending candidates for the current user/client
+p4 changes -s shelved -u "$P4USER" -c "$P4CLIENT"
+p4 changes -s pending -u "$P4USER" -c "$P4CLIENT"
 ```
 
 Key field differences between platforms:
@@ -76,7 +77,8 @@ Key field differences between platforms:
 **GitHub:**
 ```bash
 gh pr view <PR_NUMBER> --json title,body,state,reviews,comments,headRefName,statusCheckRollup
-gh api repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments
+gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments?per_page=100"
+gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/reviews?per_page=100"
 gh api --paginate "repos/{owner}/{repo}/issues/<PR_NUMBER>/comments?per_page=100"
 ```
 
@@ -96,15 +98,16 @@ For GitLab, paginate discussions if needed (add `?per_page=100&page=N`).
 # Get changelist description, files, and status
 p4 describe -s <CL_NUMBER>
 
-# Get shelved files (for in-review CLs)
+# Get shelved files and their diff (for in-review CLs)
 p4 describe -S <CL_NUMBER>
 
-# Get the diff of the shelved changelist
-p4 diff2 //...@=<CL_NUMBER> //...@=<CL_NUMBER>
-
-# List review comments (if using p4 review workflow)
-p4 review -c <CL_NUMBER>
 ```
+
+Fetch review comments through the configured Helix Swarm or other review-system
+API, bound to the selected changelist's review ID. The Perforce CLI's automated
+review-daemon command does not expose comments or resolution state. If no review
+system is configured, report that comment evidence is unavailable rather than
+claiming there are no findings.
 
 Key Perforce CL fields:
 - `Change`: changelist number
@@ -114,15 +117,26 @@ Key Perforce CL fields:
 
 ### 3. Wait for pending checks
 
-Before analyzing, ensure all status checks have completed. If any checks are `PENDING` or `IN_PROGRESS` (GitHub) / `running` or `pending` (GitLab), poll every 30 seconds until all checks reach a terminal state.
+Capture the candidate head before checking status. Check only that revision's
+checks, with at most 20 attempts at 30-second intervals (ten minutes). If checks
+remain pending or no current-head pipeline appears by that deadline, report the
+pending/missing gates as blockers and stop waiting. Never interpret an API error,
+missing check, skipped or canceled gate as a pass. A head change requires fresh
+revision binding.
 
-**GitHub:** poll `statusCheckRollup` from `gh pr view`.
+**GitHub:** capture `headRefOid`, then inspect `statusCheckRollup` from `gh pr view`
+and verify the head has not changed on each attempt.
 
 **GitLab:**
 ```bash
-glab api "projects/:fullpath/merge_requests/<MR_IID>/pipelines"
+HEAD_SHA=$(glab mr view <MR_IID> --output json | jq -r '.sha')
+glab api --paginate "projects/:fullpath/merge_requests/<MR_IID>/pipelines?per_page=100"
 ```
-Pipeline statuses: `running`, `pending`, `success`, `failed`, `canceled`, `skipped`. Poll until no pipeline has `running` or `pending` status.
+Select the applicable pipeline with `sha == HEAD_SHA` and retain its ID. Do not
+fall back to an older SHA while waiting for the new pipeline to appear. On each
+attempt, verify the MR still has that head and inspect that pipeline's jobs.
+Pipeline statuses: `running`, `pending`, `success`, `failed`, `canceled`, `skipped`.
+Only actual successful current-head gates qualify; old terminal pipelines do not.
 
 **Perforce:** Perforce doesn't have built-in CI checks natively. If the team uses a review tool (Swarm, etc.) or an external CI triggered by shelve events, check the relevant system. Otherwise, proceed to analysis immediately.
 
@@ -146,7 +160,7 @@ Once all checks are complete, evaluate these areas:
 - Inline code review comments that need addressing
 - Look for bot review comments (e.g. from `greptile-apps[bot]` on GitHub, or the Greptile bot user on GitLab, linters, etc.)
 - Human reviewer comments
-- **Perforce:** review comments from `p4 review` or external review tools
+- **Perforce:** comments from the configured Swarm or other review-system API
 
 #### D. General Comments
 
@@ -203,12 +217,10 @@ p4 shelve -f -c <CL_NUMBER>
 
 After addressing comments, resolve the corresponding review threads.
 
-**Perforce** — Perforce does not have a native "resolve thread" concept. Instead, mark comments as addressed by updating the CL description or by responding in the review tool being used (Swarm, etc.). If using `p4 review`:
-
-```bash
-# Mark files as reviewed after addressing feedback
-p4 review -c <CL_NUMBER>
-```
+**Perforce** — respond to addressed findings through the configured Swarm or
+other review-system API and use that system's supported resolution operation.
+Do not substitute an automated depot review-daemon command for a comment API.
+Retain the reply and resolution receipts bound to the selected review/changelist.
 
 **GitHub** — fetch unresolved thread IDs (paginate if needed — see [the GraphQL reference](references/graphql-queries.md)):
 
@@ -272,6 +284,7 @@ If checking a chain of PRs/MRs/CLs, process them sequentially.
 **Perforce** — to check multiple changelists at once:
 ```bash
 p4 changes -s pending -u $P4USER -c $P4CLIENT -l
+p4 changes -s shelved -u "$P4USER" -c "$P4CLIENT" -l
 ```
 
 ## Output format

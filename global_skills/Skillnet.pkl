@@ -35,4 +35,13 @@ skills: Mapping<String, Skill> = new {
   ["pr-review-reply-style"] = new {
     dependencies = List("write-human-style")
   }
+  ["repo-pages"] = new {
+    role = "reference"
+  }
+  ["gitlab-pages"] = new {
+    dependencies = List("repo-pages")
+  }
+  ["forgejo-pages"] = new {
+    dependencies = List("repo-pages")
+  }
 }
