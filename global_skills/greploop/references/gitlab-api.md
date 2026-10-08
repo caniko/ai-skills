@@ -4,11 +4,17 @@ Useful GitLab REST API calls for the greploop workflow, using `glab api`.
 
 Use the verified target MR project and IID throughout, not the source fork's
 remote. Set `MR_TARGET_REPO` from the actual upstream MR URL; ask if unknown.
+Retain its URL hostname for every API call, not the checkout's default instance.
 
 ## Fetch MR details
 
 ```bash
-: "${MR_TARGET_REPO:?Set the verified GitLab target repository first}"
+: "${MR_TARGET_REPO:?Set the verified https://HOST/OWNER/REPO target URL first}"
+case "$MR_TARGET_REPO" in https://*/*) ;; *) echo "A fully qualified GitLab target URL is required." >&2; exit 1 ;; esac
+GITLAB_HOST=${MR_TARGET_REPO#https://}
+GITLAB_HOST=${GITLAB_HOST%%/*}
+: "${GITLAB_HOST:?Missing GitLab instance}"
+export GITLAB_HOST
 MR=$(glab mr view <MR_IID> --repo "$MR_TARGET_REPO" --output json) || exit 1
 MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
 MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1

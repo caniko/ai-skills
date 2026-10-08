@@ -405,7 +405,7 @@ for identity in (True, False):
     if identity:
         assert [item['id'] for item in json.loads(result.stdout)] == ['real'], result
 # URL-derived host binding must override a different checkout's default instance.
-for source in (check_pr, loop, gitlab_refs[0]):
+for source in (check_pr, loop, *gitlab_refs):
     for line in source.splitlines():
         if 'glab api ' in line:
             assert '--hostname "$GITLAB_HOST"' in line, line
