@@ -1,0 +1,17 @@
+class Skill {
+  role: String = "entrypoint"
+  dependencies: Listing<String> = new {}
+  source: String? = null
+  users: Listing<String>? = null
+  hosts: Listing<String>? = null
+}
+
+schemaVersion = 3
+defaultUsers = List("can", "dejana")
+skills: Mapping<String, Skill> = new {
+  ["atlas-nomad-orchestration"] = new {
+    source = "atlas-nomad-orchestration"
+    hosts = List("atlas")
+    dependencies = List("multi-host-agent-orchestration", "canix-cli", "canix-structure-reference")
+  }
+}

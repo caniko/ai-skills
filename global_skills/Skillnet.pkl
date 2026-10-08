@@ -16,6 +16,7 @@ skills: Mapping<String, Skill> = new {
     role = "reference"
     source = "references/solution-placement.md"
   }
+  ["multi-host-agent-orchestration"] = new {}
   ["check-pr"] = new {
     dependencies = List("fix-loop", "pr-review-reply-style", "grouped-git-commits")
   }

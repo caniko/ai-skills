@@ -25,6 +25,14 @@ Configuration is centralized per user by Skillnet:
 manifest (`Skillnet.pkl`) and its grants are per-store; generate them locally
 with `skillnet catalog generate` when needed.
 
+Host-specific entrypoints live under `host_skills/` and are registered through
+its external `Skillnet.pkl` (schema 3). Skillnet requires an explicit destination
+`host` and intersects host restrictions with existing user grants. The Atlas-only
+`atlas-nomad-orchestration` adapter composes the global
+`multi-host-agent-orchestration` skill through generated dependency links.
+Keeping this source outside the legacy global scan prevents older consumers from
+discovering it before the host-capable package and configuration are deployed.
+
 ## Authoring
 
 ### Greptile review skills
