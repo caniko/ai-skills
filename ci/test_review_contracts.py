@@ -61,6 +61,35 @@ assert "If there are no scoped edits" in loop and "skip commit/push/re-shelve" i
 assert "Then go back to steps **B/C**" in loop
 assert "Then go back to step **A**" not in loop
 assert "Reuse existing successful review/CI receipts" in loop
+for skill in ("check-pr", "greploop"):
+    reference = (ROOT / f"global_skills/{skill}/references/graphql-queries.md").read_text()
+    assert "comments(first: 3)" not in reference
+    assert "comments(first: 100, after: $commentCursor)" in reference
+    assert "pageInfo { hasNextPage endCursor }" in reference
+    assert "threadId=THREAD_ID" in reference
+
+# Execute each documented trigger with ready/draft/unknown state; the mock only
+# supplies platform metadata and records the requested message (no network).
+for cli_name in ("gh", "glab"):
+    marker = "DRAFT=$(" + cli_name
+    snippet = marker + loop.split("```bash\n" + marker, 1)[1].split("```", 1)[0]
+    snippet = snippet.replace("<PR_NUMBER>", "1").replace("<MR_IID>", "1")
+    for state in (True, False, None):
+        payload = json.dumps({"isDraft": state}) if cli_name == "gh" else json.dumps({"draft": state})
+        mock = f'''{cli_name}() {{
+  case "$*" in
+    'pr view '*|'mr view '*) printf '%s\\n' '{payload}' ;;
+    'pr comment '*|'mr note '*) printf '%s\\n' "$*" ;;
+    *) return 99 ;;
+  esac
+}}
+'''
+        result = subprocess.run(["bash", "-c", "set -o pipefail\n" + mock + snippet], capture_output=True, text=True, timeout=5)
+        if state is None:
+            assert result.returncode != 0 and "@greptileai" not in result.stdout
+        else:
+            expected = "@greptileai review this draft" if state else "@greptileai review"
+            assert result.returncode == 0 and result.stdout.rstrip().endswith(expected), result
 
 # Run the actual documented polling snippets with terminal API responses only;
 # no network, credentials, sleeping, or repository mutations are involved.

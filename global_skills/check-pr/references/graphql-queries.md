@@ -16,7 +16,8 @@ query($cursor: String) {
         nodes {
           id
           isResolved
-          comments(first: 3) {
+          comments(first: 100) {
+            pageInfo { hasNextPage endCursor }
             nodes {
               body
               path
@@ -32,6 +33,26 @@ query($cursor: String) {
 ```
 
 Pass `-f cursor=ENDCURSOR` on subsequent requests if `hasNextPage` is `true`.
+
+Thread pagination does not paginate comments. For every thread whose comments
+connection has `hasNextPage == true`, use its ID and comment `endCursor`:
+
+```bash
+gh api graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
+query($threadId: ID!, $commentCursor: String) {
+  node(id: $threadId) {
+    ... on PullRequestReviewThread {
+      comments(first: 100, after: $commentCursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes { body path author { login } createdAt }
+      }
+    }
+  }
+}'
+```
+
+Repeat with that connection's next `endCursor` until all replies have been read.
+Inspect objections and source-bound dispositions before resolving any thread.
 
 ## Resolve a single review thread
 
@@ -70,7 +91,7 @@ gh pr view <PR_NUMBER> --json title,body,state,reviews,comments,headRefName,stat
 ## Fetch inline review comments (REST)
 
 ```bash
-gh api repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments
+gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments?per_page=100"
 ```
 
 ## Fetch general PR comments edited in place (REST)

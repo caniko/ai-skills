@@ -118,7 +118,13 @@ Otherwise retain the current check IDs and request timestamp, then request a
 fresh review:
 
 ```bash
-gh pr comment <PR_NUMBER> --body "@greptileai review"
+DRAFT=$(gh pr view <PR_NUMBER> --json isDraft | jq -r '.isDraft') || exit 1
+case "$DRAFT" in
+  true) REVIEW_TRIGGER="@greptileai review this draft" ;;
+  false) REVIEW_TRIGGER="@greptileai review" ;;
+  *) echo "Missing PR draft state; stop before requesting review." >&2; exit 1 ;;
+esac
+gh pr comment <PR_NUMBER> --body "$REVIEW_TRIGGER"
 ```
 
 Bind `CHECK_RUN_ID` to the single check belonging to that current request and
@@ -184,7 +190,13 @@ an unrelated running pipeline does not establish a pending Greptile review.
 If no current request exists, retain its timestamp and request a review:
 
 ```bash
-glab mr note <MR_IID> --message "@greptileai review"
+DRAFT=$(glab mr view <MR_IID> --output json | jq -r '.draft') || exit 1
+case "$DRAFT" in
+  true) REVIEW_TRIGGER="@greptileai review this draft" ;;
+  false) REVIEW_TRIGGER="@greptileai review" ;;
+  *) echo "Missing MR draft state; stop before requesting review." >&2; exit 1 ;;
+esac
+glab mr note <MR_IID> --message "$REVIEW_TRIGGER"
 ```
 
 Bind `JOB_ID` to the current request's job in a pipeline at `HEAD_SHA`, using its
