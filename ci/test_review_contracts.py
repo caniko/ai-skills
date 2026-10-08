@@ -22,7 +22,7 @@ assert '--arg head "$(git rev-parse HEAD)"' in workflow
 assert "name: greptile-consumer-skills-${{ env.CANDIDATE_HEAD }}" in workflow
 for source in (check_pr, loop):
     for endpoint in ("comments", "reviews"):
-        assert f'gh api --paginate "repos/{{owner}}/{{repo}}/pulls/<PR_NUMBER>/{endpoint}?per_page=100"' in source
+        assert f'gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/pulls/$PR_NUMBER/{endpoint}?per_page=100"' in source
 assert "p4 describe -S <CL_NUMBER>" in check_pr
 assert "p4 diff2" not in check_pr
 assert "p4 review" not in check_pr
@@ -34,7 +34,7 @@ assert '["repo-pages"] = new {\n    role = "reference"' in manifest
 for skill in ("gitlab-pages", "forgejo-pages"):
     assert f'["{skill}"] = new {{\n    dependencies = List("repo-pages")' in manifest
     assert f'/{skill}/.skillnet/deps/repo-pages/SKILL.md' in workflow
-assert 'repos/{owner}/{repo}/check-runs/$CHECK_RUN_ID' in loop
+assert 'repos/$PR_TARGET_REPO/check-runs/$CHECK_RUN_ID' in loop
 assert 'projects/$PIPELINE_PROJECT_ID/jobs/$JOB_ID' in loop
 assert "jq -r '.head_sha'" in loop and ".commit.id == $sha" in loop
 assert "Do not guess the run by" in loop and "Retried jobs have distinct IDs" in loop
@@ -47,7 +47,15 @@ assert "explicitly authorizes transmitting each named path" in cli
 assert "branches: [main, trunk, maintenance/greptile-skills]" in workflow
 for source in (check_pr, loop):
     assert source.index("git rev-parse --is-inside-work-tree") < source.index("p4 where")
-    assert "p4 info" not in source
+    assert 'p4 -ztag -Mj info' in source
+    assert '$P4USER' not in source and '$P4CLIENT' not in source
+    assert 'Bash(jq:*)' in source and 'Requires jq' in source
+    assert 'git push\n' not in source
+    for line in source.splitlines():
+        if 'gh pr ' in line and not line.lstrip().startswith('from `'):
+            assert '--repo "$PR_TARGET_REPO"' in line, line
+        if line.lstrip().startswith('gh api ') or '$(gh api ' in line:
+            assert '--hostname "$GH_HOST"' in line, line
     assert "comments(first: 100)" in source and "comments(first: 1)" not in source
     assert "commentCursor" in source and "pageInfo { hasNextPage endCursor }" in source
     assert 'glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/notes?per_page=100"' in source
@@ -56,6 +64,9 @@ for source in (check_pr, loop):
     assert "refuse a dirty baseline" in source
 assert check_pr.index("reviewThreads(first: 100") < check_pr.index("### 4. Analyze")
 assert "Resolved threads are historical" in check_pr
+assert check_pr.index('git switch --detach "$HEAD_SHA"') < check_pr.index('### 4. Analyze')
+assert loop.index('LOCAL_HEAD=$(git rev-parse HEAD)') < loop.index('#### A. Trigger')
+assert 'No initial push or re-shelve' in loop
 for reference in gitlab_refs:
     assert ':fullpath' not in reference
     assert 'glab mr view <MR_IID> --repo "$MR_TARGET_REPO"' in reference
@@ -96,12 +107,14 @@ for cli_name in ("gh", "glab"):
   esac
 }}
 '''
-        result = subprocess.run(["bash", "-c", "set -o pipefail\nMR_PROJECT_ID=101\nMR_IID=1\n" + mock + snippet], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(["bash", "-c", "set -o pipefail\nGH_HOST=github.com\nPR_TARGET_REPO=upstream/repo\nPR_NUMBER=1\nMR_PROJECT_ID=101\nMR_IID=1\n" + mock + snippet], capture_output=True, text=True, timeout=5)
         if state is None:
             assert result.returncode != 0 and "@greptileai" not in result.stdout
         else:
             expected = "@greptileai review this draft" if state else "@greptileai review"
             assert result.returncode == 0 and result.stdout.rstrip().endswith(expected), result
+            if cli_name == "gh":
+                assert 'pr comment --repo upstream/repo 1 --body ' in result.stdout, result
 trigger_reference = (ROOT / "global_skills/greploop/references/gitlab-api.md").read_text()
 assert "step A's draft-aware trigger" in trigger_reference
 assert 'glab mr note <MR_IID> --message "@greptileai review"' not in trigger_reference
@@ -259,7 +272,7 @@ for source in (check_pr, loop):
   esac
 }}
 '''
-        result = subprocess.run(["bash", "-c", mock + publish], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(["bash", "-c", "PUBLISH_REMOTE=source-fork\nHEAD_BRANCH=feature\n" + mock + publish], capture_output=True, text=True, timeout=5)
         assert (result.returncode == 0) == (not staged), result
         assert ("PUBLISH" in result.stdout) == (not staged), result
 
@@ -282,4 +295,60 @@ for skill in ("check-pr", "greploop"):
         assert (result.returncode == 0) == (include_verified and identity), result
         if result.returncode == 0:
             assert json.loads(result.stdout)["body"] == verified["body"], result
+# Clean committed work is not publish authorization: actual head guards reject
+# an unpublished local commit, even when the dirty-entry guard would pass.
+for source in (check_pr, loop):
+    guard = "LOCAL_HEAD=" + source.split("```bash\nLOCAL_HEAD=", 1)[1].split("```", 1)[0]
+    for local_head in ("candidate", "unpublished-commit"):
+        mock = f"git() {{ printf '%s\\n' '{local_head}'; }}\nHEAD_SHA=candidate\n"
+        result = subprocess.run(["bash", "-c", mock + guard], capture_output=True, text=True, timeout=5)
+        assert (result.returncode == 0) == (local_head == "candidate"), result
+
+# Execute exact-candidate checkout without publishing or rewriting the original
+# local branch. A different supplied PR's candidate must precede source analysis.
+prepare = ': "${CANDIDATE_REMOTE' + check_pr.split('```bash\n: "${CANDIDATE_REMOTE', 1)[1].split("```", 1)[0]
+for checked_out in ("candidate", "wrong-head"):
+    mock = f'''git() {{
+  case "$*" in
+    'fetch --no-tags source-fork candidate'|'switch --detach candidate') return 0 ;;
+    'rev-parse HEAD') printf '%s\\n' '{checked_out}' ;;
+    *) return 99 ;;
+  esac
+}}
+CANDIDATE_REMOTE=source-fork
+HEAD_SHA=candidate
+'''
+    result = subprocess.run(["bash", "-c", mock + prepare], capture_output=True, text=True, timeout=5)
+    assert (result.returncode == 0) == (checked_out == "candidate"), result
+
+# P4CONFIG-only identities are discovered through Perforce, not exported vars.
+for source in (check_pr, loop):
+    identity = "P4_IDENTITY=" + source.split("P4_IDENTITY=", 1)[1].split('p4 changes -s pending -u "$REVIEW_USER" -c "$REVIEW_CLIENT"', 1)[0]
+    identity += 'p4 changes -s pending -u "$REVIEW_USER" -c "$REVIEW_CLIENT"\n'
+    for client in ("mapped-client", "", "*unknown*"):
+        payload = json.dumps({"userName": "configured-user", "clientName": client})
+        mock = f'''unset P4USER P4CLIENT
+p4() {{
+  case "$*" in
+    '-ztag -Mj info') printf '%s\\n' '{payload}' ;;
+    'changes -s shelved -u configured-user -c mapped-client'|'changes -s pending -u configured-user -c mapped-client') printf '%s\\n' "$*" ;;
+    *) return 99 ;;
+  esac
+}}
+'''
+        result = subprocess.run(["bash", "-c", mock + identity], capture_output=True, text=True, timeout=5)
+        assert (result.returncode == 0) == (client == "mapped-client"), result
+        assert ('changes -s' in result.stdout) == (client == "mapped-client"), result
+
+# Verify the edited file really belongs to the reviewed numbered CL; empty
+# opened output, default CL and another numbered CL all block publication.
+association = "OPENED_FILE=" + check_pr.split("OPENED_FILE=", 1)[1].split("# make changes", 1)[0]
+association = association.replace("<CL_NUMBER>", "123").replace("<file>", "owned.txt")
+assert 'p4 unshelve -s <CL_NUMBER> -c <CL_NUMBER>' in check_pr
+assert 'p4 edit -c <CL_NUMBER> <file>' in check_pr and 'p4 edit -c <CL_NUMBER> <file>' in loop
+for change in ("123", "default", "456", None):
+    payload = json.dumps({"change": change}) if change is not None else ""
+    mock = f"p4() {{ printf '%s\\n' '{payload}'; }}\n"
+    result = subprocess.run(["bash", "-c", "set -o pipefail\n" + mock + association], capture_output=True, text=True, timeout=5)
+    assert (result.returncode == 0) == (change == "123"), result
 print("review source contracts passed")

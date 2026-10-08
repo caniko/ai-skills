@@ -4,11 +4,11 @@ description: >
   Run a bounded Greptile review-and-fix loop for a PR/MR/CL, targeting 5/5
   confidence and no unresolved findings while retaining CI and merge gates.
 license: MIT
-compatibility: Requires git, gh (GitHub CLI) or glab (GitLab CLI) authenticated, and Greptile installed on the repo. For Perforce, requires p4 CLI authenticated.
+compatibility: Requires jq and git with authenticated gh (GitHub CLI) or glab (GitLab CLI), and Greptile installed on the repo. For Perforce, requires authenticated p4 with JSON output support.
 metadata:
   author: greptileai
   version: "1.3"
-allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*)
+allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*) Bash(jq:*)
 ---
 
 # Greploop
@@ -21,6 +21,9 @@ Iteratively fix a PR/MR/CL until Greptile gives a perfect review: 5/5 confidence
 ## Inputs
 
 - **PR/MR/CL number** (optional): If not provided, detect the PR/MR for the current branch, or the default pending changelist for p4.
+- **GitHub target**: Set `PR_TARGET_REPO` to `OWNER/REPO` and `GH_HOST` from the
+  verified upstream PR URL. Ask for the URL if unknown; never infer upstream from
+  a fork remote. All GitHub CLI/API requests use this captured target.
 - **GitLab target repository**: Set `MR_TARGET_REPO` to the verified upstream
   target project. If unknown, ask for the MR URL; never guess from a fork remote.
 
@@ -69,8 +72,17 @@ preserve them; the initial clean guard does not authorize those later edits.
 
 **GitHub:**
 ```bash
-gh pr view --json number,headRefName -q '{number: .number, branch: .headRefName}'
+: "${PR_TARGET_REPO:?Set the verified GitHub target repository first}"
+: "${GH_HOST:?Set the verified GitHub host first}"
+export GH_HOST
+PR_REVISION=$(gh pr view --repo "$PR_TARGET_REPO" --json number,headRefOid,baseRefOid,headRefName) || exit 1
+PR_NUMBER=$(echo "$PR_REVISION" | jq -er '.number') || exit 1
+HEAD_SHA=$(echo "$PR_REVISION" | jq -er '.headRefOid') || exit 1
+BASE_SHA=$(echo "$PR_REVISION" | jq -er '.baseRefOid') || exit 1
+HEAD_BRANCH=$(echo "$PR_REVISION" | jq -er '.headRefName') || exit 1
 ```
+
+When supplied, pass the PR number to that same explicitly targeted command.
 
 **GitLab:**
 ```bash
@@ -78,29 +90,57 @@ gh pr view --json number,headRefName -q '{number: .number, branch: .headRefName}
 MR=$(glab mr view --repo "$MR_TARGET_REPO" --output json) || exit 1
 MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
 MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
+HEAD_SHA=$(echo "$MR" | jq -er '.sha') || exit 1
+HEAD_BRANCH=$(echo "$MR" | jq -er '.source_branch') || exit 1
 ```
 
 When supplied, pass the IID to that same command with `--repo "$MR_TARGET_REPO"`.
 Use the captured target project ID and IID for all later MR API operations.
 
-Switch to the PR/MR branch if not already on it.
+For Git, require the local source to equal the hosted candidate **before** any
+review trigger, source analysis or publication:
+
+```bash
+LOCAL_HEAD=$(git rev-parse HEAD) || exit 1
+if [ "$LOCAL_HEAD" != "$HEAD_SHA" ]; then
+  echo "Local HEAD differs from hosted candidate; preserve unpublished commits and stop." >&2
+  exit 1
+fi
+```
+
+Provide a clean task-owned checkout of that exact revision if needed, preserving
+the original local branch. A clean porcelain status does not authorize unpublished
+commits. Extra commits require explicit authorization and a separate source-bound
+publication step; never silently push them to start a review.
 
 **Perforce:**
 ```bash
-# List shelved and pending candidates for current user/client
-p4 changes -s shelved -u "$P4USER" -c "$P4CLIENT"
-p4 changes -s pending -u "$P4USER" -c "$P4CLIENT"
+# Resolve effective settings, including P4CONFIG; exported variables may be unset.
+P4_IDENTITY=$(p4 -ztag -Mj info) || exit 1
+REVIEW_USER=$(echo "$P4_IDENTITY" | jq -esr 'map(select(.userName != null)) | if length == 1 then .[0].userName else error("Unknown Perforce user") end') || exit 1
+REVIEW_CLIENT=$(echo "$P4_IDENTITY" | jq -esr 'map(select(.clientName != null)) | if length == 1 then .[0].clientName else error("Unknown Perforce client") end') || exit 1
+if [ -z "$REVIEW_USER" ] || [ -z "$REVIEW_CLIENT" ] || [ "$REVIEW_CLIENT" = "*unknown*" ]; then
+  echo "Unknown effective Perforce identity; stop." >&2
+  exit 1
+fi
+p4 changes -s shelved -u "$REVIEW_USER" -c "$REVIEW_CLIENT"
+p4 changes -s pending -u "$REVIEW_USER" -c "$REVIEW_CLIENT"
 
 # Describe a specific CL
 p4 describe -s <CL_NUMBER>
 ```
 
-Ensure the correct workspace (`p4 client`) is set before proceeding.
+Ensure the correct workspace (`p4 client`) is set before proceeding. Analyze the
+selected shelf, not unrelated local files. Before step D edits, use check-pr's
+declared dependency preparation: refuse foreign/opened/unopened work, verify the
+pending CL's owner/client, unshelve into that CL when needed and verify the file's
+association with `p4 opened -c <CL_NUMBER>`. Open edits explicitly with
+`p4 edit -c <CL_NUMBER> <file>`; never default to the default changelist.
 
 Key field differences:
 - GitHub: `number`, `headRefName`, `headRefOid`
 - GitLab: `iid`, `source_branch`, `sha`
-- Perforce: changelist number, `P4CLIENT`, shelved files
+- Perforce: changelist number, effective client, shelved files
 
 ### 2. Loop
 
@@ -108,33 +148,22 @@ Repeat the following cycle. **Max 5 iterations** to avoid runaway loops.
 
 #### A. Trigger Greptile review
 
-Push/shelve the latest changes (if any):
-
-**GitHub/GitLab:**
-```bash
-git push
-```
-
-**Perforce:**
-```bash
-# Re-shelve to update the shelved files for review
-p4 shelve -f -c <CL_NUMBER>
-```
-
-Wait for checks to start after push/shelve:
-
-```bash
-sleep 5
-```
+No initial push or re-shelve: start from the already hosted candidate/shelf.
+Only task-owned confirmed repairs are published in step E. Revalidate local and
+hosted source identities before each analysis/edit phase; never refresh `HEAD_SHA`
+to a moved candidate without also preparing and verifying that local source.
 
 **GitHub** — check if Greptile is already running before posting a new trigger comment:
 
 ```bash
-PR_REVISION=$(gh pr view <PR_NUMBER> --json headRefOid,baseRefOid) || exit 1
+PR_REVISION=$(gh pr view --repo "$PR_TARGET_REPO" "$PR_NUMBER" --json headRefOid,baseRefOid) || exit 1
 HEAD_SHA=$(echo "$PR_REVISION" | jq -er '.headRefOid') || exit 1
 BASE_SHA=$(echo "$PR_REVISION" | jq -er '.baseRefOid') || exit 1
-gh api --paginate "repos/{owner}/{repo}/commits/$HEAD_SHA/check-runs?per_page=100"
+gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/commits/$HEAD_SHA/check-runs?per_page=100"
 ```
+
+Re-run step 1's local-head equality guard here before requesting a review. Any
+newly captured head requires matching local source, not just clean worktree status.
 
 Verify the installed review provider's app identity, not just a matching check
 name. Retain the configured app's exact bot login and numeric actor ID as
@@ -149,13 +178,13 @@ Otherwise retain the current check IDs and request timestamp, then request a
 fresh review:
 
 ```bash
-DRAFT=$(gh pr view <PR_NUMBER> --json isDraft | jq -r '.isDraft') || exit 1
+DRAFT=$(gh pr view --repo "$PR_TARGET_REPO" "$PR_NUMBER" --json isDraft | jq -r '.isDraft') || exit 1
 case "$DRAFT" in
   true) REVIEW_TRIGGER="@greptileai review this draft" ;;
   false) REVIEW_TRIGGER="@greptileai review" ;;
   *) echo "Missing PR draft state; stop before requesting review." >&2; exit 1 ;;
 esac
-gh pr comment <PR_NUMBER> --body "$REVIEW_TRIGGER"
+gh pr comment --repo "$PR_TARGET_REPO" "$PR_NUMBER" --body "$REVIEW_TRIGGER"
 ```
 
 Bind `CHECK_RUN_ID` to the single check belonging to that current request and
@@ -178,13 +207,13 @@ while true; do
     exit 1
   fi
 
-  CURRENT_REVISION=$(gh pr view <PR_NUMBER> --json headRefOid,baseRefOid) || exit 1
+  CURRENT_REVISION=$(gh pr view --repo "$PR_TARGET_REPO" "$PR_NUMBER" --json headRefOid,baseRefOid) || exit 1
   if [ "$(echo "$CURRENT_REVISION" | jq -r '.headRefOid')" != "$HEAD_SHA" ] \
     || [ "$(echo "$CURRENT_REVISION" | jq -r '.baseRefOid')" != "$BASE_SHA" ]; then
     echo "PR head/base moved; stop and reconcile the review request." >&2
     exit 1
   fi
-  GREPTILE_CHECK=$(gh api "repos/{owner}/{repo}/check-runs/$CHECK_RUN_ID") || exit 1
+  GREPTILE_CHECK=$(gh api --hostname "$GH_HOST" "repos/$PR_TARGET_REPO/check-runs/$CHECK_RUN_ID") || exit 1
   if [ "$(echo "$GREPTILE_CHECK" | jq -r '.head_sha')" != "$HEAD_SHA" ]; then
     echo "Review check is not bound to the candidate head." >&2
     exit 1
@@ -223,6 +252,7 @@ glab api --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?pe
 
 Load the comparison/pipeline binding from
 [check-pr's declared dependency](.skillnet/deps/check-pr/references/gitlab-api.md).
+Re-run step 1's local-head equality guard for this captured source before reviewing.
 Inspect MR-associated pipelines and their paginated jobs for the verified
 provider. Reconcile an existing review request before posting another trigger;
 an unrelated running pipeline does not establish a pending Greptile review.
@@ -302,12 +332,12 @@ cannot be tied to that receipt, report missing evidence rather than reuse a scor
 
 **1. PR description (body):**
 ```bash
-gh pr view <PR_NUMBER> --json body -q '.body'
+gh pr view --repo "$PR_TARGET_REPO" "$PR_NUMBER" --json body -q '.body'
 ```
 
 **2. General PR comments (issue comments):**
 ```bash
-gh api --paginate "repos/{owner}/{repo}/issues/<PR_NUMBER>/comments?per_page=100"
+gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/issues/$PR_NUMBER/comments?per_page=100"
 ```
 
 Filter by the exact verified bot login **and actor ID**, using
@@ -318,7 +348,7 @@ summary; read its full current body, including "Prompt to fix all with AI".
 
 **3. PR reviews:**
 ```bash
-gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/reviews?per_page=100"
+gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/pulls/$PR_NUMBER/reviews?per_page=100"
 ```
 
 Match only `GREPTILE_BOT_LOGIN` and `GREPTILE_BOT_ID` from provider verification.
@@ -374,7 +404,7 @@ Also fetch all unresolved inline comments:
 
 **GitHub:**
 ```bash
-gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments?per_page=100"
+gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/pulls/$PR_NUMBER/comments?per_page=100"
 ```
 
 This REST endpoint supplies comment history, **not** thread-resolution state.
@@ -448,12 +478,16 @@ git add -- <scoped-files>
 git diff --cached --check || exit 1
 # Inspect the entire staged diff and verify every hunk belongs to this task.
 git commit -m "fix: describe the confirmed review issue"
-git push
+# Recheck the hosted comparison and verify the whole commit range is task-owned.
+# PUBLISH_REMOTE and HEAD_BRANCH must be the verified candidate source repository/ref.
+git push "${PUBLISH_REMOTE:?Verify candidate source remote}" "HEAD:refs/heads/${HEAD_BRANCH:?Verify candidate branch}"
 ```
 
 **Perforce:**
 ```bash
 # Publish the updated shelf for the next review round
+# First verify the complete CL file inventory and each edited file's association.
+p4 opened -c <CL_NUMBER>
 p4 shelve -f -c <CL_NUMBER>
 ```
 
@@ -498,7 +532,7 @@ comments or substitute a depot review-daemon command.
 **GitHub** — fetch unresolved review threads and resolve all that have been addressed (see [GraphQL reference](references/graphql-queries.md)):
 
 ```bash
-gh api graphql -f query='
+gh api --hostname "$GH_HOST" graphql -f query='
 query($cursor: String) {
   repository(owner: "OWNER", name: "REPO") {
     pullRequest(number: PR_NUMBER) {
@@ -520,12 +554,15 @@ query($cursor: String) {
 
 Resolve addressed threads:
 
+Substitute only the captured target owner/repository and PR number into GraphQL
+placeholders. A fork checkout never changes that target.
+
 If `hasNextPage` is true, repeat with `-f cursor=ENDCURSOR` until every thread has
 been read. Inspect each thread's complete comment history before disposition;
 paginate the comments connection separately when needed.
 
 ```bash
-gh api graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
+gh api --hostname "$GH_HOST" graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
 query($threadId: ID!, $commentCursor: String) {
   node(id: $threadId) {
     ... on PullRequestReviewThread {
@@ -541,7 +578,7 @@ query($threadId: ID!, $commentCursor: String) {
 Repeat until all comments are read; a follow-up may invalidate the opening finding's disposition.
 
 ```bash
-gh api graphql -f query='
+gh api --hostname "$GH_HOST" graphql -f query='
 mutation {
   t1: resolveReviewThread(input: {threadId: "ID1"}) { thread { isResolved } }
   t2: resolveReviewThread(input: {threadId: "ID2"}) { thread { isResolved } }

@@ -1,5 +1,9 @@
 # GraphQL Queries Reference
 
+Use the verified upstream `GH_HOST`, `PR_TARGET_REPO` and `PR_NUMBER`. Export
+`GH_HOST` for `gh pr` and substitute only the captured target owner/repo/number
+into GraphQL placeholders; never infer them from a fork checkout.
+
 ## Fetch unresolved review threads (paginated)
 
 ```graphql
@@ -34,7 +38,7 @@ thread whose comments connection has `hasNextPage == true`, use its ID and
 comment `endCursor`:
 
 ```bash
-gh api graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
+gh api --hostname "$GH_HOST" graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
 query($threadId: ID!, $commentCursor: String) {
   node(id: $threadId) {
     ... on PullRequestReviewThread {
@@ -73,7 +77,7 @@ missing matching summary is not a clean review.
 ```bash
 : "${GREPTILE_BOT_LOGIN:?Missing verified review bot login}"
 : "${GREPTILE_BOT_ID:?Missing verified review bot actor ID}"
-gh api --paginate "repos/{owner}/{repo}/issues/<PR_NUMBER>/comments?per_page=100" \
+gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/issues/$PR_NUMBER/comments?per_page=100" \
   | jq -se --arg bot "$GREPTILE_BOT_LOGIN" --argjson bot_id "$GREPTILE_BOT_ID" 'add
     | map(select(.user.login == $bot and .user.id == $bot_id))
     | sort_by(.updated_at)

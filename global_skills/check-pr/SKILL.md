@@ -4,11 +4,11 @@ description: >
   Inspect PR/MR/CL review feedback, CI and descriptions; fix confirmed issues and
   resolve addressed threads with revision-bound evidence. Supports GitHub, GitLab and Perforce.
 license: MIT
-compatibility: Requires git and gh (GitHub CLI), glab (GitLab CLI), or p4 (Perforce CLI) installed and authenticated.
+compatibility: Requires jq and git with authenticated gh (GitHub CLI) or glab (GitLab CLI), or authenticated p4 (Perforce CLI) with JSON output support.
 metadata:
   author: greptileai
   version: "1.3"
-allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*)
+allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*) Bash(jq:*)
 ---
 
 # Check PR
@@ -22,6 +22,10 @@ Analyze a pull request (GitHub), merge request (GitLab), or shelved changelist (
 ## Inputs
 
 - **PR/MR/CL number** (optional): If not provided, detect the PR/MR for the current branch, or the default pending changelist for p4.
+- **GitHub target**: Set `PR_TARGET_REPO` to `OWNER/REPO` and `GH_HOST` to the
+  host from the verified upstream PR URL (`github.com` for public GitHub).
+  Numbers are repository-local: ask for the URL when the target is unknown, never
+  infer upstream from a fork remote. Use these values for all CLI/API operations.
 - **GitLab target repository**: Set `MR_TARGET_REPO` to the verified upstream
   target project, not a source fork. An IID is project-local; if the target is
   unknown, ask for the MR URL instead of guessing from the checkout's remote.
@@ -73,8 +77,17 @@ If a number was provided, use it. Otherwise, detect it:
 
 **GitHub:**
 ```bash
-gh pr view --json number -q .number
+: "${PR_TARGET_REPO:?Set the verified GitHub target repository first}"
+: "${GH_HOST:?Set the verified GitHub host first}"
+export GH_HOST
+PR_REVISION=$(gh pr view --repo "$PR_TARGET_REPO" --json number,headRefOid,baseRefOid,headRefName) || exit 1
+PR_NUMBER=$(echo "$PR_REVISION" | jq -er '.number') || exit 1
+HEAD_SHA=$(echo "$PR_REVISION" | jq -er '.headRefOid') || exit 1
+BASE_SHA=$(echo "$PR_REVISION" | jq -er '.baseRefOid') || exit 1
+HEAD_BRANCH=$(echo "$PR_REVISION" | jq -er '.headRefName') || exit 1
 ```
+
+When supplied, pass the PR number to that same explicitly targeted command.
 
 **GitLab:**
 ```bash
@@ -82,6 +95,8 @@ gh pr view --json number -q .number
 MR=$(glab mr view --repo "$MR_TARGET_REPO" --output json) || exit 1
 MR_PROJECT_ID=$(echo "$MR" | jq -er '.target_project_id') || exit 1
 MR_IID=$(echo "$MR" | jq -er '.iid') || exit 1
+HEAD_SHA=$(echo "$MR" | jq -er '.sha') || exit 1
+HEAD_BRANCH=$(echo "$MR" | jq -er '.source_branch') || exit 1
 ```
 
 When a number is supplied, pass it to that same `glab mr view` with the explicit
@@ -90,9 +105,16 @@ every later API operation; never re-infer the project from the local fork.
 
 **Perforce:**
 ```bash
-# List shelved and pending candidates for the current user/client
-p4 changes -s shelved -u "$P4USER" -c "$P4CLIENT"
-p4 changes -s pending -u "$P4USER" -c "$P4CLIENT"
+# Resolve effective settings, including P4CONFIG; exported variables may be unset.
+P4_IDENTITY=$(p4 -ztag -Mj info) || exit 1
+REVIEW_USER=$(echo "$P4_IDENTITY" | jq -esr 'map(select(.userName != null)) | if length == 1 then .[0].userName else error("Unknown Perforce user") end') || exit 1
+REVIEW_CLIENT=$(echo "$P4_IDENTITY" | jq -esr 'map(select(.clientName != null)) | if length == 1 then .[0].clientName else error("Unknown Perforce client") end') || exit 1
+if [ -z "$REVIEW_USER" ] || [ -z "$REVIEW_CLIENT" ] || [ "$REVIEW_CLIENT" = "*unknown*" ]; then
+  echo "Unknown effective Perforce identity; stop." >&2
+  exit 1
+fi
+p4 changes -s shelved -u "$REVIEW_USER" -c "$REVIEW_CLIENT"
+p4 changes -s pending -u "$REVIEW_USER" -c "$REVIEW_CLIENT"
 ```
 
 Key field differences between platforms:
@@ -100,14 +122,35 @@ Key field differences between platforms:
 - GitLab: `iid`, `source_branch`, `sha`
 - Perforce: changelist number (CL), `shelved` files for in-review CLs
 
+For Git, prepare the **exact hosted candidate before source analysis**, not at
+the later fix step. Preserve any committed local branch, including unpublished
+commits, by using a detached task-owned checkout. Verify `CANDIDATE_REMOTE` is
+the candidate's source repository (the fork for fork PRs/MRs), not merely origin.
+Fetching must not publish anything. A missing remote/revision is a blocker.
+
+```bash
+: "${CANDIDATE_REMOTE:?Verify the candidate source remote first}"
+git fetch --no-tags "$CANDIDATE_REMOTE" "$HEAD_SHA" || exit 1
+git switch --detach "$HEAD_SHA" || exit 1
+if [ "$(git rev-parse HEAD)" != "$HEAD_SHA" ]; then
+  echo "Local source does not match the hosted candidate; stop." >&2
+  exit 1
+fi
+```
+
+Repeat the live comparison check after preparation/waiting and before analysis.
+For Perforce, analyze the selected shelf's described diff/file revisions, not an
+unrelated workspace's local files; restoring a shelf belongs to the authorized fix
+phase below. Keep the exact shelf identity in source-verification receipts.
+
 ### 2. Fetch PR/MR/CL details
 
 **GitHub:**
 ```bash
-gh pr view <PR_NUMBER> --json title,body,state,reviews,comments,headRefName,statusCheckRollup
-gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments?per_page=100"
-gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/reviews?per_page=100"
-gh api --paginate "repos/{owner}/{repo}/issues/<PR_NUMBER>/comments?per_page=100"
+gh pr view --repo "$PR_TARGET_REPO" "$PR_NUMBER" --json title,body,state,reviews,comments,headRefName,statusCheckRollup
+gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/pulls/$PR_NUMBER/comments?per_page=100"
+gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/pulls/$PR_NUMBER/reviews?per_page=100"
+gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/issues/$PR_NUMBER/comments?per_page=100"
 ```
 
 GitHub PRs are also issues, so general PR comments live on the issue comments endpoint. Greptile may edit a single general PR comment on each review cycle. First retain the configured app's exact bot login and numeric actor ID from trusted installation/provider configuration; use the guarded filter in [the GraphQL reference](references/graphql-queries.md#fetch-general-pr-comments-edited-in-place-rest). Similar logins and human-editable description text do not authenticate provider evidence. Inspect only authenticated, current-request-bound summaries by `updated_at`, including "Prompt to fix all with AI".
@@ -116,7 +159,7 @@ During this initial collection, also fetch thread state **before** analysis or
 categorization. REST comment history has no thread-level resolution state:
 
 ```bash
-gh api graphql -f query='
+gh api --hostname "$GH_HOST" graphql -f query='
 query($cursor: String) {
   repository(owner: "OWNER", name: "REPO") {
     pullRequest(number: PR_NUMBER) {
@@ -139,7 +182,7 @@ query($cursor: String) {
 Follow every thread cursor. Separately paginate each thread's remaining comments:
 
 ```bash
-gh api graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
+gh api --hostname "$GH_HOST" graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
 query($threadId: ID!, $commentCursor: String) {
   node(id: $threadId) {
     ... on PullRequestReviewThread {
@@ -152,7 +195,9 @@ query($threadId: ID!, $commentCursor: String) {
 }'
 ```
 
-Read every page before proceeding ([reference](references/graphql-queries.md)). Join
+Read every page before proceeding ([reference](references/graphql-queries.md)). Bind
+the GraphQL query's `OWNER`, `REPO` and `PR_NUMBER` placeholders to the captured
+target repository and number, never the fork's identity. Join
 REST comment IDs to GraphQL `databaseId`; missing thread state is unknown, not
 unresolved. Resolved threads are historical, not automatically current actionable
 feedback. Read all replies and retain their source-backed disposition in the
@@ -214,8 +259,18 @@ missing check, skipped or canceled gate as a pass. A head change requires fresh
 revision binding.
 
 **GitHub:** capture `headRefOid` and `baseRefOid`, then inspect `statusCheckRollup`
-from `gh pr view` and verify both revisions still match on each attempt. Retain
-head/base-bound receipts; a target advance requires fresh comparison qualification.
+with the explicitly targeted command and verify both revisions on each attempt:
+
+```bash
+CURRENT_REVISION=$(gh pr view --repo "$PR_TARGET_REPO" "$PR_NUMBER" --json headRefOid,baseRefOid,statusCheckRollup) || exit 1
+if [ "$(echo "$CURRENT_REVISION" | jq -r '.headRefOid')" != "$HEAD_SHA" ] \
+  || [ "$(echo "$CURRENT_REVISION" | jq -r '.baseRefOid')" != "$BASE_SHA" ]; then
+  echo "PR head/base moved; stop and requalify the comparison." >&2
+  exit 1
+fi
+```
+
+Retain head/base-bound receipts; a target advance requires fresh comparison qualification.
 
 **GitLab:**
 ```bash
@@ -293,10 +348,22 @@ Present a summary table:
 
 If there are actionable items:
 
-1. Switch to the PR/MR's branch (git) or ensure files are open in the correct CL (Perforce) if not already.
+1. Revalidate the live comparison/shelf identity. For Git, require local `HEAD`
+   still equals the prepared hosted head before editing; do not switch to an
+   unverified local branch. For Perforce, prepare the selected CL as below.
 2. Use the user's existing authorization to fix issues. Ask only when the task
    did not authorize changes or a material product decision is required.
 3. Make confirmed fixes, then:
+
+Re-run step 3's live comparison guard and this local guard **before** editing:
+
+```bash
+LOCAL_HEAD=$(git rev-parse HEAD) || exit 1
+if [ "$LOCAL_HEAD" != "$HEAD_SHA" ]; then
+  echo "Local source moved; stop before applying review fixes." >&2
+  exit 1
+fi
+```
 
 **GitHub/GitLab:** commit and push:
 ```bash
@@ -305,15 +372,36 @@ git add -- <files>
 git diff --cached --check || exit 1
 # Inspect the entire staged diff and verify every hunk belongs to this task.
 git commit -m "fix: describe the confirmed review issue"
-git push
+# Recheck the hosted comparison, and verify the complete commit range is task-owned.
+# PUBLISH_REMOTE and HEAD_BRANCH must be the verified candidate source repository/ref.
+git push "${PUBLISH_REMOTE:?Verify candidate source remote}" "HEAD:refs/heads/${HEAD_BRANCH:?Verify candidate branch}"
 ```
 
-**Perforce:** open files for edit, make changes, and re-shelve:
+**Perforce:** before restoring a shelf, inspect `p4 opened` and a nonmutating
+`p4 reconcile -n` preview. Refuse foreign/opened/unopened modifications; never use
+force unshelve or move someone else's work. Verify the selected pending CL's
+`User` and `Client` match the effective identity. If a handoff needs another CL,
+obtain explicit authorization and record the new review/shelf identity instead.
+When the shelf is not already open, restore it into the selected pending CL:
+
 ```bash
-p4 edit <file>
+p4 unshelve -s <CL_NUMBER> -c <CL_NUMBER> || exit 1
+p4 opened -c <CL_NUMBER>
+# Inspect all restored files; resolve any integration requirements before editing.
+# For a shelved edit (other actions retain their restored action):
+p4 edit -c <CL_NUMBER> <file> || exit 1
+# Verify the file is opened in this CL, not default or another numbered CL.
+p4 opened -c <CL_NUMBER> <file>
+OPENED_FILE=$(p4 -ztag -Mj opened <file>) || exit 1
+echo "$OPENED_FILE" | jq -es --arg cl "<CL_NUMBER>" 'length == 1 and (.[0].change | tostring) == $cl' >/dev/null || exit 1
 # make changes
-p4 shelve -f -c <CL_NUMBER>
+p4 shelve -f -c <CL_NUMBER> || exit 1
 ```
+
+If already open in this task-owned CL, verify its files/actions/content against the
+selected shelf before editing instead of unshelving over work. Recheck association
+and the full CL file inventory immediately before reshelving; preserve adds,
+deletes and moves rather than converting every shelved action to `edit`.
 
 ### 8. Validate the published revision
 
@@ -345,7 +433,7 @@ secondary comment pages, to obtain fresh unresolved IDs and follow-up replies.
 Then resolve threads that have been addressed or are informational:
 
 ```bash
-gh api graphql -f query='
+gh api --hostname "$GH_HOST" graphql -f query='
 mutation {
   resolveReviewThread(input: {threadId: "THREAD_ID"}) {
     thread { isResolved }
@@ -381,8 +469,8 @@ If checking a chain of PRs/MRs/CLs, process them sequentially.
 
 **Perforce** — to check multiple changelists at once:
 ```bash
-p4 changes -s pending -u $P4USER -c $P4CLIENT -l
-p4 changes -s shelved -u "$P4USER" -c "$P4CLIENT" -l
+p4 changes -s pending -u "$REVIEW_USER" -c "$REVIEW_CLIENT" -l
+p4 changes -s shelved -u "$REVIEW_USER" -c "$REVIEW_CLIENT" -l
 ```
 
 ## Output format

@@ -1,5 +1,9 @@
 # GraphQL Queries Reference
 
+Use `GH_HOST`, `PR_TARGET_REPO` and `PR_NUMBER` captured from the verified upstream
+PR URL. Export `GH_HOST` for `gh pr` and substitute only that target owner/repo and
+number into GraphQL placeholders; never infer them from a fork checkout.
+
 Useful GitHub GraphQL queries for working with PR review threads.
 
 ## Fetch unresolved review threads (with pagination)
@@ -39,7 +43,7 @@ Thread pagination does not paginate comments. For every thread whose comments
 connection has `hasNextPage == true`, use its ID and comment `endCursor`:
 
 ```bash
-gh api graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
+gh api --hostname "$GH_HOST" graphql -f threadId=THREAD_ID -f commentCursor=ENDCURSOR -f query='
 query($threadId: ID!, $commentCursor: String) {
   node(id: $threadId) {
     ... on PullRequestReviewThread {
@@ -86,13 +90,13 @@ mutation {
 ## Fetch PR details (REST)
 
 ```bash
-gh pr view <PR_NUMBER> --json title,body,state,reviews,comments,headRefName,statusCheckRollup
+gh pr view --repo "$PR_TARGET_REPO" "$PR_NUMBER" --json title,body,state,reviews,comments,headRefName,statusCheckRollup
 ```
 
 ## Fetch inline review comments (REST)
 
 ```bash
-gh api --paginate "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments?per_page=100"
+gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/pulls/$PR_NUMBER/comments?per_page=100"
 ```
 
 ## Fetch general PR comments edited in place (REST)
@@ -109,7 +113,7 @@ missing matching summary is not a clean review.
 ```bash
 : "${GREPTILE_BOT_LOGIN:?Missing verified review bot login}"
 : "${GREPTILE_BOT_ID:?Missing verified review bot actor ID}"
-gh api --paginate "repos/{owner}/{repo}/issues/<PR_NUMBER>/comments?per_page=100" \
+gh api --hostname "$GH_HOST" --paginate "repos/$PR_TARGET_REPO/issues/$PR_NUMBER/comments?per_page=100" \
   | jq -se --arg bot "$GREPTILE_BOT_LOGIN" --argjson bot_id "$GREPTILE_BOT_ID" 'add
     | map(select(.user.login == $bot and .user.id == $bot_id))
     | sort_by(.updated_at)
