@@ -86,6 +86,11 @@ assert "Then go back to steps **B/C**" in loop
 assert "Then go back to step **A**" not in loop
 assert "Reuse existing successful review/CI receipts" in loop
 assert 'post-resolution review' in loop and 'disposition watermark' in loop
+assert '["canix-cli"] = new {\n    dependencies = List("canix-structure-reference")' in manifest
+assert '["canix-structure-reference"] = new {\n    role = "reference"' in manifest
+for skill in ('canix-cli', 'canix-structure-reference', 'multi-host-agent-orchestration'):
+    assert (ROOT / f'global_skills/{skill}/SKILL.md').is_file()
+assert '../.skillnet/deps/canix-structure-reference/SKILL.md' in (ROOT / 'global_skills/canix-cli/references/secrets-and-registry.md').read_text()
 for skill in ("check-pr", "greploop"):
     reference = (ROOT / f"global_skills/{skill}/references/graphql-queries.md").read_text()
     assert "comments(first: 3)" not in reference

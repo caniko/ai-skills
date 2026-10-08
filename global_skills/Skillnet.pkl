@@ -17,6 +17,12 @@ skills: Mapping<String, Skill> = new {
     source = "references/solution-placement.md"
   }
   ["multi-host-agent-orchestration"] = new {}
+  ["canix-cli"] = new {
+    dependencies = List("canix-structure-reference")
+  }
+  ["canix-structure-reference"] = new {
+    role = "reference"
+  }
   ["check-pr"] = new {
     dependencies = List("fix-loop", "pr-review-reply-style", "grouped-git-commits")
   }
