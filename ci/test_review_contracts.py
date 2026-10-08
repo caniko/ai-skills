@@ -57,6 +57,10 @@ assert 'echo "Greptile check completed with: $CONCLUSION" >&2\n      exit 1' in 
 assert 'echo "Greptile job completed with: $JOB_STATUS" >&2\n    exit 1' in loop
 assert "at most 60 attempts" in loop and "shelf identity" in loop
 assert "**Perforce** — after successful shelf-bound validation" in loop
+assert "If there are no scoped edits" in loop and "skip commit/push/re-shelve" in loop
+assert "Then go back to steps **B/C**" in loop
+assert "Then go back to step **A**" not in loop
+assert "Reuse existing successful review/CI receipts" in loop
 
 # Run the actual documented polling snippets with terminal API responses only;
 # no network, credentials, sleeping, or repository mutations are involved.

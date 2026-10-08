@@ -369,6 +369,11 @@ For each unresolved Greptile comment:
 
 #### E. Commit and push / re-shelve
 
+Only publish when step D made scoped edits. If there are no scoped edits (for
+example, every finding is informational or a false positive), reuse the existing
+published head or shelf, skip commit/push/re-shelve, and continue to step F. Do
+not manufacture an empty commit or treat "nothing to commit" as a failed fix.
+
 **GitHub/GitLab:**
 ```bash
 git add <scoped-files>
@@ -393,6 +398,8 @@ and the configured CI system. Retain exact-revision receipts; a completed
 Greptile review alone is not required CI. Failed, skipped, canceled, missing or
 pending gates keep threads open. Stop with the specific blocker at the deadline.
 Inspect new feedback and verify the live candidate still matches before resolution.
+Reuse existing successful review/CI receipts when the published head or shelf
+has not changed; do not trigger another review merely to validate a no-edit pass.
 
 #### G. Resolve threads
 
@@ -479,7 +486,11 @@ glab api --method PUT \
 
 Repeat for each unresolved discussion ID. (GitLab has no batch resolution — loop through each one.)
 
-Then go back to step **A**.
+Then go back to steps **B/C**, using the review already completed in step F.
+Count that result as the next bounded iteration and evaluate its exit conditions
+before requesting anything else. Return to A only if the candidate changed or a
+current completed review receipt is missing; do not retrigger a review already
+obtained during validation.
 
 ### 3. Report
 
