@@ -25,7 +25,53 @@ Configuration is centralized per user by Skillnet:
 manifest (`Skillnet.pkl`) and its grants are per-store; generate them locally
 with `skillnet catalog generate` when needed.
 
+Host-specific entrypoints live under `host_skills/` and are registered through
+its external `Skillnet.pkl` (schema 3). Skillnet requires an explicit destination
+`host` and intersects host restrictions with existing user grants. The Atlas-only
+`atlas-nomad-orchestration` adapter composes the global
+`multi-host-agent-orchestration` skill through generated dependency links.
+Keeping this source outside the legacy global scan prevents older consumers from
+discovering it before the host-capable package and configuration are deployed.
+
 ## Authoring
+
+### Greptile review skills
+
+The MIT-licensed `check-pr`, `greploop`, and `cli-review` packages are imported
+from `greptileai/skills` at a recorded immutable revision. Each package retains
+its license, provenance and upstream references, plus a repository contract for
+scoped fixes, revision-bound evidence and hosted-only validation.
+
+- `check-pr`: inspect review feedback, descriptions and CI, then address confirmed issues.
+- `greploop`: iterate through current Greptile reviews with a bounded repair loop.
+- `cli-review`: explicitly authorized pre-PR CLI review; use hosted review for hosted-only tasks.
+
+These packages do not enable automatic Greptile usage. Honor the operator's
+provider policy: when Greptile is excluded, do not request its review or treat
+its installation, credits, or score as a prerequisite for unrelated qualification.
+
+Skillnet discovers these packages from `global_skills/` using the existing
+canonical-store configuration. Run `skillnet catalog generate`, then
+`skillnet view sync --all` to materialize configured consumer views. View sync evaluates
+configured Pkl manifests; during a no-local-evaluation pass, defer that step to
+the permitted qualification environment. The `Skillnet.pkl` manifest declares
+the three entrypoints and their review/Git dependencies. No subscription or second skill store
+is required.
+
+`ci/skillnet-composition.yaml` contains the hosted composition gate. Install it
+as `.github/workflows/skillnet.yaml` with a workflow-scoped publishing credential.
+The gate composes all three skills through published Skillnet and verifies the
+entrypoints, repository contracts and transitive dependencies.
+
+The hosted gate uploads `greptile-qualification-skills-<head>` with a portable
+archive, provenance and SHA-256 checksums for inspection, **not installation**.
+Every event, including protected-branch pushes, records `consumable: false` and
+`trust: "qualification-only"`, plus event, ref, protection, source repository and
+PR base metadata. A successful candidate-controlled test is not trusted release
+authorization. Verify the exact run/source and checksums when auditing evidence;
+do not load these artifacts as agent instructions. Consumable publication requires
+a separate trusted source/release audit. Keep canonical authored packages in
+`global_skills/`; this template does not publish qualified releases.
 
 Author global skills directly in this repository:
 
@@ -48,7 +94,7 @@ skillnet project sync --name <project>
 
 ### Cross-repository prerequisite
 
-`defaultDependencies` loads `graphify-policy` and
+`defaultDependencies` loads `chaosbox-policy` and
 `solution-placement-policy` for every canonical skill. After adding or changing
 a skill, run:
 

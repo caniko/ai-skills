@@ -1,0 +1,87 @@
+# Install as .github/workflows/skillnet.yaml with a workflow-scoped credential.
+name: Skillnet composition
+
+on:
+  push:
+    branches: [main, trunk, maintenance/greptile-skills]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skillnet-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ env.CANDIDATE_HEAD }}
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+      - name: Install published Skillnet
+        run: cargo install skillnet --version =0.6.0 --locked
+      - name: Compose Greptile consumer view
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_HEAD"
+          python3 ci/test_review_contracts.py
+          cat > "$RUNNER_TEMP/skillnet.toml" <<EOF
+          skills_root = "$GITHUB_WORKSPACE"
+          data_dir = "$RUNNER_TEMP/skillnet-data"
+          [global]
+          canonical_path = "$GITHUB_WORKSPACE/global_skills"
+          views = [{ label = "qualification", path = "$RUNNER_TEMP/skillnet-view" }]
+          EOF
+          skillnet --config "$RUNNER_TEMP/skillnet.toml" view sync --all
+          for skill in check-pr greploop cli-review; do
+            test -s "$RUNNER_TEMP/skillnet-view/$skill/SKILL.md"
+            test -s "$RUNNER_TEMP/skillnet-view/$skill/LICENSE"
+            test -s "$RUNNER_TEMP/skillnet-view/$skill/references/repository-contract.md"
+          done
+          test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/fix-loop/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/greploop/.skillnet/deps/check-pr/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/cli-review/.skillnet/deps/write-human-style/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/pr-review-reply-style/.skillnet/deps/write-human-style/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/fix-loop/.skillnet/deps/fix-loop-ref/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/fix-loop/.skillnet/deps/graphify/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/greploop/.skillnet/deps/fix-loop/.skillnet/deps/graphify/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/grouped-git-commits/.skillnet/deps/chaosbox-policy/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/chaosbox-policy/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/check-pr/.skillnet/deps/fix-loop/.skillnet/deps/solution-placement-policy/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/cli-review/.skillnet/deps/write-human-style/.skillnet/deps/solution-placement-policy/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/gitlab-pages/.skillnet/deps/repo-pages/SKILL.md"
+          test -s "$RUNNER_TEMP/skillnet-view/forgejo-pages/.skillnet/deps/repo-pages/SKILL.md"
+          test ! -e "$RUNNER_TEMP/skillnet-view/fix-loop-ref"
+          test ! -e "$RUNNER_TEMP/skillnet-view/repo-pages"
+      - name: Export non-consumable qualification evidence
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/skillnet-artifact"
+          # Dereference Skillnet's generated links so the archive remains
+          # usable after the runner and its temporary bundle paths disappear.
+          tar --dereference --hard-dereference -czf "$RUNNER_TEMP/skillnet-artifact/greptile-consumer-skills.tar.gz" \
+            -C "$RUNNER_TEMP/skillnet-view" check-pr greploop cli-review
+          jq -n --arg repository "$GITHUB_REPOSITORY" --arg head "$(git rev-parse HEAD)" \
+            --arg run "$GITHUB_RUN_ID" --arg attempt "$GITHUB_RUN_ATTEMPT" \
+            --arg event "$GITHUB_EVENT_NAME" --arg ref "$GITHUB_REF" \
+            --arg protected "$GITHUB_REF_PROTECTED" \
+            --arg sourceRepository "${{ github.event.pull_request.head.repo.full_name || github.repository }}" \
+            --arg base "${{ github.event.pull_request.base.sha || '' }}" \
+            '{schemaVersion: 1, repository: $repository, head: $head, run: $run, attempt: $attempt, event: $event, ref: $ref, refProtected: ($protected == "true"), sourceRepository: $sourceRepository, base: $base, trust: "qualification-only", consumable: false, skillnetVersion: "0.6.0", skills: ["check-pr", "greploop", "cli-review"]}' \
+            > "$RUNNER_TEMP/skillnet-artifact/provenance.json"
+          (cd "$RUNNER_TEMP/skillnet-artifact" && sha256sum greptile-consumer-skills.tar.gz provenance.json > SHA256SUMS)
+      - name: Retain non-consumable qualification evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: greptile-qualification-skills-${{ env.CANDIDATE_HEAD }}
+          path: ${{ runner.temp }}/skillnet-artifact
+          if-no-files-found: error
+          retention-days: 30

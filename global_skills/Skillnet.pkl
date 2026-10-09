@@ -1,0 +1,54 @@
+class Skill {
+  role: String = "entrypoint"
+  dependencies: Listing<String> = new {}
+  source: String? = null
+}
+
+schemaVersion = 2
+defaultDependencies = List("chaosbox-policy", "solution-placement-policy")
+
+skills: Mapping<String, Skill> = new {
+  ["chaosbox-policy"] = new {
+    role = "reference"
+    source = "references/chaosbox-policy.md"
+  }
+  ["solution-placement-policy"] = new {
+    role = "reference"
+    source = "references/solution-placement.md"
+  }
+  ["multi-host-agent-orchestration"] = new {}
+  ["canix-cli"] = new {
+    dependencies = List("canix-structure-reference")
+  }
+  ["canix-structure-reference"] = new {
+    role = "reference"
+  }
+  ["check-pr"] = new {
+    dependencies = List("fix-loop", "pr-review-reply-style", "grouped-git-commits")
+  }
+  ["cli-review"] = new {
+    dependencies = List("write-human-style")
+  }
+  ["greploop"] = new {
+    dependencies = List("check-pr", "fix-loop", "grouped-git-commits")
+  }
+  ["fix-loop"] = new {
+    dependencies = List("fix-loop-ref", "graphify")
+  }
+  ["fix-loop-ref"] = new {
+    role = "reference"
+    source = "fix-loop/references/repair-contract.md"
+  }
+  ["pr-review-reply-style"] = new {
+    dependencies = List("write-human-style")
+  }
+  ["repo-pages"] = new {
+    role = "reference"
+  }
+  ["gitlab-pages"] = new {
+    dependencies = List("repo-pages")
+  }
+  ["forgejo-pages"] = new {
+    dependencies = List("repo-pages")
+  }
+}

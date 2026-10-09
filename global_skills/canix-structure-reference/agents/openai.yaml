@@ -1,0 +1,6 @@
+interface:
+  display_name: "Canix Structure Reference"
+  short_description: "Reference canix layout and ownership boundaries."
+  default_prompt: "Use $canix-structure-reference before cross-repository canix work."
+policy:
+  allow_implicit_invocation: false
