@@ -8,7 +8,7 @@ compatibility: Requires jq and git with authenticated gh (GitHub CLI) or glab (G
 metadata:
   author: greptileai
   version: "1.3"
-allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*) Bash(jq:*) Bash(canix repo review:*) Bash(canix repo merge:*) Bash(canix-toolbelt repo review:*) Bash(canix-toolbelt repo merge:*)
+allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*) Bash(jq:*) Bash(sleep:*) Bash(canix repo review:*) Bash(canix repo merge:*) Bash(canix-toolbelt repo review:*) Bash(canix-toolbelt repo merge:*)
 ---
 
 # Greploop
@@ -36,7 +36,9 @@ that the current directory belongs to a depot. Otherwise require a current-path
 Perforce mapping:
 
 ```bash
-if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+if [ "${VCS:-}" = "perforce" ]; then
+  p4 where "$PWD/..." >/dev/null 2>&1 || { echo "Explicit Perforce selection requires a mapped workspace." >&2; exit 1; }
+elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
   if [ "${VCS:-}" != "github" ] && [ "${VCS:-}" != "gitlab" ]; then
     REMOTE_URL=$(git remote get-url "${PLATFORM_REMOTE:-origin}") || {
       echo "Cannot identify platform: select a verified remote or explicit VCS." >&2
@@ -258,8 +260,13 @@ If polling times out, stop the greploop workflow and report the timeout. Do not 
 ```bash
 MR=$(glab api --hostname "$GITLAB_HOST" "projects/$MR_PROJECT_ID/merge_requests/$MR_IID") || exit 1
 # Load the MR identity helpers from the declared check-pr dependency first.
-MR_REVISION=$(mr_revision) || exit 1
-HEAD_SHA=$(echo "$MR_REVISION" | jq -er '.source_sha') || exit 1
+CURRENT_MR_REVISION=$(mr_revision) || exit 1
+CURRENT_SOURCE_SHA=$(echo "$CURRENT_MR_REVISION" | jq -er '.source_sha') || exit 1
+if [ "$CURRENT_SOURCE_SHA" != "$HEAD_SHA" ] || [ "$(git rev-parse HEAD)" != "$HEAD_SHA" ]; then
+  echo "MR source moved from the prepared candidate; stop before review." >&2
+  exit 1
+fi
+MR_REVISION=$CURRENT_MR_REVISION
 TARGET_SHA=$(echo "$MR_REVISION" | jq -er '.target_sha') || exit 1
 glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
 ```
@@ -494,10 +501,11 @@ git diff --cached --quiet || { echo "Unexpected staged work; stop without changi
 git add -- <scoped-files>
 git diff --cached --check || exit 1
 # Inspect the entire staged diff and verify every hunk belongs to this task.
-git commit -m "fix: describe the confirmed review issue"
+git commit -m "fix: describe the confirmed review issue" || exit 1
+PUBLISHED_HEAD=$(git rev-parse HEAD) || exit 1
 # Recheck the hosted comparison and verify the whole commit range is task-owned.
 # PUBLISH_REMOTE and HEAD_BRANCH must be the verified candidate source repository/ref.
-git push "${PUBLISH_REMOTE:?Verify candidate source remote}" "HEAD:refs/heads/${HEAD_BRANCH:?Verify candidate branch}"
+git push "${PUBLISH_REMOTE:?Verify candidate source remote}" "HEAD:refs/heads/${HEAD_BRANCH:?Verify candidate branch}" || exit 1
 ```
 
 **Perforce:**
@@ -513,7 +521,11 @@ threads open; a local edit or commit is not a published fix.
 
 #### F. Validate the published revision
 
-Capture the new head/base or shelf identity and obtain successful required CI
+After an actual Git publication, run check-pr step 8's declared dependency
+rebind snippet: verify hosted/local heads equal `PUBLISHED_HEAD` and the target
+still equals the retained pre-fix target before updating `HEAD_SHA`. A no-edit
+pass keeps its original identities and skips that publication-only rebind.
+Capture the updated shelf identity after Perforce publication. Obtain successful required CI
 and a completed review for it, using step A's bounded, current-request checks
 and the configured CI system. Retain exact-revision receipts; a completed
 Greptile review alone is not required CI. Failed, skipped, canceled, missing or

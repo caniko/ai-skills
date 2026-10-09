@@ -109,21 +109,23 @@ both output modes. Run `assert_review_revision` again after the review and befor
 presenting results, including a fresh remote target OID check. A moved target
 requires a fresh comparison, not an obsolete coverage claim.
 
-Prefer JSON output:
+Discover the installed output selectors first; prefer JSON when advertised and
+use agent output when JSON is unavailable. Do not mistake authentication/network
+or review failures for missing JSON support:
 
 ```bash
-greptile review --branch "$REVIEW_BASE" --json || exit 1
+REVIEW_HELP=$(greptile review --help) || exit 1
+case "$REVIEW_HELP" in
+  *--json*) greptile review --branch "$REVIEW_BASE" --json || exit 1 ;;
+  *--agent*) greptile review --branch "$REVIEW_BASE" --agent || exit 1 ;;
+  *) echo "No supported machine-readable review output; stop." >&2; exit 1 ;;
+esac
 assert_review_revision || exit 1
 ```
 
-If JSON output is unsupported or fails with a usage error, fall back to:
-
-```bash
-greptile review --branch "$REVIEW_BASE" --agent || exit 1
-assert_review_revision || exit 1
-```
-
-Do not hide the raw command failure if both commands fail. Summarize the failing command and the next action the user needs to take.
+An advertised mode that fails (including a contradictory usage error) remains a
+reported CLI failure, not authorization to run a second review. Retain the raw
+failure and next action; never hide genuine failures behind the fallback mode.
 
 ### 5. Summarize results
 

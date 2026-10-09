@@ -8,7 +8,7 @@ compatibility: Requires jq and git with authenticated gh (GitHub CLI) or glab (G
 metadata:
   author: greptileai
   version: "1.3"
-allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*) Bash(jq:*) Bash(canix repo review:*) Bash(canix repo merge:*) Bash(canix-toolbelt repo review:*) Bash(canix-toolbelt repo merge:*)
+allowed-tools: Bash(gh:*) Bash(glab:*) Bash(git:*) Bash(p4:*) Bash(jq:*) Bash(sleep:*) Bash(canix repo review:*) Bash(canix repo merge:*) Bash(canix-toolbelt repo review:*) Bash(canix-toolbelt repo merge:*)
 ---
 
 # Check PR
@@ -39,7 +39,9 @@ that the current directory belongs to a depot. Otherwise require a current-path
 Perforce mapping:
 
 ```bash
-if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+if [ "${VCS:-}" = "perforce" ]; then
+  p4 where "$PWD/..." >/dev/null 2>&1 || { echo "Explicit Perforce selection requires a mapped workspace." >&2; exit 1; }
+elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
   if [ "${VCS:-}" != "github" ] && [ "${VCS:-}" != "gitlab" ]; then
     REMOTE_URL=$(git remote get-url "${PLATFORM_REMOTE:-origin}") || {
       echo "Cannot identify platform: select a verified remote or explicit VCS." >&2
@@ -61,7 +63,7 @@ fi
 
 For self-hosted GitLab instances whose hostname doesn't contain "gitlab", the user can override by passing `--vcs gitlab` as an input. For Perforce, the user can override by passing `--vcs perforce`.
 
-Map an explicit Git platform input to `VCS` before detection. Set `PLATFORM_REMOTE`
+Map any explicit platform input to `VCS` before detection. Set `PLATFORM_REMOTE`
 when origin is not the intended remote; a failed lookup never defaults to GitHub.
 
 For Git, refuse a dirty baseline before switching branches or making fixes.
@@ -290,8 +292,13 @@ Retain head/base-bound receipts; a target advance requires fresh comparison qual
 ```bash
 MR=$(glab api --hostname "$GITLAB_HOST" "projects/$MR_PROJECT_ID/merge_requests/$MR_IID") || exit 1
 # Load the MR identity helpers from references/gitlab-api.md first.
-MR_REVISION=$(mr_revision) || exit 1
-HEAD_SHA=$(echo "$MR_REVISION" | jq -er '.source_sha') || exit 1
+CURRENT_MR_REVISION=$(mr_revision) || exit 1
+CURRENT_SOURCE_SHA=$(echo "$CURRENT_MR_REVISION" | jq -er '.source_sha') || exit 1
+if [ "$CURRENT_SOURCE_SHA" != "$HEAD_SHA" ] || [ "$(git rev-parse HEAD)" != "$HEAD_SHA" ]; then
+  echo "MR source moved from the prepared candidate; stop before analysis." >&2
+  exit 1
+fi
+MR_REVISION=$CURRENT_MR_REVISION
 TARGET_SHA=$(echo "$MR_REVISION" | jq -er '.target_sha') || exit 1
 glab api --hostname "$GITLAB_HOST" --paginate "projects/$MR_PROJECT_ID/merge_requests/$MR_IID/pipelines?per_page=100"
 ```
@@ -304,7 +311,10 @@ Only actual successful current-head gates qualify; old terminal pipelines do not
 Immediately before accepting receipts and before each GitLab reply/resolution,
 call `assert_mr_revision`; a source, live target or diff-ref change invalidates reuse.
 
-**Perforce:** Perforce doesn't have built-in CI checks natively. If the team uses a review tool (Swarm, etc.) or an external CI triggered by shelve events, check the relevant system. Otherwise, proceed to analysis immediately.
+**Perforce:** Perforce doesn't have built-in CI checks natively. Discover configured
+Swarm/external shelf gates and report their actual passing/failing/pending state,
+bound to the selected shelf. Record N/A only when no CI is configured and that
+empty gate set is verified; unknown configuration/evidence is a blocker, not N/A.
 
 ### 4. Analyze the PR/MR
 
@@ -385,10 +395,11 @@ git diff --cached --quiet || { echo "Unexpected staged work; stop without changi
 git add -- <files>
 git diff --cached --check || exit 1
 # Inspect the entire staged diff and verify every hunk belongs to this task.
-git commit -m "fix: describe the confirmed review issue"
+git commit -m "fix: describe the confirmed review issue" || exit 1
+PUBLISHED_HEAD=$(git rev-parse HEAD) || exit 1
 # Recheck the hosted comparison, and verify the complete commit range is task-owned.
 # PUBLISH_REMOTE and HEAD_BRANCH must be the verified candidate source repository/ref.
-git push "${PUBLISH_REMOTE:?Verify candidate source remote}" "HEAD:refs/heads/${HEAD_BRANCH:?Verify candidate branch}"
+git push "${PUBLISH_REMOTE:?Verify candidate source remote}" "HEAD:refs/heads/${HEAD_BRANCH:?Verify candidate branch}" || exit 1
 ```
 
 **Perforce:** before restoring a shelf, inspect `p4 opened` and a nonmutating
@@ -419,7 +430,36 @@ deletes and moves rather than converting every shelved action to `edit`.
 
 ### 8. Validate the published revision
 
-After publication, repeat step 3 against the new head (or exact updated shelf
+After Git publication, bind the expected head to the exact commit just pushed,
+not whatever the host happens to report. Preserve the previous target identity:
+
+```bash
+: "${PUBLISHED_HEAD:?Capture the task-owned commit before pushing}"
+if [ "$(git rev-parse HEAD)" != "$PUBLISHED_HEAD" ]; then
+  echo "Local source moved after publication; stop." >&2
+  exit 1
+fi
+case "$VCS" in
+  github)
+    PUBLISHED_REVISION=$(gh pr view --repo "$PR_TARGET_REPO" "$PR_NUMBER" --json headRefOid,baseRefOid) || exit 1
+    if [ "$(echo "$PUBLISHED_REVISION" | jq -er '.headRefOid')" != "$PUBLISHED_HEAD" ] || [ "$(echo "$PUBLISHED_REVISION" | jq -er '.baseRefOid')" != "$BASE_SHA" ]; then
+      echo "Hosted head/base differs from the expected publication; stop and requalify." >&2
+      exit 1
+    fi
+    PR_REVISION=$PUBLISHED_REVISION ;;
+  gitlab)
+    PUBLISHED_REVISION=$(mr_revision) || exit 1
+    if [ "$(echo "$PUBLISHED_REVISION" | jq -er '.source_sha')" != "$PUBLISHED_HEAD" ] || [ "$(echo "$PUBLISHED_REVISION" | jq -er '.target_sha')" != "$TARGET_SHA" ]; then
+      echo "Hosted source/target differs from the expected publication; stop and requalify." >&2
+      exit 1
+    fi
+    MR_REVISION=$PUBLISHED_REVISION ;;
+  *) echo "Expected GitHub or GitLab publication." >&2; exit 1 ;;
+esac
+HEAD_SHA=$PUBLISHED_HEAD
+```
+
+Then repeat step 3 against the new head (or exact updated shelf
 identity), retaining successful required checks and a current completed review.
 Verify the live head/base or shelf still matches that evidence. Failed, skipped,
 canceled, missing or pending gates keep actionable threads open; report the
@@ -492,7 +532,8 @@ p4 changes -s shelved -u "$REVIEW_USER" -c "$REVIEW_CLIENT" -l
 Summarize:
 - PR/MR/CL title or description and current state
 - Platform detected (GitHub / GitLab / Perforce)
-- Status checks summary (passing/failing/pending) — or N/A for Perforce
+- Status checks summary (passing/failing/pending/unknown), including configured
+  Perforce external CI; N/A only for a verified empty configured gate set
 - Total issues found
 - Actionable items with descriptions
 - Items that can be ignored with reasons

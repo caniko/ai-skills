@@ -50,7 +50,8 @@ assert "withheld/excluded" in cli and "coverage as unknown/incomplete" in cli
 assert "explicitly authorizes transmitting each named path" in cli
 assert "branches: [main, trunk, maintenance/greptile-skills]" in workflow
 for source in (check_pr, loop):
-    assert source.index("git rev-parse --is-inside-work-tree") < source.index("p4 where")
+    assert source.index('elif [ "$(git rev-parse --is-inside-work-tree') < source.index('elif p4 where')
+    assert 'Bash(sleep:*)' in source
     assert 'p4 -ztag -Mj info' in source
     assert '$P4USER' not in source and '$P4CLIENT' not in source
     assert 'Bash(jq:*)' in source and 'Requires jq' in source
@@ -372,8 +373,8 @@ for change in ("123", "default", "456", None):
 # Platform detection fails explicitly without the selected remote, and an explicit
 # platform selection avoids touching origin in a valid Git worktree.
 for source in (check_pr, loop):
-    detection = 'if [ "$(git rev-parse' + source.split('```bash\nif [ "$(git rev-parse', 1)[1].split('```', 1)[0]
-    for platform, remote, success in (("", "missing", False), ("", "gitlab", True), ("", "github", True), ("", "unknown", False), ("gitlab", "missing", True), ("github", "missing", True)):
+    detection = 'if [ "${VCS:-}"' + source.split('```bash\nif [ "${VCS:-}"', 1)[1].split('```', 1)[0]
+    for platform, remote, success in (("", "missing", False), ("", "gitlab", True), ("", "github", True), ("", "unknown", False), ("gitlab", "missing", True), ("github", "missing", True), ("perforce", "missing", True), ("perforce", "unmapped", False)):
         mock = f'''VCS='{platform}'
 PLATFORM_REMOTE=selected-remote
 git() {{
@@ -385,7 +386,7 @@ git() {{
     *) return 99 ;;
   esac
 }}
-p4() {{ return 99; }}
+p4() {{ [ '{platform}' = perforce ] && [ '{remote}' != unmapped ]; }}
 '''
         result = subprocess.run(["bash", "-c", mock + detection + '\nprintf "%s" "$VCS"'], capture_output=True, text=True, timeout=5)
         assert (result.returncode == 0) == success, result
@@ -440,5 +441,58 @@ REVIEW_TARGET_BRANCH=trunk
 '''
     result = subprocess.run(['bash', '-c', mock + setup + '\n[ "$REVIEW_BASE" = fresh-base ]'], capture_output=True, text=True, timeout=5)
     assert (result.returncode == 0) == success, result
-assert cli.count('assert_review_revision || exit 1') == 3
+assert cli.count('assert_review_revision || exit 1') == 2
+
+# The prepared GitLab source is immutable during initial CI/review capture.
+for source in (check_pr, loop):
+    marker = 'CURRENT_MR_REVISION='
+    snippet = marker + source.split(marker, 1)[1].split('```', 1)[0]
+    for live, local, success in (('candidate', 'candidate', True), ('advanced', 'candidate', False), ('candidate', 'wrong-local', False)):
+        mock = f'''HEAD_SHA=candidate
+mr_revision() {{ printf '%s\\n' '{{"source_sha":"{live}","target_sha":"target"}}'; }}
+git() {{ [ "$*" = 'rev-parse HEAD' ] || return 99; echo '{local}'; }}
+glab() {{ return 0; }}
+'''
+        result = subprocess.run(['bash', '-c', mock + snippet + '\n[ "$HEAD_SHA" = candidate ]'], capture_output=True, text=True, timeout=5)
+        assert (result.returncode == 0) == success, result
+
+# Post-fix rebind accepts only the exact pushed commit, preserving the old target.
+marker = ': "${PUBLISHED_HEAD'
+snippet = marker + check_pr.split('```bash\n' + marker, 1)[1].split('```', 1)[0]
+for platform in ('github', 'gitlab'):
+    for hosted, base, local, success in (('published', 'base', 'published', True), ('old', 'base', 'published', False), ('foreign', 'base', 'published', False), ('published', 'advanced-base', 'published', False), ('published', 'base', 'wrong-local', False)):
+        data = json.dumps({'headRefOid': hosted, 'baseRefOid': base, 'source_sha': hosted, 'target_sha': base})
+        mock = f'''VCS={platform}
+PUBLISHED_HEAD=published
+HEAD_SHA=old
+BASE_SHA=base
+TARGET_SHA=base
+PR_TARGET_REPO=upstream/repo
+PR_NUMBER=1
+git() {{ [ "$*" = 'rev-parse HEAD' ] || return 99; echo '{local}'; }}
+gh() {{ [ "$*" = 'pr view --repo upstream/repo 1 --json headRefOid,baseRefOid' ] || return 99; printf '%s\\n' '{data}'; }}
+mr_revision() {{ printf '%s\\n' '{data}'; }}
+'''
+        result = subprocess.run(['bash', '-c', mock + snippet + '\n[ "$HEAD_SHA" = published ]'], capture_output=True, text=True, timeout=5)
+        assert (result.returncode == 0) == success, result
+assert "check-pr step 8's declared dependency" in loop
+assert 'including configured\n  Perforce external CI' in check_pr
+assert 'N/A for Perforce' not in check_pr
+
+# Native help selects agent output when JSON is unavailable, but a genuine
+# JSON/review failure must not be silently retried in another mode.
+marker = 'REVIEW_HELP='
+snippet = marker + cli.split('```bash\n' + marker, 1)[1].split('```', 1)[0]
+for help_text, failure, expected in (('--json --agent', 0, '--json'), ('--agent', 0, '--agent'), ('--json --agent', 7, '--json'), ('--text', 0, None)):
+    mock = f'''REVIEW_BASE=immutable-base
+greptile() {{
+  if [ "$*" = 'review --help' ]; then echo '{help_text}'; return 0; fi
+  printf '%s\\n' "$*"
+  return {failure}
+}}
+assert_review_revision() {{ return 0; }}
+'''
+    result = subprocess.run(['bash', '-c', mock + snippet], capture_output=True, text=True, timeout=5)
+    assert (result.returncode == 0) == (expected is not None and failure == 0), result
+    assert result.stdout.strip() == (f'review --branch immutable-base {expected}' if expected else ''), result
 print("review source contracts passed")
