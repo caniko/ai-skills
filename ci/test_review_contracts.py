@@ -101,6 +101,10 @@ registry_reference = (ROOT / 'global_skills/canix-cli/references/secrets-and-reg
 assert '`.skillnet/deps/canix-structure-reference/SKILL.md`' in registry_reference
 assert '**canix-cli package root**' in registry_reference
 assert '../.skillnet/' not in registry_reference
+assert '[incident-triage.md](references/incident-triage.md)' in (ROOT / 'global_skills/canix-cli/SKILL.md').read_text()
+assert (ROOT / 'global_skills/canix-cli/references/incident-triage.md').is_file()
+assert '["fix-loop"] = new {\n    dependencies = List("fix-loop-ref", "graphify")' in manifest
+assert (ROOT / 'global_skills/graphify/SKILL.md').is_file()
 for skill in ("check-pr", "greploop"):
     reference = (ROOT / f"global_skills/{skill}/references/graphql-queries.md").read_text()
     assert "comments(first: 3)" not in reference
@@ -382,7 +386,7 @@ git() {{
     'rev-parse --is-inside-work-tree') echo true ;;
     'remote get-url selected-remote')
       if [ '{remote}' = missing ]; then return 1; fi
-      echo 'https://{remote}.example/owner/repo.git' ;;
+      echo 'https://{remote}.com/owner/repo.git' ;;
     *) return 99 ;;
   esac
 }}
@@ -392,6 +396,32 @@ p4() {{ [ '{platform}' = perforce ] && [ '{remote}' != unmapped ]; }}
         assert (result.returncode == 0) == success, result
         if success:
             assert result.stdout.strip() == (platform or remote), result
+    for remote, expected in (
+        ('https://github.com/acme/gitlab-mirror.git', 'github'),
+        ('https://gitlab.com/acme/github-mirror.git', 'gitlab'),
+        ('ssh://git@github.com:22/acme/gitlab-mirror.git', 'github'),
+        ('git@gitlab.com:acme/github-mirror.git', 'gitlab'),
+        ('https://GITHUB.COM/acme/repo.git', 'github'),
+        ('https://unknown.example/acme/github-mirror.git', None),
+        ('https://notgithub.com/acme/repo.git', None),
+        ('https://github.com.unknown.example/acme/repo.git', None),
+        ('unknown://github.com/acme/repo.git', None),
+        ('/local/github.com/repo', None),
+    ):
+        mock = f'''unset VCS
+git() {{
+  case "$*" in
+    'rev-parse --is-inside-work-tree') echo true ;;
+    'remote get-url origin') printf '%s\\n' '{remote}' ;;
+    *) return 99 ;;
+  esac
+}}
+p4() {{ return 99; }}
+'''
+        result = subprocess.run(['bash', '-c', mock + detection + '\nprintf "%s" "$VCS"'], capture_output=True, text=True, timeout=5)
+        assert (result.returncode == 0) == (expected is not None), result
+        if expected:
+            assert result.stdout.strip() == expected, result
 
 # Use the real configured GitLab service account, never its placeholder name.
 reference = gitlab_refs[1]

@@ -47,9 +47,17 @@ elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
       echo "Cannot identify platform: select a verified remote or explicit VCS." >&2
       exit 1
     }
-    case "$REMOTE_URL" in
-      *gitlab*) VCS="gitlab" ;;
-      *github*) VCS="github" ;;
+    if [[ "$REMOTE_URL" =~ ^(https?|ssh|git)://([^/@]+@)?([A-Za-z0-9.-]+)(:[0-9]+)?/[^[:space:]]+$ ]]; then
+      REMOTE_HOST=${BASH_REMATCH[3],,}
+    elif [[ "$REMOTE_URL" =~ ^([A-Za-z0-9._-]+@)?([A-Za-z0-9.-]+):[^[:space:]]+$ ]]; then
+      REMOTE_HOST=${BASH_REMATCH[2],,}
+    else
+      echo "Cannot parse remote hostname: select explicit VCS from the verified candidate URL." >&2
+      exit 1
+    fi
+    case "$REMOTE_HOST" in
+      gitlab.com) VCS="gitlab" ;;
+      github.com) VCS="github" ;;
       *) echo "Unknown forge: set VCS from the verified candidate URL." >&2; exit 1 ;;
     esac
   fi
@@ -61,7 +69,9 @@ else
 fi
 ```
 
-For self-hosted GitLab instances whose hostname doesn't contain "gitlab", the user can override by passing `--vcs gitlab` as an input. For Perforce, the user can override by passing `--vcs perforce`.
+For self-hosted GitLab/GitHub instances, select `--vcs gitlab` or `--vcs github`
+from the verified candidate URL; a hostname substring is not provider evidence.
+For Perforce, the user can override by passing `--vcs perforce`.
 
 Map any explicit platform input to `VCS` before detection. Set `PLATFORM_REMOTE`
 when origin is not the intended remote; a failed lookup never defaults to GitHub.

@@ -33,7 +33,7 @@ skills: Mapping<String, Skill> = new {
     dependencies = List("check-pr", "fix-loop", "grouped-git-commits")
   }
   ["fix-loop"] = new {
-    dependencies = List("fix-loop-ref")
+    dependencies = List("fix-loop-ref", "graphify")
   }
   ["fix-loop-ref"] = new {
     role = "reference"

@@ -45,6 +45,8 @@ Load only the reference needed by the task:
 
 - [host-targeting.md](references/host-targeting.md) for fleet routes and SSH;
 - [attic.md](references/attic.md) for cache tokens and endpoint modes;
+- [incident-triage.md](references/incident-triage.md) for fleet outages or service
+  crash loops, dependency-first recovery and data-preserving WAL quarantine;
 - [secrets-and-registry.md](references/secrets-and-registry.md) for agenix,
   Fleetix sources, generated topology, and result links;
 - [extension.md](references/extension.md) when the requested operation is not
